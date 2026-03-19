@@ -16,17 +16,25 @@ const StartScanSchema = z.object({
   url: z
     .string()
     .min(1, 'URL is required')
-    .url('Must be a valid URL')
-    .refine(
-      (val) => {
-        try {
-          const parsed = new URL(val);
-          return ['http:', 'https:'].includes(parsed.protocol);
-        } catch {
-          return false;
-        }
-      },
-      { message: 'URL must use http or https protocol' }
+    .transform((val) => {
+      const trimmed = val.trim();
+      if (!/^https?:\/\//i.test(trimmed)) {
+        return `https://${trimmed}`;
+      }
+      return trimmed;
+    })
+    .pipe(
+      z.string().url('Must be a valid URL').refine(
+        (val) => {
+          try {
+            const parsed = new URL(val);
+            return ['http:', 'https:'].includes(parsed.protocol);
+          } catch {
+            return false;
+          }
+        },
+        { message: 'URL must use http or https protocol' }
+      )
     ),
   utmSource: z.string().optional(),
   utmMedium: z.string().optional(),

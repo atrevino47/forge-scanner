@@ -580,10 +580,7 @@ async function updateStageStatusIfPending(
 // ============================================================
 
 function generateScreenshotId(): string {
-  // Produce a collision-resistant ID without external dependencies
-  const timestamp = Date.now().toString(36);
-  const randomPart = Math.random().toString(36).substring(2, 10);
-  return `ss_${timestamp}_${randomPart}`;
+  return crypto.randomUUID();
 }
 
 function platformToSourceType(platform: keyof DetectedSocials): SourceType {
