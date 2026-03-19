@@ -109,6 +109,15 @@ After fixes are verified, the Orchestrator commits to the local repository:
 4. Do NOT push to remote — local commits only. Adrián decides when to push.
 5. Commit per verification batch (e.g., all Backend fixes verified together = one commit)
 
+### Branch discipline
+
+- All work happens on a `claude/<description>` branch (e.g., `claude/audit-003-fixes`)
+- Before the first commit of any session, check the current branch:
+  - If on `main` or `dev`: create and switch to a `claude/*` branch first
+  - If already on a `claude/*` branch from a previous session: continue on it
+- NEVER merge into `main` or `dev` — Adrián handles all merges after review
+- NEVER push to any remote — Adrián handles all pushes
+
 ### Fix failure protocol
 
 When a fix verification fails:
