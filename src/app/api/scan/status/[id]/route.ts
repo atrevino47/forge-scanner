@@ -160,6 +160,7 @@ export async function GET(
             if (scan.detected_socials && typeof scan.detected_socials === 'object') {
               const socials = scan.detected_socials as Record<string, unknown>;
               for (const [platform, data] of Object.entries(socials)) {
+                if (platform === '_ambiguous') continue;
                 if (!emittedSocialPlatforms.has(platform) && isSocialEntry(data)) {
                   sendEvent({
                     type: 'social_detected',
@@ -169,6 +170,24 @@ export async function GET(
                     confidence: data.confidence,
                   });
                   emittedSocialPlatforms.add(platform);
+                }
+              }
+
+              // --- Check for ambiguous socials (emit each platform once) ---
+              const ambiguousData = socials._ambiguous as
+                | Record<string, Array<{ handle: string; url: string }>>
+                | undefined;
+              if (ambiguousData && typeof ambiguousData === 'object') {
+                for (const [platform, options] of Object.entries(ambiguousData)) {
+                  const ambiguousKey = `ambiguous_${platform}`;
+                  if (!emittedSocialPlatforms.has(ambiguousKey) && Array.isArray(options)) {
+                    sendEvent({
+                      type: 'social_ambiguous',
+                      platform: platform as SourceType,
+                      options,
+                    });
+                    emittedSocialPlatforms.add(ambiguousKey);
+                  }
                 }
               }
             }

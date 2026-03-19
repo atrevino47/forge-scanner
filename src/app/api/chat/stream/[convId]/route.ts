@@ -5,6 +5,7 @@ import { streamWithSonnet } from '@/lib/ai/client';
 import { buildSalesAgentSystemPrompt } from '@/lib/ai/sales-agent';
 import type { ApiError } from '@/../contracts/api';
 import type { ChatSSEEvent } from '@/../contracts/events';
+import type { Annotation } from '@/../contracts/types';
 import type {
   DbScan,
   DbLead,
@@ -193,12 +194,104 @@ export async function GET(
           const typingStartEvent: ChatSSEEvent = { type: 'typing_start' };
           controller.enqueue(encoder.encode(formatSSE(typingStartEvent)));
 
-          // Stream tokens from the AI
+          // Stream tokens from the AI with unified marker parsing
+          // Detects [DATA_CARD:screenshotId] and [CALCOM_EMBED] markers,
+          // strips them from displayed text, and emits corresponding SSE events.
           const tokenStream = streamWithSonnet({
             systemPrompt,
             messages: chatMessages,
             maxTokens: 2048,
           });
+
+          let tokenBuffer = '';
+          let calcomEmbedEmitted = false;
+          const calcomUrl = process.env.NEXT_PUBLIC_CALCOM_EMBED_URL ?? '';
+
+          const sendTokenText = (text: string) => {
+            if (text) {
+              controller.enqueue(
+                encoder.encode(formatSSE({ type: 'token', content: text }))
+              );
+            }
+          };
+
+          // Process buffer: extract known markers, flush safe text
+          const processBuffer = async () => {
+            while (true) {
+              const bracketOpen = tokenBuffer.indexOf('[');
+
+              if (bracketOpen === -1) {
+                // No potential marker — flush everything
+                sendTokenText(tokenBuffer);
+                tokenBuffer = '';
+                return;
+              }
+
+              const bracketClose = tokenBuffer.indexOf(']', bracketOpen);
+
+              if (bracketClose === -1) {
+                // Incomplete bracket — flush text before '[', hold the rest
+                sendTokenText(tokenBuffer.substring(0, bracketOpen));
+                tokenBuffer = tokenBuffer.substring(bracketOpen);
+                return;
+              }
+
+              // Complete bracket pair — check if it's a known marker
+              const markerCandidate = tokenBuffer.substring(bracketOpen, bracketClose + 1);
+              const dataCardMatch = markerCandidate.match(/^\[DATA_CARD:([^\]]+)\]$/);
+
+              if (dataCardMatch) {
+                // Flush text before marker
+                sendTokenText(tokenBuffer.substring(0, bracketOpen));
+
+                // Emit data_card event with annotations from DB
+                const screenshotId = dataCardMatch[1];
+                try {
+                  const { data: screenshot } = await supabase
+                    .from('screenshots')
+                    .select('annotations')
+                    .eq('id', screenshotId)
+                    .single<{ annotations: Annotation[] }>();
+
+                  if (screenshot) {
+                    const dataCardEvent: ChatSSEEvent = {
+                      type: 'data_card',
+                      screenshotId,
+                      annotations: screenshot.annotations ?? [],
+                    };
+                    controller.enqueue(encoder.encode(formatSSE(dataCardEvent)));
+                  }
+                } catch {
+                  // Invalid screenshotId — skip silently
+                }
+
+                tokenBuffer = tokenBuffer.substring(bracketClose + 1);
+                continue;
+              }
+
+              if (markerCandidate === '[CALCOM_EMBED]') {
+                // Flush text before marker
+                sendTokenText(tokenBuffer.substring(0, bracketOpen));
+
+                // Emit calcom_embed event (once per conversation)
+                if (!calcomEmbedEmitted && calcomUrl) {
+                  const calcomEvent: ChatSSEEvent = {
+                    type: 'calcom_embed',
+                    url: calcomUrl,
+                  };
+                  controller.enqueue(encoder.encode(formatSSE(calcomEvent)));
+                  calcomEmbedEmitted = true;
+                }
+
+                tokenBuffer = tokenBuffer.substring(bracketClose + 1);
+                continue;
+              }
+
+              // Not a known marker — flush through the bracket as normal text
+              sendTokenText(tokenBuffer.substring(0, bracketClose + 1));
+              tokenBuffer = tokenBuffer.substring(bracketClose + 1);
+            }
+          };
 
           for await (const token of tokenStream) {
             if (aborted) {
@@ -206,22 +299,27 @@ export async function GET(
             }
 
             fullResponse += token;
-
-            const tokenEvent: ChatSSEEvent = {
-              type: 'token',
-              content: token,
-            };
-            controller.enqueue(encoder.encode(formatSSE(tokenEvent)));
+            tokenBuffer += token;
+            await processBuffer();
           }
+
+          // Flush any remaining buffer content
+          sendTokenText(tokenBuffer);
+          tokenBuffer = '';
+
+          // Strip marker text from the stored message
+          const cleanResponse = fullResponse
+            .replace(/\[DATA_CARD:[^\]]+\]/g, '')
+            .replace(/\[CALCOM_EMBED\]/g, '');
 
           if (aborted) {
             // Client disconnected — still store what we have if any content was generated
-            if (fullResponse.length > 0) {
+            if (cleanResponse.length > 0) {
               await supabase.from('messages').insert({
                 conversation_id: convId,
                 channel: 'web',
                 role: 'assistant',
-                content: fullResponse,
+                content: cleanResponse,
               });
             }
             controller.close();
@@ -232,14 +330,14 @@ export async function GET(
           const typingEndEvent: ChatSSEEvent = { type: 'typing_end' };
           controller.enqueue(encoder.encode(formatSSE(typingEndEvent)));
 
-          // Store the complete assistant message in DB
+          // Store the complete assistant message in DB (markers stripped)
           const { data: storedMessage } = await supabase
             .from('messages')
             .insert({
               conversation_id: convId,
               channel: 'web',
               role: 'assistant',
-              content: fullResponse,
+              content: cleanResponse,
             })
             .select('id')
             .single<{ id: string }>();
@@ -250,13 +348,13 @@ export async function GET(
           const completeEvent: ChatSSEEvent = {
             type: 'message_complete',
             messageId,
-            content: fullResponse,
+            content: cleanResponse,
           };
           controller.enqueue(encoder.encode(formatSSE(completeEvent)));
 
           console.log(
             `[chat/stream] Completed stream for convId=${convId} → messageId=${messageId}, ` +
-              `tokens=${fullResponse.length} chars`
+              `tokens=${cleanResponse.length} chars`
           );
         } catch (streamErr) {
           console.error('[chat/stream] Streaming error:', streamErr);

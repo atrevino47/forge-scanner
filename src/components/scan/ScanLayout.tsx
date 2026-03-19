@@ -1,6 +1,8 @@
 'use client';
 
 import { useReducer, useEffect, useState, useRef } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import type {
   FunnelStage,
   ScanStatus,
@@ -12,6 +14,7 @@ import type { ScanSSEEvent, ScanCompletedSummary } from '../../../contracts/even
 import type { ScanResultsResponse } from '../../../contracts/api';
 import type { ScreenshotEntry, StageState } from './types';
 import { useCalcom } from '@/components/providers/CalcomContext';
+import { useAuth } from '@/components/providers/SupabaseProvider';
 import { ProgressIndicator } from './ProgressIndicator';
 import { CapturePrompt } from './CapturePrompt';
 import { SocialConfirmation } from './SocialConfirmation';
@@ -19,6 +22,7 @@ import { StageSection } from './StageSection';
 import { FunnelHealthSummary } from './FunnelHealthSummary';
 import { BlueprintCTA } from './BlueprintCTA';
 import { BlueprintView } from './BlueprintView';
+import { SaveResultsPrompt } from './SaveResultsPrompt';
 import { ChatContainer } from '@/components/chat/ChatContainer';
 import { ChatToggle } from '@/components/chat/ChatToggle';
 
@@ -318,10 +322,15 @@ function scanReducer(state: ScanState, action: ScanAction): ScanState {
 export function ScanLayout({ scanId }: { scanId: string }) {
   const [state, dispatch] = useReducer(scanReducer, initialState);
   const { hasBooked, openCalcom } = useCalcom();
+  const { user } = useAuth();
 
   // Chat state — controlled here so the 30s timer can auto-open
   const [chatOpen, setChatOpen] = useState(false);
   const chatTimerFiredRef = useRef(false);
+
+  // Refs for GSAP blur/unblur animation (FIX-0020)
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const gateOverlayRef = useRef<HTMLDivElement>(null);
 
   // ── Fetch initial scan data ──
   useEffect(() => {
@@ -424,6 +433,58 @@ export function ScanLayout({ scanId }: { scanId: string }) {
   const isFailed = state.status === 'failed';
   const needsEmailGate = isComplete && !state.emailCaptured;
 
+  /* ANIMATION SEQUENCE — Email gate blur/unblur:
+   * Gate on (needsEmailGate=true):
+   *   Beat 1 (0.00s): Results — filter blur(0px)→blur(8px), 0.6s power2.out
+   *   Beat 2 (0.20s): Overlay — fadeSlideUp (y 20→0, opacity 0→1), 0.5s power2.out
+   * Gate off (emailCaptured=true):
+   *   Beat 1 (0.00s): Overlay — fade out opacity→0, 0.3s power2.in
+   *   Beat 2 (0.30s): Results — blur(8px)→blur(0px) + scale(0.98→1), 0.8s power2.inOut
+   */
+  useGSAP(
+    () => {
+      if (!resultsRef.current) return;
+
+      if (needsEmailGate) {
+        // Blur entrance
+        gsap.to(resultsRef.current, {
+          filter: 'blur(8px)',
+          duration: 0.6,
+          ease: 'power2.out',
+        });
+        // Overlay entrance
+        if (gateOverlayRef.current) {
+          gsap.fromTo(
+            gateOverlayRef.current,
+            { opacity: 0, y: 20 },
+            { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out', delay: 0.2 },
+          );
+        }
+      } else if (state.emailCaptured) {
+        // Unblur reveal — overlay fades first, then blur removes
+        const tl = gsap.timeline();
+        if (gateOverlayRef.current) {
+          tl.to(gateOverlayRef.current, {
+            opacity: 0,
+            duration: 0.3,
+            ease: 'power2.in',
+          });
+        }
+        tl.to(
+          resultsRef.current,
+          {
+            filter: 'blur(0px)',
+            scale: 1,
+            duration: 0.8,
+            ease: 'power2.inOut',
+          },
+          0.3,
+        );
+      }
+    },
+    { dependencies: [needsEmailGate, state.emailCaptured] },
+  );
+
   return (
     <div className="min-h-screen px-6 pt-20 pb-16">
       <div className="mx-auto max-w-[1120px]">
@@ -442,8 +503,12 @@ export function ScanLayout({ scanId }: { scanId: string }) {
           </div>
         )}
 
-        {/* Results content (blurred when email gate is active) */}
-        <div className={needsEmailGate ? 'pointer-events-none select-none blur-sm' : ''}>
+        {/* Results content (GSAP-driven blur when email gate is active) */}
+        <div
+          ref={resultsRef}
+          className={needsEmailGate ? 'pointer-events-none select-none' : ''}
+          style={needsEmailGate ? { filter: 'blur(8px)', scale: 0.98 } : {}}
+        >
           {STAGE_ORDER.map((stage) => {
             const screenshots = state.screenshots.filter((s) => s.stage === stage);
             const stageState = state.stages[stage];
@@ -479,6 +544,11 @@ export function ScanLayout({ scanId }: { scanId: string }) {
             <BlueprintView blueprint={state.blueprintData} />
           )}
 
+          {/* Save results OAuth prompt — after blueprint, non-blocking */}
+          {state.blueprintData && !user && (
+            <SaveResultsPrompt />
+          )}
+
           {/* Secondary CTA to book a call (after blueprint) */}
           {state.blueprintData && (
             <div className="py-8 text-center">
@@ -492,9 +562,13 @@ export function ScanLayout({ scanId }: { scanId: string }) {
           )}
         </div>
 
-        {/* Email gate overlay */}
+        {/* Email gate overlay — GSAP animated entrance/exit */}
         {needsEmailGate && (
-          <div className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-forge-base via-forge-base/95 to-transparent px-6 pb-8 pt-20">
+          <div
+            ref={gateOverlayRef}
+            className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-forge-base via-forge-base/95 to-transparent px-6 pb-8 pt-20"
+            style={{ opacity: 0 }}
+          >
             <div className="mx-auto max-w-md text-center">
               <h3 className="font-display mb-2 text-xl tracking-display">
                 [COPY: email gate headline]

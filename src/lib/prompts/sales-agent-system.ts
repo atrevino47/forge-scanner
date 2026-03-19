@@ -41,14 +41,13 @@ export function buildFullSalesAgentPrompt(params: SalesAgentPromptParams): strin
     channel,
     businessName,
     leadName,
-    calcomUrl,
   } = params;
 
   const overallHealth = calculateOverallHealth(scanResult);
   const stageSummaries = buildStageSummaries(scanResult);
   const weakestStage = findWeakestStage(scanResult);
   const channelRules = getChannelRules(channel);
-  const calLink = calcomUrl || process.env.NEXT_PUBLIC_CALCOM_EMBED_URL || '';
+  const screenshotIndex = buildScreenshotIndex(scanResult);
 
   return `You are the AI Sales Agent for Forge Digital — a premium digital marketing agency specializing in high-converting sales funnels.
 
@@ -110,12 +109,37 @@ Create natural urgency without being manipulative:
 ## CHANNEL: ${channel.toUpperCase()}
 ${channelRules}
 
-## CAL.COM BOOKING
-When the lead is ready to book (or when you sense an opening):
-${calLink ? `- Suggest booking with this link: ${calLink}` : '- Mention they can book directly from the scan results page.'}
-- Frame it naturally: "Want me to pull up the calendar? You can grab a time that works for you."
-- In web chat: The frontend will render a Cal.com embed when you include the booking link.
-- Never force the booking. If they're not ready, say "No rush — the link is there whenever you want it."
+## INLINE WIDGET PROTOCOLS
+
+You can trigger interactive UI widgets by including special markers in your messages. The frontend detects these markers, strips them from the displayed text, and renders rich interactive elements inline.
+
+### Data Cards — \`[DATA_CARD:{screenshotId}]\`
+Include this marker to show an annotated screenshot card inline in the chat. Use the exact screenshot ID from the list below.
+
+**Available screenshots:**
+${screenshotIndex}
+
+**When to use:**
+- In your opener message — reference the most critical finding
+- When discussing a specific issue — show them the evidence
+- When building urgency — visual proof is more compelling than words
+- Maximum 2 data cards per message
+
+**Example:** "Your homepage hero section is missing a clear CTA — take a look: [DATA_CARD:abc-123-def]"
+
+### Cal.com Booking — \`[CALCOM_EMBED]\`
+Include this marker to render an interactive booking calendar inline in the chat. Do NOT paste a raw booking URL — always use the marker.
+
+**When to trigger:**
+- After establishing rapport and the lead shows interest (typically 2-3 exchanges in)
+- When the lead asks about booking, pricing, or next steps
+- After presenting key findings and the lead is engaged
+- **Maximum ONCE per conversation** — do not repeat the embed
+
+**How to frame it:**
+- "Want to grab a time? Here's the calendar: [CALCOM_EMBED]"
+- "I can pull up the scheduling widget right here: [CALCOM_EMBED]"
+- If not ready: "No rush — just let me know when you'd like to see the calendar."
 
 ## ABSOLUTE RULES
 1. **NEVER fabricate data.** Only reference findings, scores, and insights that exist in their scan data above.
@@ -141,10 +165,10 @@ function getChannelRules(channel: Channel): string {
     case 'web':
       return `**Web Chat Rules:**
 - Keep messages SHORT: 2-4 sentences max. This is real-time chat, not email.
-- You can reference specific screenshots by describing what's in them — the frontend may display inline data cards.
+- Use [DATA_CARD:{screenshotId}] markers to show annotated screenshots inline (see INLINE WIDGET PROTOCOLS).
 - Use casual formatting: no headers, no bullet lists unless comparing options.
 - React quickly to their messages. Don't lecture — have a conversation.
-- When suggesting the booking, the frontend will render the Cal.com modal inline.
+- Use [CALCOM_EMBED] to trigger the booking widget inline (see INLINE WIDGET PROTOCOLS).
 - If they go quiet, send ONE follow-up after a natural pause: "Still there? Happy to answer any questions."`;
 
     case 'email':
@@ -220,6 +244,20 @@ function buildBlueprintContext(blueprint: BlueprintData): string {
 ${weakNode ? `**Current State:** ${weakNode.currentDescription}\n**Ideal State:** ${weakNode.idealDescription}\n**Key Improvements:** ${weakNode.improvements.slice(0, 3).join(', ')}` : ''}
 
 Use the blueprint data to show the lead what's possible. The mockup is a tangible preview of what their optimized funnel piece could look like — reference it when selling the dream.`;
+}
+
+function buildScreenshotIndex(scanResult: ScanResult): string {
+  const lines: string[] = [];
+  for (const stage of scanResult.stages) {
+    if (stage.screenshots.length > 0) {
+      const label = STAGE_LABELS[stage.stage];
+      for (const ss of stage.screenshots) {
+        const annotationCount = ss.annotations.length;
+        lines.push(`- \`${ss.id}\` → ${label}${annotationCount > 0 ? ` (${annotationCount} findings)` : ''}`);
+      }
+    }
+  }
+  return lines.length > 0 ? lines.join('\n') : 'No screenshots available.';
 }
 
 function findWeakestStage(scanResult: ScanResult) {
