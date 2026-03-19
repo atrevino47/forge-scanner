@@ -5,7 +5,8 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import type { Annotation } from '../../../contracts/types';
 import type { ScreenshotEntry } from './types';
-import { AnnotationMarker } from './AnnotationMarker';
+import { AnnotationMarker, TYPE_BG } from './AnnotationMarker';
+import { cn } from '@/lib/utils';
 import { AnnotationPopover } from './AnnotationPopover';
 
 interface ScreenshotCardProps {
@@ -50,34 +51,61 @@ export function ScreenshotCard({ screenshot }: ScreenshotCardProps) {
       ref={containerRef}
       className="glass-card overflow-hidden rounded-xl"
     >
-      {/* Screenshot image */}
-      <div className="relative">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={screenshot.thumbnailUrl}
-          alt={`${screenshot.source} screenshot (${screenshot.viewport})`}
-          className="w-full"
-          loading="lazy"
-        />
-
-        {/* Annotation dots overlaid */}
-        {screenshot.annotations.map((annotation) => (
-          <AnnotationMarker
-            key={annotation.id}
-            annotation={annotation}
-            isActive={activeAnnotation?.id === annotation.id}
-            onClick={() => handleMarkerClick(annotation)}
+      {/* Screenshot image in scrollable container */}
+      <div className="relative max-h-[600px] overflow-y-auto">
+        <div className="relative">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={screenshot.thumbnailUrl}
+            alt={`${screenshot.source} screenshot (${screenshot.viewport})`}
+            className="w-full"
+            loading="lazy"
           />
-        ))}
 
-        {/* Active annotation popover */}
-        {activeAnnotation && (
-          <AnnotationPopover
-            annotation={activeAnnotation}
-            onClose={() => setActiveAnnotation(null)}
-          />
-        )}
+          {/* Annotation dots overlaid */}
+          {screenshot.annotations.map((annotation, index) => (
+            <AnnotationMarker
+              key={annotation.id}
+              annotation={annotation}
+              index={index}
+              isActive={activeAnnotation?.id === annotation.id}
+              onClick={() => handleMarkerClick(annotation)}
+            />
+          ))}
+
+          {/* Active annotation popover */}
+          {activeAnnotation && (
+            <AnnotationPopover
+              annotation={activeAnnotation}
+              onClose={() => setActiveAnnotation(null)}
+            />
+          )}
+        </div>
       </div>
+
+      {/* Annotation list below screenshot */}
+      {screenshot.annotations.length > 0 && (
+        <div className="border-t border-forge-border px-4 py-3 space-y-2">
+          {screenshot.annotations.map((annotation, index) => (
+            <button
+              key={annotation.id}
+              onClick={() => handleMarkerClick(annotation)}
+              className="flex w-full items-start gap-3 rounded-lg px-2 py-1.5 text-left transition-colors duration-200 hover:bg-forge-surface"
+            >
+              <span className={cn(
+                'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-forge-base',
+                TYPE_BG[annotation.type]
+              )}>
+                {index + 1}
+              </span>
+              <div>
+                <p className="font-body text-sm font-medium text-forge-text">{annotation.title}</p>
+                <p className="font-body text-xs text-forge-text-muted line-clamp-1">{annotation.detail}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Screenshot metadata bar */}
       <div className="flex items-center justify-between px-4 py-3">
