@@ -175,6 +175,31 @@ export async function capturePageWithMetadata(
       );
     }
 
+    // Force all elements visible — override animation initial states
+    // (opacity: 0, transform, clip-path, visibility hidden, etc.)
+    try {
+      await page.addStyleTag({
+        content: `
+          *, *::before, *::after {
+            opacity: 1 !important;
+            visibility: visible !important;
+            clip-path: none !important;
+            -webkit-clip-path: none !important;
+            transition: none !important;
+            animation: none !important;
+          }
+        `,
+      });
+      // Brief wait for reflow after style injection
+      await page.waitForTimeout(500);
+    } catch (styleError: unknown) {
+      const styleMessage =
+        styleError instanceof Error ? styleError.message : String(styleError);
+      console.warn(
+        `[screenshots/client] Style injection failed for ${url}: ${styleMessage}. Capturing as-is.`,
+      );
+    }
+
     // Capture screenshot (full page for desktop, viewport-only for mobile)
     const screenshotBuffer = await captureScreenshot(page, {
       fullPage: viewport === 'desktop',

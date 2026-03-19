@@ -21,3 +21,6 @@ The owning agent (Backend, Frontend, AI Engine) applies the fix. The Orchestrato
 | FIX-0007 | 2026-03-18 | AUDIT-002 E2E test | Frontend | [FIX-0007](FIX-0007.md) | `src/components/landing/HeroSection.tsx` | URL input type="url" blocks bare domains via browser validation | yes |
 | FIX-0008 | 2026-03-19 | AUDIT-002 E2E test | Backend | [FIX-0008](FIX-0008.md) | `src/lib/screenshots/client.ts` | Screenshots miss animated content + mobile captures distorted | yes |
 | FIX-0009 | 2026-03-19 | AUDIT-002 E2E test | Frontend | [FIX-0009](FIX-0009.md) | `ScreenshotCard.tsx` + `AnnotationMarker.tsx` | Screenshots need scroll container + annotation dots need labels | yes |
+| FIX-0010 | 2026-03-19 | AUDIT-002 E2E test | Backend | [FIX-0010](FIX-0010.md) | `src/lib/screenshots/client.ts` | Force all elements visible via CSS injection before capture | partial |
+| FIX-0011 | 2026-03-19 | AUDIT-002 E2E test | Backend | [FIX-0011](FIX-0011.md) | `src/lib/screenshots/client.ts` | Remove transform:none from CSS injection (breaks carousels) | partial |
+| FIX-0012 | 2026-03-19 | AUDIT-002 E2E test | Backend | [FIX-0012](FIX-0012.md) | `src/lib/screenshots/client.ts` | Simplify CSS injection to only opacity+visibility, add 2s init wait | pending |
