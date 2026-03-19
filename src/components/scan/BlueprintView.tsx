@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import type { BlueprintData, FunnelMapNode } from '../../../contracts/types';
@@ -101,15 +101,7 @@ export function BlueprintView({ blueprint }: BlueprintViewProps) {
       </h2>
 
       {/* ── Funnel Map ── */}
-      <div className="mx-auto mb-10 max-w-[960px] space-y-4">
-        {funnelMap.nodes.map((node, i) => (
-          <FunnelStageNode
-            key={node.stage}
-            node={node}
-            isLast={i === funnelMap.nodes.length - 1}
-          />
-        ))}
-      </div>
+      <FunnelMap nodes={funnelMap.nodes} />
 
       {/* ── Revenue Impact ── */}
       <div
@@ -153,24 +145,114 @@ export function BlueprintView({ blueprint }: BlueprintViewProps) {
   );
 }
 
+// ── Funnel Map with accordion behavior ──
+
+/* ANIMATION SEQUENCE — Node interactions:
+ * Hover enter (0.2s):  scale 1→1.02, boxShadow adds gold glow
+ * Hover leave (0.2s):  scale 1.02→1, boxShadow removes glow
+ * Expand (0.4s):       improvements container height 0→auto + content fadeSlideUp
+ * Collapse (0.3s):     improvements container height→0, opacity→0
+ * Active node border switches to gold accent
+ */
+
+function FunnelMap({ nodes }: { nodes: FunnelMapNode[] }) {
+  const [expandedStage, setExpandedStage] = useState<string | null>(null);
+
+  const toggleNode = useCallback((stage: string) => {
+    setExpandedStage((prev) => (prev === stage ? null : stage));
+  }, []);
+
+  return (
+    <div className="mx-auto mb-10 max-w-[960px] space-y-4">
+      {nodes.map((node, i) => (
+        <FunnelStageNode
+          key={node.stage}
+          node={node}
+          isLast={i === nodes.length - 1}
+          isExpanded={expandedStage === node.stage}
+          onToggle={() => toggleNode(node.stage)}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ── Individual funnel stage node ──
 function FunnelStageNode({
   node,
   isLast,
+  isExpanded,
+  onToggle,
 }: {
   node: FunnelMapNode;
   isLast: boolean;
+  isExpanded: boolean;
+  onToggle: () => void;
 }) {
   const Icon = HEALTH_ICON[node.health];
+  const nodeRef = useRef<HTMLDivElement>(null);
+  const improvementsRef = useRef<HTMLDivElement>(null);
+
+  // GSAP hover effects
+  const handleMouseEnter = useCallback(() => {
+    gsap.to(nodeRef.current, {
+      scale: 1.02,
+      boxShadow: '0 0 20px rgba(212, 165, 55, 0.15)',
+      duration: 0.2,
+      ease: 'power2.out',
+    });
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    gsap.to(nodeRef.current, {
+      scale: 1,
+      boxShadow: '0 0 0px rgba(212, 165, 55, 0)',
+      duration: 0.2,
+      ease: 'power2.out',
+    });
+  }, []);
+
+  // GSAP expand/collapse for improvements
+  useGSAP(
+    () => {
+      if (!improvementsRef.current) return;
+
+      if (isExpanded) {
+        gsap.set(improvementsRef.current, { display: 'block', overflow: 'hidden' });
+        gsap.fromTo(
+          improvementsRef.current,
+          { height: 0, opacity: 0 },
+          { height: 'auto', opacity: 1, duration: 0.4, ease: 'power2.out' },
+        );
+      } else {
+        gsap.to(improvementsRef.current, {
+          height: 0,
+          opacity: 0,
+          duration: 0.3,
+          ease: 'power2.in',
+          onComplete: () => {
+            if (improvementsRef.current) {
+              gsap.set(improvementsRef.current, { display: 'none' });
+            }
+          },
+        });
+      }
+    },
+    { dependencies: [isExpanded] },
+  );
 
   return (
     <>
       <div
+        ref={nodeRef}
         data-bp="node"
         className={cn(
-          'rounded-xl border p-5',
-          HEALTH_BG[node.health],
+          'cursor-pointer rounded-xl border p-5',
+          isExpanded ? 'border-forge-accent bg-forge-accent/5' : HEALTH_BG[node.health],
         )}
+        onClick={onToggle}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <div className="mb-3 flex items-center gap-3">
           <Icon
@@ -207,18 +289,21 @@ function FunnelStageNode({
           </div>
         </div>
 
+        {/* Expandable improvements — accordion */}
         {node.improvements.length > 0 && (
-          <ul className="mt-3 space-y-1">
-            {node.improvements.map((imp, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-2 text-xs text-forge-text-muted"
-              >
-                <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-forge-accent" />
-                {imp}
-              </li>
-            ))}
-          </ul>
+          <div ref={improvementsRef} style={{ display: 'none', height: 0 }}>
+            <ul className="mt-3 space-y-1">
+              {node.improvements.map((imp, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-2 text-xs text-forge-text-muted"
+                >
+                  <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-forge-accent" />
+                  {imp}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
 

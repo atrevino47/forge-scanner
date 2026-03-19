@@ -39,6 +39,15 @@ interface TechnicalCheckResult {
   issues: string[];
 }
 
+interface PageSpeedResult {
+  performanceScore: number; // 0-100
+  firstContentfulPaint: number; // ms
+  largestContentfulPaint: number; // ms
+  totalBlockingTime: number; // ms
+  cumulativeLayoutShift: number; // score
+  speedIndex: number; // ms
+}
+
 // ============================================================
 // Main landing stage analysis
 // ============================================================
@@ -72,10 +81,12 @@ export async function analyzeLandingStage(
 
   await onUpdate(STAGE, { status: 'analyzing', startedAt: new Date().toISOString() });
 
-  // Run visual annotation and technical checks in parallel
-  const [annotationResults, technicalResults] = await Promise.allSettled([
+  // Run visual annotation, technical checks, and PageSpeed in parallel
+  const pageUrl = input.pageUrl ?? screenshots[0]?.sourceUrl;
+  const [annotationResults, technicalResults, pageSpeedResults] = await Promise.allSettled([
     annotateScreenshots(screenshots, screenshotFetcher, businessContext, onAnnotationReady),
     pageHtml ? runTechnicalChecks(pageHtml) : Promise.resolve(null),
+    pageUrl ? runPageSpeedCheck(pageUrl) : Promise.resolve(null),
   ]);
 
   // Collect annotations
@@ -102,6 +113,11 @@ export async function analyzeLandingStage(
   // Add technical check annotations
   if (technicalResults.status === 'fulfilled' && technicalResults.value) {
     allAnnotations.push(...technicalToAnnotations(technicalResults.value));
+  }
+
+  // Add PageSpeed annotations
+  if (pageSpeedResults.status === 'fulfilled' && pageSpeedResults.value) {
+    allAnnotations.push(...pageSpeedToAnnotations(pageSpeedResults.value));
   }
 
   // Generate stage summary
@@ -188,6 +204,78 @@ Return ONLY valid JSON:
       issues: [],
     };
   }
+}
+
+async function runPageSpeedCheck(url: string): Promise<PageSpeedResult | null> {
+  const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
+  if (!apiKey) {
+    console.warn('[stage-landing] GOOGLE_PAGESPEED_API_KEY not set — skipping PageSpeed check');
+    return null;
+  }
+
+  try {
+    const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=${apiKey}&strategy=mobile&category=performance`;
+    const response = await fetch(apiUrl);
+
+    if (!response.ok) {
+      console.error(`[stage-landing] PageSpeed API returned ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    const audits = data.lighthouseResult?.audits;
+    const categories = data.lighthouseResult?.categories;
+
+    return {
+      performanceScore: Math.round((categories?.performance?.score ?? 0) * 100),
+      firstContentfulPaint: audits?.['first-contentful-paint']?.numericValue ?? 0,
+      largestContentfulPaint: audits?.['largest-contentful-paint']?.numericValue ?? 0,
+      totalBlockingTime: audits?.['total-blocking-time']?.numericValue ?? 0,
+      cumulativeLayoutShift: audits?.['cumulative-layout-shift']?.numericValue ?? 0,
+      speedIndex: audits?.['speed-index']?.numericValue ?? 0,
+    };
+  } catch (error) {
+    console.error('[stage-landing] PageSpeed check failed:', error);
+    return null;
+  }
+}
+
+function pageSpeedToAnnotations(result: PageSpeedResult): Annotation[] {
+  const annotations: Annotation[] = [];
+
+  if (result.performanceScore < 50) {
+    annotations.push({
+      id: 'landing-pagespeed-score',
+      position: { x: 50, y: 5 },
+      type: 'critical',
+      title: `Performance score: ${result.performanceScore}/100`,
+      detail: `Google PageSpeed rates this page ${result.performanceScore}/100 on mobile. Pages scoring below 50 lose significant traffic — Google uses Core Web Vitals as a ranking factor.`,
+      category: 'performance',
+    });
+  } else if (result.performanceScore < 80) {
+    annotations.push({
+      id: 'landing-pagespeed-score',
+      position: { x: 50, y: 5 },
+      type: 'warning',
+      title: `Performance score: ${result.performanceScore}/100`,
+      detail: `Google PageSpeed rates this page ${result.performanceScore}/100 on mobile. There's room to improve — top-performing sites score 90+.`,
+      category: 'performance',
+    });
+  }
+
+  const lcpSeconds = (result.largestContentfulPaint / 1000).toFixed(1);
+  if (result.largestContentfulPaint > 2500) {
+    annotations.push({
+      id: 'landing-pagespeed-lcp',
+      position: { x: 50, y: 30 },
+      type: result.largestContentfulPaint > 4000 ? 'critical' : 'warning',
+      title: `Main content loads in ${lcpSeconds}s`,
+      detail: `Largest Contentful Paint is ${lcpSeconds}s. Google considers >2.5s "needs improvement" and >4s "poor". 53% of mobile users abandon sites that take over 3 seconds to load.`,
+      category: 'performance',
+    });
+  }
+
+  return annotations;
 }
 
 function technicalToAnnotations(checks: TechnicalCheckResult): Annotation[] {

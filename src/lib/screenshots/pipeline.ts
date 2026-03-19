@@ -182,11 +182,18 @@ export async function runScreenshotPipeline(params: {
     // --------------------------------------------------------
     try {
       if (homepageHtml) {
-        detectedSocials = detectSocialLinks(homepageHtml, websiteUrl);
+        const detection = detectSocialLinks(homepageHtml, websiteUrl);
+        detectedSocials = detection.resolved;
+
+        // Store both resolved and ambiguous socials in the scan record
+        const socialsForDb: Record<string, unknown> = { ...detection.resolved };
+        if (Object.keys(detection.ambiguous).length > 0) {
+          socialsForDb._ambiguous = detection.ambiguous;
+        }
 
         await supabase
           .from('scans')
-          .update({ detected_socials: detectedSocials })
+          .update({ detected_socials: socialsForDb })
           .eq('id', scanId);
       }
     } catch (socialDetectError) {
@@ -580,10 +587,7 @@ async function updateStageStatusIfPending(
 // ============================================================
 
 function generateScreenshotId(): string {
-  // Produce a collision-resistant ID without external dependencies
-  const timestamp = Date.now().toString(36);
-  const randomPart = Math.random().toString(36).substring(2, 10);
-  return `ss_${timestamp}_${randomPart}`;
+  return crypto.randomUUID();
 }
 
 function platformToSourceType(platform: keyof DetectedSocials): SourceType {

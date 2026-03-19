@@ -6,6 +6,8 @@ import {
 } from 'next/font/google';
 import { GSAPProvider } from '@/components/providers/GSAPProvider';
 import { CalcomProvider } from '@/components/providers/CalcomContext';
+import { PostHogProvider } from '@/components/providers/PostHogProvider';
+import { SupabaseProvider } from '@/components/providers/SupabaseProvider';
 import { TopBanner } from '@/components/shared/TopBanner';
 import { CalcomModal } from '@/components/shared/CalcomModal';
 import './globals.css';
@@ -47,13 +49,17 @@ export default function RootLayout({
       className={`dark ${instrumentSerif.variable} ${plusJakartaSans.variable} ${jetbrainsMono.variable}`}
     >
       <body className="min-h-screen bg-forge-base font-body text-forge-text antialiased">
-        <GSAPProvider>
-          <CalcomProvider>
-            <TopBanner />
-            <main>{children}</main>
-            <CalcomModal />
-          </CalcomProvider>
-        </GSAPProvider>
+        <SupabaseProvider>
+          <PostHogProvider>
+            <GSAPProvider>
+              <CalcomProvider>
+                <TopBanner />
+                <main>{children}</main>
+                <CalcomModal />
+              </CalcomProvider>
+            </GSAPProvider>
+          </PostHogProvider>
+        </SupabaseProvider>
       </body>
     </html>
   );

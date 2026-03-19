@@ -76,6 +76,9 @@ All captured screenshots stored at `screenshots/{scanId}/{screenshotId}.png` in 
 ### Rule 10: Cal.com is always a modal
 Every Cal.com trigger opens an overlay on the current page. User never navigates away from results.
 
+### Rule 11: Root cause fixes only
+Every fix must address the underlying cause, not the symptom. No temporary workarounds, no band-aids. If the root cause is unclear, investigate deeper before writing code. A fix that silences an error without understanding why it happens is not a fix.
+
 ## Pages
 ```
 /                      → Landing page

@@ -34,7 +34,7 @@ export interface StartScanResponse {
 export interface CaptureInfoRequest {
   scanId: string;
   leadId: string;
-  email: string;
+  email?: string; // Optional when socialConfirmation is provided
   phone?: string;
   fullName?: string;
   businessName?: string;

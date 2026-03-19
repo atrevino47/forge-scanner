@@ -30,16 +30,16 @@ const SocialConfirmationSchema = z
 const CaptureInfoSchema = z.object({
   scanId: z.string().min(1, 'Scan ID is required'),
   leadId: z.string().min(1, 'Lead ID is required'),
-  email: z
-    .string()
-    .min(1, 'Email is required')
-    .email('Must be a valid email address'),
+  email: z.string().email('Must be a valid email address').optional(),
   phone: z.string().optional(),
   fullName: z.string().optional(),
   businessName: z.string().optional(),
   providedSocials: ProvidedSocialsSchema,
   socialConfirmation: SocialConfirmationSchema,
-});
+}).refine(
+  (data) => data.email || data.socialConfirmation,
+  { message: 'Either email or socialConfirmation must be provided' }
+);
 
 /**
  * Shape of a lead row as returned from the `leads` table (snake_case).
@@ -127,8 +127,8 @@ export async function POST(
 
     // (c) Update lead record with provided info
     const updateData: Record<string, string> = {
-      email,
       capture_method: 'direct',
+      ...(email && { email }),
       ...(phone && { phone }),
       ...(fullName && { full_name: fullName }),
       ...(businessName && { business_name: businessName }),

@@ -55,7 +55,6 @@ export function SocialConfirmation({
         body: JSON.stringify({
           scanId,
           leadId: leadId ?? '',
-          email: '',
           socialConfirmation: {
             platform,
             confirmedHandle: selected,
