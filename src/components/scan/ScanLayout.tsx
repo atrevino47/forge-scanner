@@ -364,11 +364,54 @@ export function ScanLayout({ scanId }: { scanId: string }) {
     return () => clearTimeout(timer);
   }, [state.completedSummary, state.emailCaptured, hasBooked]);
 
+  // ── Exit detection — trigger follow-up if user leaves without booking ──
+  const exitTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (!state.emailCaptured || !state.leadId || hasBooked) return;
+
+    const triggerExit = (reason: 'exit_intent' | 'abandoned_scan') => {
+      if (exitTriggeredRef.current || hasBooked) return;
+      exitTriggeredRef.current = true;
+
+      const payload = JSON.stringify({
+        scanId,
+        leadId: state.leadId,
+        reason,
+      });
+
+      navigator.sendBeacon('/api/followup/trigger', new Blob([payload], { type: 'application/json' }));
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && state.completedSummary) {
+        triggerExit('exit_intent');
+      }
+    };
+
+    const handleBeforeUnload = () => {
+      if (state.completedSummary) {
+        triggerExit('exit_intent');
+      } else {
+        triggerExit('abandoned_scan');
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [scanId, state.emailCaptured, state.leadId, state.completedSummary, hasBooked]);
+
   // ── Pre-fill Cal.com from captured data ──
-  const handleOpenCalcom = () => {
+  const handleOpenCalcom = (source: string = 'results_cta') => {
     openCalcom({
       email: state.capturedEmail ?? undefined,
       phone: state.capturedPhone ?? undefined,
+      source,
     });
   };
 
@@ -440,7 +483,7 @@ export function ScanLayout({ scanId }: { scanId: string }) {
           {state.blueprintData && (
             <div className="py-8 text-center">
               <button
-                onClick={handleOpenCalcom}
+                onClick={() => handleOpenCalcom('results_cta')}
                 className="inline-flex items-center gap-2 rounded-lg bg-forge-accent px-8 py-3 font-body font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover"
               >
                 [COPY: book strategy call after blueprint]

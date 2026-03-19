@@ -180,6 +180,9 @@ export function CalcomModal() {
             config={{
               layout: 'month_view',
               theme: 'dark',
+              metadata: {
+                source: prefill.source ?? 'banner_cta',
+              },
             }}
           />
         </div>

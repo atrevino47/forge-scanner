@@ -38,7 +38,7 @@ export function TopBanner() {
       {/* Left: CTA — opens Cal.com modal */}
       <button
         data-banner="cta"
-        onClick={() => openCalcom()}
+        onClick={() => openCalcom({ source: 'banner_cta' })}
         className="rounded-lg px-3 py-1.5 font-body text-xs font-semibold tracking-wide text-forge-accent uppercase sm:px-4 sm:text-sm"
       >
         [COPY: banner CTA text]
