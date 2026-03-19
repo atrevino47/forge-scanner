@@ -27,3 +27,7 @@ The owning agent (Backend, Frontend, AI Engine) applies the fix. The Orchestrato
 | FIX-0013 | 2026-03-19 | AUDIT-001 RUNTIME-1 | Backend | [FIX-0013](FIX-0013.md) | `src/app/api/scan/start/route.ts` | Use after() for pipeline so it survives on Vercel | yes |
 | FIX-0014 | 2026-03-19 | AUDIT-001 MISSING-5 | Backend | [FIX-0014](FIX-0014.md) | `src/middleware.ts` (new) | Build middleware for Supabase auth session refresh | yes |
 | FIX-0015 | 2026-03-19 | AUDIT-001 MISMATCH-2 | Backend | [FIX-0015](FIX-0015.md) | `src/lib/db/mappers.ts` (new) + 4 routes | Extract shared DB-to-contract mappers | yes |
+| FIX-0016 | 2026-03-19 | AUDIT-001 MISSING 7-8 | Frontend | [FIX-0016](FIX-0016.md) | `src/components/scan/ScanLayout.tsx` | Exit detection + follow-up trigger via sendBeacon | pending |
+| FIX-0017 | 2026-03-19 | AUDIT-001 MISSING 17 | Frontend | [FIX-0017](FIX-0017.md) | `PostHogProvider.tsx` (new) + `layout.tsx` | Initialize PostHog analytics | pending |
+| FIX-0018 | 2026-03-19 | AUDIT-001 MISSING 3 | AI Engine | [FIX-0018](FIX-0018.md) | `src/lib/scanner/stage-landing.ts` | Add PageSpeed API integration to landing stage | pending |
+| FIX-0019 | 2026-03-19 | AUDIT-001 MISSING 12 | Frontend | [FIX-0019](FIX-0019.md) | `CalcomContext.tsx` + `CalcomModal.tsx` + `TopBanner.tsx` + `ScanLayout.tsx` | Pass booking source through Cal.com metadata | pending |
