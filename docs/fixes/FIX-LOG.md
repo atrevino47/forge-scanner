@@ -17,3 +17,5 @@ The owning agent (Backend, Frontend, AI Engine) applies the fix. The Orchestrato
 | FIX-0003 | 2026-03-18 | AUDIT-001 BUG-4 | Frontend | [FIX-0003](FIX-0003.md) | `src/components/shared/CalcomModal.tsx` | Cal.com calLink hardcoded to wrong path | yes |
 | FIX-0004 | 2026-03-18 | AUDIT-001 BUG-3 | Backend+Frontend | [FIX-0004a](FIX-0004a.md), [FIX-0004b](FIX-0004b.md) | `capture-info/route.ts` + `SocialConfirmation.tsx` | SocialConfirmation sends empty email — always fails | yes |
 | FIX-0005 | 2026-03-18 | AUDIT-001 RUNTIME-4 | Frontend | [FIX-0005](FIX-0005.md) | `src/components/scan/ScanLayout.tsx` | CapturePrompt renders before leadId is available | yes |
+| FIX-0006 | 2026-03-18 | AUDIT-002 E2E test | Frontend | [FIX-0006](FIX-0006.md) | `src/components/scan/ScanLayout.tsx` | Duplicate screenshot keys from SSE + initial data race | yes |
+| FIX-0007 | 2026-03-18 | AUDIT-002 E2E test | Frontend | [FIX-0007](FIX-0007.md) | `src/components/landing/HeroSection.tsx` | URL input type="url" blocks bare domains via browser validation | yes |

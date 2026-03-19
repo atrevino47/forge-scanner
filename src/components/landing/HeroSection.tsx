@@ -111,10 +111,10 @@ export function HeroSection() {
         <form data-hero="input" onSubmit={handleSubmit} className="mx-auto mb-8 max-w-xl">
           <div className="group relative flex items-center rounded-xl border border-forge-border bg-forge-surface/80 backdrop-blur-sm transition-colors duration-200 hover:border-forge-accent/30 focus-within:border-forge-accent/40 focus-within:shadow-[0_0_30px_rgba(212,165,55,0.08)]">
             <input
-              type="url"
+              type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://yourwebsite.com"
+              placeholder="yourwebsite.com"
               required
               className="h-14 flex-1 bg-transparent px-5 font-body text-base text-forge-text placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
             />

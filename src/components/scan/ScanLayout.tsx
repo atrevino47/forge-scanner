@@ -148,7 +148,10 @@ function handleSSEEvent(state: ScanState, event: ScanSSEEvent): ScanState {
           `Discovering your ${STAGE_LABELS[event.stage]}...`,
         ],
       };
-    case 'screenshot_captured':
+    case 'screenshot_captured': {
+      if (state.screenshots.some((s) => s.id === event.screenshotId)) {
+        return state;
+      }
       return {
         ...state,
         screenshots: [
@@ -168,6 +171,7 @@ function handleSSEEvent(state: ScanState, event: ScanSSEEvent): ScanState {
           `Capturing your ${SOURCE_LABELS[event.source] ?? event.source}...`,
         ],
       };
+    }
     case 'social_detected':
       return {
         ...state,
