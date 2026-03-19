@@ -148,9 +148,36 @@ export async function capturePageWithMetadata(
       }
     }
 
-    // Capture screenshot
+    // Scroll down incrementally to trigger scroll-based animations (GSAP, Framer Motion, etc.)
+    try {
+      await page.evaluate(async () => {
+        const scrollStep = Math.max(window.innerHeight * 0.8, 400);
+        const maxScroll = document.body.scrollHeight;
+        let currentScroll = 0;
+
+        while (currentScroll < maxScroll) {
+          window.scrollBy(0, scrollStep);
+          currentScroll += scrollStep;
+          await new Promise((r) => setTimeout(r, 200));
+        }
+
+        // Scroll back to top
+        window.scrollTo(0, 0);
+      });
+
+      // Wait for animations to settle after scrolling
+      await page.waitForTimeout(1500);
+    } catch (scrollError: unknown) {
+      const scrollMessage =
+        scrollError instanceof Error ? scrollError.message : String(scrollError);
+      console.warn(
+        `[screenshots/client] Scroll routine failed for ${url}: ${scrollMessage}. Capturing without scroll.`,
+      );
+    }
+
+    // Capture screenshot (full page for desktop, viewport-only for mobile)
     const screenshotBuffer = await captureScreenshot(page, {
-      fullPage: true,
+      fullPage: viewport === 'desktop',
       viewport: viewportSize,
     });
 

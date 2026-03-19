@@ -19,5 +19,5 @@ The owning agent (Backend, Frontend, AI Engine) applies the fix. The Orchestrato
 | FIX-0005 | 2026-03-18 | AUDIT-001 RUNTIME-4 | Frontend | [FIX-0005](FIX-0005.md) | `src/components/scan/ScanLayout.tsx` | CapturePrompt renders before leadId is available | yes |
 | FIX-0006 | 2026-03-18 | AUDIT-002 E2E test | Frontend | [FIX-0006](FIX-0006.md) | `src/components/scan/ScanLayout.tsx` | Duplicate screenshot keys from SSE + initial data race | yes |
 | FIX-0007 | 2026-03-18 | AUDIT-002 E2E test | Frontend | [FIX-0007](FIX-0007.md) | `src/components/landing/HeroSection.tsx` | URL input type="url" blocks bare domains via browser validation | yes |
-| FIX-0008 | 2026-03-19 | AUDIT-002 E2E test | Backend | [FIX-0008](FIX-0008.md) | `src/lib/screenshots/client.ts` | Screenshots miss animated content + mobile captures distorted | pending |
+| FIX-0008 | 2026-03-19 | AUDIT-002 E2E test | Backend | [FIX-0008](FIX-0008.md) | `src/lib/screenshots/client.ts` | Screenshots miss animated content + mobile captures distorted | yes |
 | FIX-0009 | 2026-03-19 | AUDIT-002 E2E test | Frontend | [FIX-0009](FIX-0009.md) | `ScreenshotCard.tsx` + `AnnotationMarker.tsx` | Screenshots need scroll container + annotation dots need labels | pending |
