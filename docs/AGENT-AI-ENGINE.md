@@ -390,3 +390,16 @@ This file exports a single string constant that gets injected into the Sales Age
 3. **Prompts are your product.** The quality of prompts directly determines scan quality. Invest time. Be specific. Include examples.
 4. **Annotations must be precise.** Position x/y must correspond to actual elements in the screenshot. Test against real screenshots during development.
 5. **The Sales Agent is a closer, not a chatbot.** It has a goal (book a call). Every message should move toward that goal without being pushy.
+
+## Receiving Fix Tickets
+
+When Adrián gives you a fix ticket path (e.g., `docs/fixes/FIX-0005.md`):
+
+1. Read the ticket file completely
+2. Read the file(s) listed in "File(s) to modify"
+3. Apply ONLY the change described — no refactoring, no "while I'm here" improvements
+4. Do NOT modify files outside your owned directories
+5. Do NOT modify the fix ticket itself (it is Orchestrator-owned)
+6. Do NOT modify `docs/fixes/FIX-LOG.md` (it is Orchestrator-owned)
+7. After applying the fix, confirm to Adrián what you changed
+8. The Orchestrator will run verification separately

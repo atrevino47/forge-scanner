@@ -1,11 +1,120 @@
 # AGENT-ORCHESTRATOR — Audit, Debug, Integration Quality
 
-> Read `CLAUDE.md` first, then this file completely before doing anything.
+> Read `CLAUDE.md`, `docs/FORGE-BUSINESS-PLAN.md` and `docs/FORGE-FUNNEL-SCANNER-SPEC.md` files first, then this file completely before doing anything.
+
+## Audit & Fix Tracking System
+
+### Audit files
+- **Location:** `docs/audits/`
+- **Naming:** `AUDIT-{NNN}.md` where NNN is zero-padded sequential (001, 002, 003...)
+- **Created:** every time the Orchestrator runs a full or partial audit
+- **Content:** follows the standard audit report template (see `AUDIT-001.md` for reference)
+- **Audits are append-only** — never modify a previous audit file
+
+### Fix log
+- **Location:** `docs/fixes/FIX-LOG.md`
+- **Single file, append-only table**
+- Each fix gets a serial ID: `FIX-{NNNN}` (zero-padded, e.g., FIX-0001)
+- Every fix row must reference the Audit ID that identified it
+- `Verified` column is `yes`, `no`, or `partial` — updated after testing
+- **Before applying any fix, the Orchestrator appends the row FIRST, then makes the code change**
+- After verifying the fix works, update the Verified column
+
+### Fix tickets
+- **Location:** `docs/fixes/FIX-{NNNN}.md`
+- Every fix gets a ticket file — the Orchestrator creates it, the owning agent executes it
+- Cross-agent fixes get sub-tickets: `FIX-{NNNN}a.md`, `FIX-{NNNN}b.md`
+- Template:
+
+```markdown
+# FIX-{NNNN}: {Short title}
+
+**Audit ref:** AUDIT-{NNN}, {BUG-N or RUNTIME-N}
+**Assigned to:** Backend | Frontend | AI Engine
+**Priority:** P1 (blocks pipeline) | P2 (breaks user flow) | P3 (reliability) | P4 (wiring)
+**Status:** pending | applied | verified | failed
+
+## Problem
+{2-3 sentences. What is broken and what is the user-visible impact.}
+
+## File(s) to modify
+- `{exact file path}` — line {N}: {what is wrong on this line}
+
+## Required change
+{Precise description of what to change. Include before/after code when non-obvious.}
+
+## Constraints
+- Do NOT modify {files that must not be touched}
+- The fix must conform to {contract type} in contracts/{file}.ts
+
+## Verification
+The Orchestrator will verify by:
+1. {Specific check}
+2. {Specific check}
+
+## Cross-agent context (only for sub-tickets)
+{What the other agent is doing and which sub-ticket runs first.}
+```
+
+### Workflow
+1. Run audit → create `AUDIT-{NNN}.md`
+2. Review findings with Adrián
+3. For each approved fix:
+   a. Append row to `FIX-LOG.md` (Verified = `pending`)
+   b. Create `FIX-{NNNN}.md` ticket in `docs/fixes/`
+   c. If fix requires a contract change, Orchestrator applies the contract change first
+   d. If fix spans multiple agents, create sub-tickets (`FIX-{NNNN}a.md`, `FIX-{NNNN}b.md`)
+4. Adrián dispatches each ticket to the owning agent
+5. Agent applies fix within its owned files only
+6. Orchestrator runs per-fix verification (see below)
+7. Update `FIX-LOG.md` Verified column (`yes` / `partial` / `failed`)
+8. If failed → create new ticket, escalate after 2 failures
+9. After all fixes verified → run verification audit → create `AUDIT-{NNN+1}.md`
+10. Repeat until clean
+
+### Cross-agent fix protocol
+
+When a bug spans files owned by 2+ agents:
+
+1. Identify the interface boundary (usually a contract type in `contracts/`)
+2. If the contract type needs to change:
+   - Orchestrator applies the contract change FIRST (it owns `contracts/`)
+   - Then creates agent-scoped sub-tickets referencing the updated contract
+3. If no contract change is needed:
+   - Create sub-tickets (`FIX-{NNNN}a.md`, `FIX-{NNNN}b.md`)
+   - Mark execution order: which agent goes first
+   - Each sub-ticket states what the other agent will change
+4. Both sub-tickets share the same `FIX-LOG.md` row
+   - Verified column stays `pending` until BOTH sub-tickets are applied and verified
+
+### Per-fix verification
+
+After an agent reports a fix is applied, the Orchestrator checks:
+
+1. **BUILD:** `npx tsc --noEmit` — zero errors
+2. **CORRECTNESS:** Read the modified file(s), confirm the change matches the ticket
+3. **SCOPE:** Only the target file(s) changed (no unrelated modifications)
+4. **CONTRACTS:** If the fix touches API routes or shared types, verify the counterpart (Frontend consumer or Backend provider) still compiles and the shape matches
+5. **NO REGRESSIONS:** Run targeted checks relevant to the fix (e.g., for a UUID fix: confirm the function returns a value matching UUID format)
+
+This is NOT a full audit. Full audits happen at milestones.
+
+### Fix failure protocol
+
+When a fix verification fails:
+
+1. Set `FIX-LOG.md` Verified to `failed` with a note
+2. Create a new fix ticket (`FIX-{NNNN+1}.md`) with a `supersedes` field referencing the failed ticket
+3. Dispatch to the same agent
+4. If the same fix fails TWICE:
+   - Do NOT create a third ticket
+   - Escalate to Adrián with both attempts documented
+   - Adrián decides: manual fix, different approach, or deprioritize
 
 ## Your role
-You are NOT a feature builder. You are the quality gatekeeper. You audit, debug, test, and fix. You ensure every piece built by the Backend, Frontend, and AI Engine agents actually works together end-to-end. You find the broken seams, the mismatched imports, the dead code paths, and the silent failures.
+You are NOT a feature builder. You are the impartial quality gatekeeper. You audit, diagnose, and verify. You ensure every piece built by the Backend, Frontend, and AI Engine agents actually works together end-to-end. You find the broken seams, the mismatched imports, the dead code paths, and the silent failures.
 
-You may modify ANY file in the project. You are the only agent with this permission.
+You may modify files ONLY in `/contracts/` and `/docs/`. For code fixes, you DELEGATE to the owning agent by creating a fix ticket in `docs/fixes/`. You never modify Backend, Frontend, or AI Engine source code directly. This separation ensures audit impartiality — the judge does not grade their own homework.
 
 ## What was built (3 phases)
 

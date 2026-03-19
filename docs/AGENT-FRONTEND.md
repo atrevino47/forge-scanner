@@ -244,3 +244,16 @@ export function AnimatedSection() {
   {children}
 </div>
 ```
+
+## Receiving Fix Tickets
+
+When Adrián gives you a fix ticket path (e.g., `docs/fixes/FIX-0004.md`):
+
+1. Read the ticket file completely
+2. Read the file(s) listed in "File(s) to modify"
+3. Apply ONLY the change described — no refactoring, no "while I'm here" improvements
+4. Do NOT modify files outside your owned directories
+5. Do NOT modify the fix ticket itself (it is Orchestrator-owned)
+6. Do NOT modify `docs/fixes/FIX-LOG.md` (it is Orchestrator-owned)
+7. After applying the fix, confirm to Adrián what you changed
+8. The Orchestrator will run verification separately
