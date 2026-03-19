@@ -175,23 +175,22 @@ export async function capturePageWithMetadata(
       );
     }
 
-    // Force all elements visible — override animation initial states
-    // (opacity: 0, transform, clip-path, visibility hidden, etc.)
+    // Wait for JS-driven content (carousels, lazy-loaded sections) to initialize
+    await page.waitForTimeout(2000);
+
+    // Force hidden animated elements visible — minimal override
+    // ONLY opacity and visibility. Do NOT override transform, animation,
+    // transition, or clip-path — those break carousels and positioned elements.
     try {
       await page.addStyleTag({
         content: `
           *, *::before, *::after {
             opacity: 1 !important;
             visibility: visible !important;
-            clip-path: none !important;
-            -webkit-clip-path: none !important;
-            transition: none !important;
-            animation: none !important;
           }
         `,
       });
-      // Brief wait for reflow after style injection
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(300);
     } catch (styleError: unknown) {
       const styleMessage =
         styleError instanceof Error ? styleError.message : String(styleError);
