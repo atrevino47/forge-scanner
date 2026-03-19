@@ -24,6 +24,6 @@ The owning agent (Backend, Frontend, AI Engine) applies the fix. The Orchestrato
 | FIX-0010 | 2026-03-19 | AUDIT-002 E2E test | Backend | [FIX-0010](FIX-0010.md) | `src/lib/screenshots/client.ts` | Force all elements visible via CSS injection before capture | partial |
 | FIX-0011 | 2026-03-19 | AUDIT-002 E2E test | Backend | [FIX-0011](FIX-0011.md) | `src/lib/screenshots/client.ts` | Remove transform:none from CSS injection (breaks carousels) | partial |
 | FIX-0012 | 2026-03-19 | AUDIT-002 E2E test | Backend | [FIX-0012](FIX-0012.md) | `src/lib/screenshots/client.ts` | Simplify CSS injection to only opacity+visibility, add 2s init wait | partial — carousels still incomplete |
-| FIX-0013 | 2026-03-19 | AUDIT-001 RUNTIME-1 | Backend | [FIX-0013](FIX-0013.md) | `src/app/api/scan/start/route.ts` | Use after() for pipeline so it survives on Vercel | pending |
-| FIX-0014 | 2026-03-19 | AUDIT-001 MISSING-5 | Backend | [FIX-0014](FIX-0014.md) | `src/middleware.ts` (new) | Build middleware for Supabase auth session refresh | pending |
-| FIX-0015 | 2026-03-19 | AUDIT-001 MISMATCH-2 | Backend | [FIX-0015](FIX-0015.md) | `src/lib/db/mappers.ts` (new) + 4 routes | Extract shared DB-to-contract mappers | pending |
+| FIX-0013 | 2026-03-19 | AUDIT-001 RUNTIME-1 | Backend | [FIX-0013](FIX-0013.md) | `src/app/api/scan/start/route.ts` | Use after() for pipeline so it survives on Vercel | yes |
+| FIX-0014 | 2026-03-19 | AUDIT-001 MISSING-5 | Backend | [FIX-0014](FIX-0014.md) | `src/middleware.ts` (new) | Build middleware for Supabase auth session refresh | yes |
+| FIX-0015 | 2026-03-19 | AUDIT-001 MISMATCH-2 | Backend | [FIX-0015](FIX-0015.md) | `src/lib/db/mappers.ts` (new) + 4 routes | Extract shared DB-to-contract mappers | yes |

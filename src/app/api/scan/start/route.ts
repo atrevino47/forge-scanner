@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import type { StartScanResponse, ApiError } from '@/../contracts/api';
 import { createServiceClient } from '@/lib/db/client';
@@ -144,18 +144,20 @@ export async function POST(
       );
     }
 
-    // (g) Dispatch the screenshot pipeline as a background job
-    // Fire and forget — pipeline updates DB as it goes, SSE picks up changes
-    runScreenshotPipeline({
-      scanId: scan.id,
-      leadId: lead.id,
-      websiteUrl: normalizedUrl,
-    }).catch((err: unknown) => {
-      console.error(
-        `[scan/start] Pipeline failed for scan ${scan.id}:`,
-        err
-      );
-    });
+    // (g) Dispatch the screenshot pipeline — runs after response is sent
+    // Uses Next.js after() to keep the serverless function alive on Vercel
+    after(
+      runScreenshotPipeline({
+        scanId: scan.id,
+        leadId: lead.id,
+        websiteUrl: normalizedUrl,
+      }).catch((err: unknown) => {
+        console.error(
+          `[scan/start] Pipeline failed for scan ${scan.id}:`,
+          err
+        );
+      })
+    );
 
     // (h) Return 201 with scan info
     console.log(
