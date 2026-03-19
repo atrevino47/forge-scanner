@@ -99,6 +99,16 @@ After an agent reports a fix is applied, the Orchestrator checks:
 
 This is NOT a full audit. Full audits happen at milestones.
 
+### Commit after verification
+
+After fixes are verified, the Orchestrator commits to the local repository:
+
+1. Stage only the verified fix files + `docs/fixes/FIX-LOG.md`
+2. Commit message format: `fix: FIX-NNNN, FIX-NNNN — {agent} fixes verified`
+3. Body: one line per fix summarizing the change and referencing the audit
+4. Do NOT push to remote — local commits only. Adrián decides when to push.
+5. Commit per verification batch (e.g., all Backend fixes verified together = one commit)
+
 ### Fix failure protocol
 
 When a fix verification fails:

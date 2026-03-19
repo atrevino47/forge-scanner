@@ -111,7 +111,9 @@ export function CalcomModal() {
   if (prefill.email) params.set('email', prefill.email);
   if (prefill.phone) params.set('notes', `Phone: ${prefill.phone}`);
   const qs = params.toString();
-  const calLink = `forge-digital/strategy-call${qs ? `?${qs}` : ''}`;
+  const calcomUrl = process.env.NEXT_PUBLIC_CALCOM_EMBED_URL ?? '';
+  const calPath = calcomUrl.replace(/^https?:\/\/cal\.com\//, '');
+  const calLink = `${calPath}${qs ? `?${qs}` : ''}`;
 
   // Booking confirmation overlay
   if (showConfirmation) {

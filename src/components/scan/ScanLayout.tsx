@@ -466,7 +466,7 @@ export function ScanLayout({ scanId }: { scanId: string }) {
         )}
 
         {/* Capture prompt — slides in from bottom */}
-        {state.showCapturePrompt && (
+        {state.showCapturePrompt && state.leadId && (
           <CapturePrompt
             scanId={scanId}
             leadId={state.leadId}
