@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r01 Dashboard Layout</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r01: Dashboard Layout
+   Fixed left sidebar with stage nav + main content area
+   One viewport, no page scrolling — content scrolls within panels */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+  --r: 12px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── SHELL: top bar + sidebar + main ── */
+.shell {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  grid-template-rows: 56px 1fr;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  grid-column: 1 / -1;
+  background: var(--surface);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  z-index: 10;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.125rem;
+  color: var(--text);
+  letter-spacing: 0.04em;
+}
+.logo b { color: var(--accent); font-weight: 400; }
+
+.topbar-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: var(--container);
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+}
+
+.topbar-score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-score-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--critical);
+}
+
+.topbar-score-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.topbar-cta {
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.topbar-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(212, 165, 55, 0.3);
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--glass-border);
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 8px;
+}
+
+.sidebar-header h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.sidebar-header p {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.stage-nav {
+  list-style: none;
+  padding: 8px 12px;
+  flex: 1;
+}
+
+.stage-item {
+  display: block;
+  padding: 14px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+  margin-bottom: 4px;
+  text-decoration: none;
+  color: inherit;
+}
+.stage-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--glass-border);
+}
+.stage-item.active {
+  background: var(--container);
+  border-color: rgba(212, 165, 55, 0.15);
+}
+
+.stage-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.stage-item-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.stage-item-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.stage-item-bar {
+  height: 4px;
+  background: var(--card);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.stage-item-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.severity-chip {
+  display: inline-block;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-top: 8px;
+}
+
+.sev-critical { background: rgba(239, 68, 68, 0.1); color: var(--critical); }
+.sev-warning { background: rgba(234, 179, 8, 0.1); color: var(--warning); }
+
+/* Sidebar CTA */
+.sidebar-cta {
+  margin: auto 16px 0;
+  padding: 16px;
+  background: rgba(212, 165, 55, 0.06);
+  border: 1px solid rgba(212, 165, 55, 0.12);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.sidebar-cta p {
+  font-size: 0.75rem;
+  color: var(--secondary);
+  margin-bottom: 10px;
+}
+
+.sidebar-cta button {
+  width: 100%;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.sidebar-cta button:hover {
+  box-shadow: 0 4px 16px rgba(212, 165, 55, 0.25);
+}
+
+/* ── MAIN CONTENT ── */
+.main {
+  overflow-y: auto;
+  padding: 40px 48px;
+  background: var(--base);
+  position: relative;
+}
+
+/* Dot grid on main */
+.main::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.3) 1px, transparent 0);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+/* ── Stage Detail Panel ── */
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.detail-header h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 3.5vw + 0.5rem, 3rem);
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+}
+
+.detail-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.detail-score-big {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3.5rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.chip-critical { background: rgba(239, 68, 68, 0.08); color: var(--critical); }
+.chip-warning { background: rgba(234, 179, 8, 0.08); color: var(--warning); }
+.chip-positive { background: rgba(34, 197, 94, 0.08); color: var(--positive); }
+
+/* ── Content grid: screenshot + findings ── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 32px;
+}
+
+/* Device mockup */
+.device {
+  background: var(--container);
+  border-radius: var(--r);
+  padding: 10px 10px 0;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
+}
+
+.device-bar {
+  height: 28px;
+  background: var(--card);
+  border-radius: 8px 8px 0 0;
+  margin: -10px -10px 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 6px;
+}
+
+.device-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.device-screen {
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg, #1a1030, #2d1050, #1a1030);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  position: relative;
+}
+
+/* Annotation dots */
+.anno-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  position: absolute;
+  z-index: 2;
+}
+.anno-dot.crit { background: var(--critical); color: white; }
+.anno-dot.warn { background: var(--warning); color: var(--base); }
+.anno-dot.pos { background: var(--positive); color: white; }
+
+@keyframes ping {
+  0% { transform: scale(1); opacity: 1; }
+  75%, 100% { transform: scale(1.8); opacity: 0; }
+}
+.anno-dot.ring::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid;
+  opacity: 0;
+  animation: ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.anno-dot.crit.ring::after { border-color: var(--critical); }
+.anno-dot.warn.ring::after { border-color: var(--warning); }
+
+/* Findings list */
+.findings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.finding {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  transition: all 0.2s;
+}
+.finding:hover {
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateX(4px);
+  border-left-color: var(--glass-border);
+}
+
+.finding-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.finding-num.crit { background: var(--critical); color: white; }
+.finding-num.warn { background: var(--warning); color: var(--base); }
+.finding-num.pos { background: var(--positive); color: white; }
+
+.finding-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.finding-desc {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: #A3B1C6;
+  margin-top: 4px;
+}
+
+/* Summary card at bottom of findings */
+.summary-card {
+  background: var(--container);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r);
+  padding: 20px 24px;
+  margin-top: 16px;
+}
+
+.summary-card p {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+}
+
+.summary-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Empty state (for stages with no screenshot) */
+.empty-state {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 56px 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  grid-column: 1 / -1;
+}
+.empty-state::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.empty-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+.empty-icon svg {
+  width: 22px;
+  height: 22px;
+  color: var(--critical);
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.empty-state p {
+  font-size: 0.9375rem;
+  color: var(--secondary);
+  max-width: 460px;
+  margin: 16px auto 0;
+}
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 32px;
+  grid-column: 1 / -1;
+  max-width: 640px;
+}
+
+.stat-box {
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 20px;
+  text-align: center;
+  border: 1px solid transparent;
+  transition: all 0.25s;
+}
+.stat-box:hover {
+  border-color: var(--glass-border);
+  transform: translateY(-2px);
+}
+
+.stat-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+/* Revenue callout */
+.revenue-bar {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.revenue-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .shell {
+    grid-template-columns: 220px 1fr;
+  }
+  .main {
+    padding: 32px;
+  }
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 56px auto 1fr;
+  }
+  .sidebar {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--glass-border);
+    padding: 0;
+  }
+  .sidebar-header { display: none; }
+  .sidebar-cta { display: none; }
+  .stage-nav {
+    display: flex;
+    gap: 4px;
+    padding: 8px 12px;
+    white-space: nowrap;
+  }
+  .stage-item {
+    padding: 10px 14px;
+    min-width: fit-content;
+  }
+  .stage-item-bar { display: none; }
+  .severity-chip { display: none; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .stats-row { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo">FORGE<b>.</b></div>
+      <span class="topbar-url">blotato.com</span>
+    </div>
+    <div class="topbar-score">
+      <div>
+        <span class="topbar-score-num">19</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.875rem;color:var(--muted)">/100</span>
+      </div>
+      <div class="topbar-score-label">Overall<br>Score</div>
+    </div>
+    <button class="topbar-cta">Book Strategy Call &rarr;</button>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="fd">Funnel Audit</h2>
+      <p>5 stages analyzed</p>
+    </div>
+
+    <ul class="stage-nav">
+      <!-- Traffic -->
+      <li>
+        <a href="#traffic" class="stage-item" onclick="showStage('traffic')" id="nav-traffic">
+          <div class="stage-item-top">
+            <span class="stage-item-name">Traffic Sources</span>
+            <span class="stage-item-score" style="color:var(--critical)">0</span>
+          </div>
+          <div class="stage-item-bar">
+            <div class="stage-item-fill" style="width:2%;background:var(--critical);min-width:2px"></div>
+          </div>
+          <span class="severity-chip sev-critical">Critical</span>
+        </a>
+      </li>
+      <!-- Landing -->
+      <li>
+        <a href="#landing" class="stage-item active" onclick="showStage('landing')" id="nav-landing">
+          <div class="stage-item-top">
+            <span class="stage-item-name">Landing Experience</span>
+            <span class="stage-item-score" style="color:var(--warning)">35</span>
+          </div>
+          <div class="stage-item-bar">
+            <div class="stage-item-fill" style="width:35%;background:var(--warning)"></div>
+          </div>
+          <span class="severity-chip sev-warning">Weak</span>
+        </a>
+      </li>
+      <!-- Capture -->
+      <li>
+        <a href="#capture" class="stage-item" onclick="showStage('capture')" id="nav-capture">
+          <div class="stage-item-top">
+            <span class="stage-item-name">Lead Capture</span>
+            <span class="stage-item-score" style="color:var(--warning)">45</span>
+          </div>
+          <div class="stage-item-bar">
+            <div class="stage-item-fill" style="width:45%;background:var(--warning)"></div>
+          </div>
+          <span class="severity-chip sev-warning">Weak</span>
+        </a>
+      </li>
+      <!-- Offer -->
+      <li>
+        <a href="#offer" class="stage-item" onclick="showStage('offer')" id="nav-offer">
+          <div class="stage-item-top">
+            <span class="stage-item-name">Offer Clarity</span>
+            <span class="stage-item-score" style="color:var(--critical)">15</span>
+          </div>
+          <div class="stage-item-bar">
+            <div class="stage-item-fill" style="width:15%;background:var(--critical)"></div>
+          </div>
+          <span class="severity-chip sev-critical">Critical</span>
+        </a>
+      </li>
+      <!-- Follow-up -->
+      <li>
+        <a href="#followup" class="stage-item" onclick="showStage('followup')" id="nav-followup">
+          <div class="stage-item-top">
+            <span class="stage-item-name">Follow-Up</span>
+            <span class="stage-item-score" style="color:var(--critical)">0</span>
+          </div>
+          <div class="stage-item-bar">
+            <div class="stage-item-fill" style="width:2%;background:var(--critical);min-width:2px"></div>
+          </div>
+          <span class="severity-chip sev-critical">Critical</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-cta">
+      <p>3 of 5 stages critical.<br>60-80% revenue leak.</p>
+      <button>Get Fix Plan &rarr;</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- ── TRAFFIC (empty state) ── -->
+    <div id="stage-traffic" class="stage-panel" style="display:none">
+      <div class="detail-header">
+        <div>
+          <span style="font-size:0.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted)">
+            <span class="fm" style="color:var(--secondary);margin-right:4px">01</span> Stage 1 of 5
+          </span>
+          <h1 class="fd" style="margin-top:8px">Traffic Sources</h1>
+          <div class="detail-header-meta">
+            <span class="chip chip-critical fm">0 / 100</span>
+            <span class="chip chip-critical">Critical</span>
+          </div>
+        </div>
+        <div class="detail-score-big fm" style="color:var(--critical)">0</div>
+      </div>
+      <div class="detail-grid">
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h3>No Traffic Sources Detected</h3>
+          <p>No social media profiles found. 100% of your traffic relies on direct search or word-of-mouth.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LANDING (with screenshot + findings) ── -->
+    <div id="stage-landing" class="stage-panel">
+      <div class="detail-header">
+        <div>
+          <span style="font-size:0.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted)">
+            <span class="fm" style="color:var(--secondary);margin-right:4px">02</span> Stage 2 of 5
+          </span>
+          <h1 class="fd" style="margin-top:8px">Landing Experience</h1>
+          <div class="detail-header-meta">
+            <span class="chip chip-warning fm">35 / 100</span>
+            <span class="chip chip-warning">Weak</span>
+          </div>
+        </div>
+        <div class="detail-score-big fm" style="color:var(--warning)">35</div>
+      </div>
+
+      <div class="detail-grid">
+        <!-- Screenshot -->
+        <div class="device">
+          <div class="device-bar">
+            <div class="device-dot" style="background:#EF4444"></div>
+            <div class="device-dot" style="background:#EAB308"></div>
+            <div class="device-dot" style="background:#22C55E"></div>
+            <span class="fm" style="margin-left:8px;font-size:10px;color:var(--muted)">blotato.com</span>
+          </div>
+          <div class="device-screen">
+            <div style="font-size:10px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.1);padding:3px 10px;border-radius:999px;margin-bottom:12px">10,387+ Business Owners</div>
+            <div style="font-size:22px;color:white;font-weight:700;text-align:center;line-height:1.2">Make <span style="color:#FF6B9D">1 week</span> of content<br>in <span style="color:#FF6B9D">1 minute</span></div>
+            <div style="background:#FF6B9D;color:white;padding:6px 18px;border-radius:8px;margin-top:12px;font-size:11px;font-weight:600">Start FREE Week</div>
+            <div class="anno-dot crit ring" style="top:18%;left:52%">1</div>
+            <div class="anno-dot warn ring" style="top:44%;left:46%">2</div>
+            <div class="anno-dot pos" style="top:70%;left:44%">3</div>
+          </div>
+        </div>
+
+        <!-- Findings -->
+        <div class="findings-panel">
+          <div class="finding">
+            <div class="finding-num crit">1</div>
+            <div>
+              <div class="finding-title">Generic Headline</div>
+              <p class="finding-desc">Visitors can't tell what Blotato does in 5 seconds. No product category mentioned.</p>
+            </div>
+          </div>
+          <div class="finding">
+            <div class="finding-num warn">2</div>
+            <div>
+              <div class="finding-title">Dual CTAs</div>
+              <p class="finding-desc">"Login" and "Start FREE Week" compete for attention.</p>
+            </div>
+          </div>
+          <div class="finding">
+            <div class="finding-num warn">3</div>
+            <div>
+              <div class="finding-title">No Trust Signals</div>
+              <p class="finding-desc">No logos or testimonials alongside social proof.</p>
+            </div>
+          </div>
+          <div class="finding">
+            <div class="finding-num pos">4</div>
+            <div>
+              <div class="finding-title">Strong Trial CTA</div>
+              <p class="finding-desc">"Start FREE Week" creates urgency and lowers friction.</p>
+            </div>
+          </div>
+
+          <div class="summary-card">
+            <p>Homepage fails to communicate what Blotato does in 5 seconds. Visitors must guess the product category.</p>
+            <div class="summary-card-footer">
+              <span class="chip chip-warning fm">35/100</span>
+              <span style="font-size:0.8125rem;color:#A3B1C6">4 findings</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="revenue-bar">
+        <div class="revenue-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--critical)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div>
+          <div style="font-size:0.8125rem;font-weight:600;color:var(--critical)">Revenue Leak</div>
+          <div style="font-size:0.75rem;color:var(--secondary);margin-top:2px">Weak landing experience means most visitors bounce before understanding the offer.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CAPTURE ── -->
+    <div id="stage-capture" class="stage-panel" style="display:none">
+      <div class="detail-header">
+        <div>
+          <span style="font-size:0.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted)">
+            <span class="fm" style="color:var(--secondary);margin-right:4px">03</span> Stage 3 of 5
+          </span>
+          <h1 class="fd" style="margin-top:8px">Lead Capture</h1>
+          <div class="detail-header-meta">
+            <span class="chip chip-warning fm">45 / 100</span>
+            <span class="chip chip-warning">Weak</span>
+          </div>
+        </div>
+        <div class="detail-score-big fm" style="color:var(--warning)">45</div>
+      </div>
+      <div class="detail-grid">
+        <div class="findings-panel" style="grid-column:1/-1;max-width:640px">
+          <div class="finding">
+            <div class="finding-num crit">1</div>
+            <div>
+              <div class="finding-title">No Email Above Fold</div>
+              <p class="finding-desc">Email field would capture leads faster than requiring a full signup flow.</p>
+            </div>
+          </div>
+          <div class="finding">
+            <div class="finding-num warn">2</div>
+            <div>
+              <div class="finding-title">No Lead Magnet</div>
+              <p class="finding-desc">No resource to exchange for contact info.</p>
+            </div>
+          </div>
+          <div class="finding">
+            <div class="finding-num pos">3</div>
+            <div>
+              <div class="finding-title">Free Trial Entry</div>
+              <p class="finding-desc">Free week reduces friction.</p>
+            </div>
+          </div>
+          <div class="summary-card">
+            <p>Lead capture relies on free trial only. No email-first approach to build a nurture list.</p>
+            <div class="summary-card-footer">
+              <span class="chip chip-warning fm">45/100</span>
+              <span style="font-size:0.8125rem;color:#A3B1C6">3 findings</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OFFER (empty-ish state) ── -->
+    <div id="stage-offer" class="stage-panel" style="display:none">
+      <div class="detail-header">
+        <div>
+          <span style="font-size:0.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted)">
+            <span class="fm" style="color:var(--secondary);margin-right:4px">04</span> Stage 4 of 5
+          </span>
+          <h1 class="fd" style="margin-top:8px">Offer Clarity</h1>
+          <div class="detail-header-meta">
+            <span class="chip chip-critical fm">15 / 100</span>
+            <span class="chip chip-critical">Critical</span>
+          </div>
+        </div>
+        <div class="detail-score-big fm" style="color:var(--critical)">15</div>
+      </div>
+      <div class="detail-grid">
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h3>Offer Is Unclear</h3>
+          <p>No pricing page, no feature comparison, no FAQ. Visitors have to guess what they're signing up for.</p>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-num" style="color:var(--critical)">0</div>
+            <div class="stat-label">Pricing visible</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" style="color:var(--critical)">0</div>
+            <div class="stat-label">Feature comparison</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-num" style="color:var(--warning)">1</div>
+            <div class="stat-label">Free trial mention</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── FOLLOW-UP (empty state) ── -->
+    <div id="stage-followup" class="stage-panel" style="display:none">
+      <div class="detail-header">
+        <div>
+          <span style="font-size:0.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted)">
+            <span class="fm" style="color:var(--secondary);margin-right:4px">05</span> Stage 5 of 5
+          </span>
+          <h1 class="fd" style="margin-top:8px">Follow-Up Systems</h1>
+          <div class="detail-header-meta">
+            <span class="chip chip-critical fm">0 / 100</span>
+            <span class="chip chip-critical">Critical</span>
+          </div>
+        </div>
+        <div class="detail-score-big fm" style="color:var(--critical)">0</div>
+      </div>
+      <div class="detail-grid">
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+          <h3>No Follow-Up Detected</h3>
+          <p>No Facebook Pixel, no Google tag, no email sequences. Every leaving visitor is lost permanently.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function showStage(id) {
+  // Hide all panels
+  document.querySelectorAll('.stage-panel').forEach(p => p.style.display = 'none');
+  // Show selected
+  const panel = document.getElementById('stage-' + id);
+  if (panel) panel.style.display = 'block';
+  // Update nav
+  document.querySelectorAll('.stage-item').forEach(n => n.classList.remove('active'));
+  const nav = document.getElementById('nav-' + id);
+  if (nav) nav.classList.add('active');
+}
+</script>
+
+</body>
+</html>

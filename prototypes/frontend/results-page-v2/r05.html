@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r05 Visual Funnel</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r05: Visual Funnel
+   The page IS a funnel shape: wide at top, narrowing toward bottom.
+   Each tier narrows the content area literally.
+   Drop-off percentages between tiers. CTA at the narrow bottom. */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+  --r: 12px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── HEADER ── */
+.site-header {
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.logo { font-family: 'Instrument Serif', serif; font-size: 1.125rem; }
+.logo b { color: var(--accent); font-weight: 400; }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+/* ── HERO ── */
+.funnel-hero {
+  text-align: center;
+  padding: 80px 32px 48px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.funnel-hero h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2.5rem, 5vw + 1rem, 4rem);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.funnel-hero p {
+  font-size: 1.0625rem;
+  color: var(--secondary);
+  margin-top: 16px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.score-hero {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-top: 32px;
+}
+
+.score-hero-num {
+  font-family: 'Instrument Serif', serif;
+  font-size: 5rem;
+  line-height: 0.85;
+  color: var(--critical);
+}
+
+.score-hero-suf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+
+/* ── FUNNEL TIERS ── */
+/* Each tier gets progressively narrower */
+.funnel-tier {
+  position: relative;
+  padding: 48px 32px;
+}
+
+.funnel-tier-inner {
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Tier-specific widths — funnel shape */
+.tier-1 .funnel-tier-inner { max-width: 1000px; }
+.tier-2 .funnel-tier-inner { max-width: 840px; }
+.tier-3 .funnel-tier-inner { max-width: 680px; }
+.tier-4 .funnel-tier-inner { max-width: 520px; }
+.tier-5 .funnel-tier-inner { max-width: 400px; }
+
+/* Trapezoidal background shape using clip-path */
+.tier-1 { background: rgba(239, 68, 68, 0.03); clip-path: polygon(2% 0, 98% 0, 94% 100%, 6% 100%); }
+.tier-2 { background: rgba(234, 179, 8, 0.03); clip-path: polygon(6% 0, 94% 0, 10% 100%, 90% 100%); margin-top: -1px; }
+.tier-3 { background: rgba(234, 179, 8, 0.03); clip-path: polygon(10% 0, 90% 0, 15% 100%, 85% 100%); margin-top: -1px; }
+.tier-4 { background: rgba(239, 68, 68, 0.03); clip-path: polygon(15% 0, 85% 0, 22% 100%, 78% 100%); margin-top: -1px; }
+.tier-5 { background: rgba(239, 68, 68, 0.03); clip-path: polygon(22% 0, 78% 0, 30% 100%, 70% 100%); margin-top: -1px; }
+
+/* Tier header */
+.tier-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.tier-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.tier-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.tier-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.tier-score-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 500;
+  padding: 6px 16px;
+  border-radius: 10px;
+}
+
+.badge-crit { background: rgba(239, 68, 68, 0.12); color: var(--critical); }
+.badge-warn { background: rgba(234, 179, 8, 0.12); color: var(--warning); }
+
+/* Findings within a tier */
+.tier-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tier-finding {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  transition: all 0.2s;
+}
+.tier-finding:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-left-color: var(--glass-border);
+}
+
+.tier-finding-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.dot-c { background: var(--critical); color: white; }
+.dot-w { background: var(--warning); color: var(--base); }
+.dot-p { background: var(--positive); color: white; }
+
+.tier-finding h3 {
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.tier-finding p {
+  font-size: 0.8125rem;
+  color: var(--secondary);
+  margin-top: 2px;
+}
+
+/* Empty tier state */
+.tier-empty {
+  text-align: center;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.tier-empty h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.tier-empty p {
+  font-size: 0.8125rem;
+  color: var(--secondary);
+}
+
+/* ── DROP-OFF INDICATORS between tiers ── */
+.dropoff {
+  text-align: center;
+  padding: 16px 32px;
+  position: relative;
+}
+
+.dropoff-line {
+  width: 1px;
+  height: 24px;
+  background: var(--glass-border);
+  margin: 0 auto;
+}
+
+.dropoff-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  margin: 8px 0;
+}
+
+.dropoff-arrow {
+  color: var(--critical);
+  font-size: 0.875rem;
+}
+
+.dropoff-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--secondary);
+}
+
+.dropoff-pct {
+  color: var(--critical);
+  font-weight: 500;
+}
+
+/* ── CTA at narrow bottom ── */
+.funnel-cta {
+  text-align: center;
+  padding: 64px 32px 120px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.funnel-cta h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.75rem, 3vw + 0.5rem, 2.5rem);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.funnel-cta p {
+  font-size: 0.9375rem;
+  color: var(--secondary);
+  margin-top: 12px;
+}
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 18px 48px;
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 32px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(212, 165, 55, 0.3);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .tier-1, .tier-2, .tier-3, .tier-4, .tier-5 {
+    clip-path: none;
+  }
+  .tier-1 .funnel-tier-inner,
+  .tier-2 .funnel-tier-inner,
+  .tier-3 .funnel-tier-inner,
+  .tier-4 .funnel-tier-inner,
+  .tier-5 .funnel-tier-inner {
+    max-width: 100%;
+  }
+  .funnel-hero { padding: 48px 20px 32px; }
+  .funnel-tier { padding: 32px 20px; }
+  .score-hero-num { font-size: 3.5rem; }
+  .tier-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="logo">FORGE<b>.</b></div>
+  <div class="header-right">
+    <span class="header-url fm">blotato.com</span>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="funnel-hero">
+  <h1 class="fd">Your Conversion Funnel</h1>
+  <p>Watch where customers drop off at every stage from first visit to return.</p>
+  <div class="score-hero">
+    <span class="score-hero-num fd">19</span>
+    <span class="score-hero-suf">/100 overall</span>
+  </div>
+</section>
+
+<!-- TIER 1: TRAFFIC (widest) -->
+<div class="funnel-tier tier-1">
+  <div class="funnel-tier-inner">
+    <div class="tier-header">
+      <div class="tier-header-left">
+        <span class="tier-number fm">Stage 01</span>
+        <span class="tier-name fd">Traffic Sources</span>
+      </div>
+      <span class="tier-score-badge badge-crit fm">0 / 100</span>
+    </div>
+    <div class="tier-empty">
+      <h3>No Traffic Sources Detected</h3>
+      <p>No social media profiles found. 100% reliance on direct search or word-of-mouth.</p>
+    </div>
+  </div>
+</div>
+
+<!-- DROP-OFF -->
+<div class="dropoff">
+  <div class="dropoff-line"></div>
+  <div class="dropoff-badge">
+    <span class="dropoff-arrow">&darr;</span>
+    <span class="dropoff-text">Unknown traffic &rarr; <span class="dropoff-pct">100% untracked</span></span>
+  </div>
+  <div class="dropoff-line"></div>
+</div>
+
+<!-- TIER 2: LANDING -->
+<div class="funnel-tier tier-2">
+  <div class="funnel-tier-inner">
+    <div class="tier-header">
+      <div class="tier-header-left">
+        <span class="tier-number fm">Stage 02</span>
+        <span class="tier-name fd">Landing Experience</span>
+      </div>
+      <span class="tier-score-badge badge-warn fm">35 / 100</span>
+    </div>
+    <div class="tier-findings">
+      <div class="tier-finding">
+        <div class="tier-finding-dot dot-c">1</div>
+        <div><h3>Generic Headline</h3><p>Visitors can't tell what Blotato does in 5 seconds.</p></div>
+      </div>
+      <div class="tier-finding">
+        <div class="tier-finding-dot dot-w">2</div>
+        <div><h3>Dual CTAs</h3><p>"Login" and "Start FREE Week" compete for attention.</p></div>
+      </div>
+      <div class="tier-finding">
+        <div class="tier-finding-dot dot-w">3</div>
+        <div><h3>No Trust Signals</h3><p>No logos or testimonials alongside social proof.</p></div>
+      </div>
+      <div class="tier-finding">
+        <div class="tier-finding-dot dot-p">4</div>
+        <div><h3>Strong Trial CTA</h3><p>"Start FREE Week" creates urgency.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DROP-OFF -->
+<div class="dropoff">
+  <div class="dropoff-line"></div>
+  <div class="dropoff-badge">
+    <span class="dropoff-arrow">&darr;</span>
+    <span class="dropoff-text">~65% bounce due to unclear headline</span>
+  </div>
+  <div class="dropoff-line"></div>
+</div>
+
+<!-- TIER 3: CAPTURE -->
+<div class="funnel-tier tier-3">
+  <div class="funnel-tier-inner">
+    <div class="tier-header">
+      <div class="tier-header-left">
+        <span class="tier-number fm">Stage 03</span>
+        <span class="tier-name fd">Lead Capture</span>
+      </div>
+      <span class="tier-score-badge badge-warn fm">45 / 100</span>
+    </div>
+    <div class="tier-findings">
+      <div class="tier-finding">
+        <div class="tier-finding-dot dot-c">1</div>
+        <div><h3>No Email Above Fold</h3><p>Email field would capture leads faster.</p></div>
+      </div>
+      <div class="tier-finding">
+        <div class="tier-finding-dot dot-w">2</div>
+        <div><h3>No Lead Magnet</h3><p>No resource to exchange for contact info.</p></div>
+      </div>
+      <div class="tier-finding">
+        <div class="tier-finding-dot dot-p">3</div>
+        <div><h3>Free Trial Entry</h3><p>Free week reduces friction.</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DROP-OFF -->
+<div class="dropoff">
+  <div class="dropoff-line"></div>
+  <div class="dropoff-badge">
+    <span class="dropoff-arrow">&darr;</span>
+    <span class="dropoff-text">~55% lost without email capture</span>
+  </div>
+  <div class="dropoff-line"></div>
+</div>
+
+<!-- TIER 4: OFFER -->
+<div class="funnel-tier tier-4">
+  <div class="funnel-tier-inner">
+    <div class="tier-header">
+      <div class="tier-header-left">
+        <span class="tier-number fm">Stage 04</span>
+        <span class="tier-name fd">Offer Clarity</span>
+      </div>
+      <span class="tier-score-badge badge-crit fm">15 / 100</span>
+    </div>
+    <div class="tier-empty">
+      <h3>Offer Is Unclear</h3>
+      <p>No pricing, no feature comparison, no FAQ.</p>
+    </div>
+  </div>
+</div>
+
+<!-- DROP-OFF -->
+<div class="dropoff">
+  <div class="dropoff-line"></div>
+  <div class="dropoff-badge">
+    <span class="dropoff-arrow">&darr;</span>
+    <span class="dropoff-text">~85% abandon — can't understand the offer</span>
+  </div>
+  <div class="dropoff-line"></div>
+</div>
+
+<!-- TIER 5: FOLLOW-UP (narrowest) -->
+<div class="funnel-tier tier-5">
+  <div class="funnel-tier-inner">
+    <div class="tier-header">
+      <div class="tier-header-left">
+        <span class="tier-number fm">Stage 05</span>
+        <span class="tier-name fd">Follow-Up</span>
+      </div>
+      <span class="tier-score-badge badge-crit fm">0 / 100</span>
+    </div>
+    <div class="tier-empty">
+      <h3>No Follow-Up</h3>
+      <p>No pixel, no tags, no email sequences. Every visitor lost.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<section class="funnel-cta">
+  <h2 class="fd">Fix Your Funnel</h2>
+  <p>60-80% of your revenue is leaking through these gaps. Get your prioritized fix plan.</p>
+  <button class="cta-btn">Get Your Fix Plan &rarr;</button>
+</section>
+
+</body>
+</html>

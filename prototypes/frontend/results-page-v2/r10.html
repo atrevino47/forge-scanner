@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r10 Score-Centric Radials</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r10: Score-Centric Radials
+   Multiple circular gauges dominate the layout.
+   Large central gauge + 5 smaller stage gauges.
+   Findings as horizontal scrolling strips below gauges. */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+  --r: 12px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 17, 32, 0.94);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+}
+
+.logo { font-family: 'Instrument Serif', serif; font-size: 1.125rem; }
+.logo b { color: var(--accent); font-weight: 400; }
+
+.topbar-r { display: flex; align-items: center; gap: 16px; }
+.topbar-url { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: var(--muted); }
+
+.cta-link {
+  font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--accent); text-decoration: none;
+  padding: 5px 14px; border-radius: 999px;
+  border: 1px solid rgba(212, 165, 55, 0.15); transition: all 0.2s;
+}
+.cta-link:hover { background: rgba(212, 165, 55, 0.08); }
+
+/* ── PAGE ── */
+.page { max-width: 1120px; margin: 0 auto; padding: 0 32px; }
+
+/* ── HERO: CENTRAL GAUGE ── */
+.gauge-hero {
+  text-align: center;
+  padding: 80px 0 40px;
+}
+
+.gauge-hero-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  margin-bottom: 32px;
+}
+
+/* SVG Gauge */
+.gauge-container {
+  position: relative;
+  display: inline-block;
+}
+
+.gauge-svg {
+  transform: rotate(-90deg);
+}
+
+.gauge-bg {
+  fill: none;
+  stroke: var(--card);
+  stroke-width: 6;
+}
+
+.gauge-fill {
+  fill: none;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.gauge-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.gauge-center-score {
+  font-family: 'Instrument Serif', serif;
+  font-size: 4rem;
+  line-height: 0.9;
+  color: var(--critical);
+}
+
+.gauge-center-suf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.gauge-center-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.gauge-hero h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.75rem, 3vw + 0.5rem, 2.5rem);
+  letter-spacing: -0.02em;
+  margin-top: 24px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Revenue badge */
+.revenue-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  border-radius: 999px;
+  padding: 8px 20px;
+  margin-top: 20px;
+  font-size: 0.8125rem;
+}
+
+.revenue-badge strong { color: var(--critical); }
+.revenue-badge span { color: var(--secondary); }
+
+/* ── STAGE GAUGES ROW ── */
+.stage-gauges {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 40px 0;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  flex-wrap: wrap;
+}
+
+.stage-gauge {
+  text-align: center;
+  cursor: pointer;
+  padding: 16px;
+  border-radius: 12px;
+  transition: background 0.2s;
+}
+
+.stage-gauge:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.stage-gauge.active {
+  background: var(--container);
+}
+
+.sg-container {
+  position: relative;
+  display: inline-block;
+}
+
+.sg-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.125rem;
+  font-weight: 500;
+}
+
+.sg-name {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.sg-severity {
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 4px;
+}
+
+/* ── FINDINGS DETAIL (shows below gauges for active stage) ── */
+.findings-detail {
+  padding: 48px 0 80px;
+}
+
+.fd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.fd-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.chip {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+.chip-c { background: rgba(239, 68, 68, 0.08); color: var(--critical); }
+.chip-w { background: rgba(234, 179, 8, 0.08); color: var(--warning); }
+
+/* Horizontal scrolling card strip */
+.findings-strip {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 16px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.findings-strip::-webkit-scrollbar {
+  height: 4px;
+}
+.findings-strip::-webkit-scrollbar-track {
+  background: var(--surface);
+  border-radius: 2px;
+}
+.findings-strip::-webkit-scrollbar-thumb {
+  background: var(--container);
+  border-radius: 2px;
+}
+
+.strip-card {
+  min-width: 280px;
+  max-width: 320px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 24px;
+  scroll-snap-align: start;
+  transition: all 0.3s;
+}
+
+.strip-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.strip-card-sev {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-bottom: 12px;
+}
+
+.strip-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.strip-card-desc {
+  font-size: 0.8125rem;
+  color: var(--secondary);
+  line-height: 1.5;
+}
+
+.strip-card-stage {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* Empty strip card */
+.strip-card-empty {
+  min-width: 280px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px dashed rgba(239, 68, 68, 0.12);
+  border-radius: 12px;
+  padding: 32px 24px;
+  text-align: center;
+}
+.strip-card-empty h3 { font-size: 0.9375rem; font-weight: 600; }
+.strip-card-empty p { font-size: 0.75rem; color: var(--secondary); margin-top: 6px; }
+
+/* ── CTA ── */
+.cta-section {
+  text-align: center;
+  padding: 64px 0 120px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.cta-section h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 3.5vw + 0.5rem, 3rem);
+  letter-spacing: -0.02em;
+}
+
+.cta-section p {
+  font-size: 0.9375rem;
+  color: var(--secondary);
+  margin-top: 12px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 18px 52px;
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 32px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(212, 165, 55, 0.3);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .stage-gauges { gap: 12px; }
+  .stage-gauge { padding: 8px; }
+  .gauge-hero { padding: 48px 0 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">FORGE<b>.</b></div>
+  <div class="topbar-r">
+    <span class="topbar-url fm">blotato.com</span>
+    <a href="#cta" class="cta-link">Book Strategy Call</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- HERO GAUGE -->
+  <section class="gauge-hero">
+    <div class="gauge-hero-label">Funnel Health Score</div>
+
+    <div class="gauge-container">
+      <!-- Large SVG radial gauge: 19/100 -->
+      <svg class="gauge-svg" width="240" height="240" viewBox="0 0 240 240">
+        <circle class="gauge-bg" cx="120" cy="120" r="100"/>
+        <!-- circumference = 2*pi*100 = 628.3; 19% = dashoffset = 628.3*(1-0.19) = 508.9 -->
+        <circle class="gauge-fill" cx="120" cy="120" r="100"
+          stroke="var(--critical)"
+          stroke-dasharray="628.3"
+          stroke-dashoffset="508.9"/>
+      </svg>
+      <div class="gauge-center">
+        <div class="gauge-center-score fd">19</div>
+        <div class="gauge-center-suf">/100</div>
+        <div class="gauge-center-label">Overall</div>
+      </div>
+    </div>
+
+    <h1 class="fd">Critical gaps at every stage of your funnel</h1>
+
+    <div class="revenue-badge">
+      <strong>60-80% Revenue Leak</strong>
+      <span>&mdash; 3 of 5 stages critical</span>
+    </div>
+  </section>
+
+  <!-- STAGE GAUGES -->
+  <div class="stage-gauges">
+
+    <!-- Traffic: 0/100 -->
+    <div class="stage-gauge" onclick="showFindings('traffic')">
+      <div class="sg-container">
+        <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
+          <circle class="gauge-bg" cx="44" cy="44" r="36"/>
+          <circle class="gauge-fill" cx="44" cy="44" r="36" stroke="var(--critical)"
+            stroke-dasharray="226.2" stroke-dashoffset="226.2"/>
+        </svg>
+        <div class="sg-center" style="color:var(--critical)">0</div>
+      </div>
+      <div class="sg-name">Traffic</div>
+      <div class="sg-severity" style="color:var(--critical)">Critical</div>
+    </div>
+
+    <!-- Landing: 35/100 -->
+    <div class="stage-gauge active" onclick="showFindings('landing')">
+      <div class="sg-container">
+        <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
+          <circle class="gauge-bg" cx="44" cy="44" r="36"/>
+          <circle class="gauge-fill" cx="44" cy="44" r="36" stroke="var(--warning)"
+            stroke-dasharray="226.2" stroke-dashoffset="147"/>
+        </svg>
+        <div class="sg-center" style="color:var(--warning)">35</div>
+      </div>
+      <div class="sg-name">Landing</div>
+      <div class="sg-severity" style="color:var(--warning)">Weak</div>
+    </div>
+
+    <!-- Capture: 45/100 -->
+    <div class="stage-gauge" onclick="showFindings('capture')">
+      <div class="sg-container">
+        <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
+          <circle class="gauge-bg" cx="44" cy="44" r="36"/>
+          <circle class="gauge-fill" cx="44" cy="44" r="36" stroke="var(--warning)"
+            stroke-dasharray="226.2" stroke-dashoffset="124.4"/>
+        </svg>
+        <div class="sg-center" style="color:var(--warning)">45</div>
+      </div>
+      <div class="sg-name">Capture</div>
+      <div class="sg-severity" style="color:var(--warning)">Weak</div>
+    </div>
+
+    <!-- Offer: 15/100 -->
+    <div class="stage-gauge" onclick="showFindings('offer')">
+      <div class="sg-container">
+        <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
+          <circle class="gauge-bg" cx="44" cy="44" r="36"/>
+          <circle class="gauge-fill" cx="44" cy="44" r="36" stroke="var(--critical)"
+            stroke-dasharray="226.2" stroke-dashoffset="192.3"/>
+        </svg>
+        <div class="sg-center" style="color:var(--critical)">15</div>
+      </div>
+      <div class="sg-name">Offer</div>
+      <div class="sg-severity" style="color:var(--critical)">Critical</div>
+    </div>
+
+    <!-- Follow-up: 0/100 -->
+    <div class="stage-gauge" onclick="showFindings('followup')">
+      <div class="sg-container">
+        <svg class="gauge-svg" width="88" height="88" viewBox="0 0 88 88">
+          <circle class="gauge-bg" cx="44" cy="44" r="36"/>
+          <circle class="gauge-fill" cx="44" cy="44" r="36" stroke="var(--critical)"
+            stroke-dasharray="226.2" stroke-dashoffset="226.2"/>
+        </svg>
+        <div class="sg-center" style="color:var(--critical)">0</div>
+      </div>
+      <div class="sg-name">Follow-up</div>
+      <div class="sg-severity" style="color:var(--critical)">Critical</div>
+    </div>
+
+  </div>
+
+  <!-- FINDINGS STRIP (default: Landing) -->
+  <div class="findings-detail" id="findings-area">
+
+    <div class="fd-header">
+      <span class="fd-title fd" id="fd-title">Landing Experience</span>
+      <span class="chip chip-w fm" id="fd-chip">35 / 100</span>
+    </div>
+
+    <div class="findings-strip">
+      <div class="strip-card">
+        <div class="strip-card-sev" style="background:var(--critical)"></div>
+        <div class="strip-card-title">Generic Headline</div>
+        <p class="strip-card-desc">Visitors can't tell what Blotato does in 5 seconds. No product category mentioned.</p>
+        <div class="strip-card-stage">Landing &middot; Stage 2</div>
+      </div>
+      <div class="strip-card">
+        <div class="strip-card-sev" style="background:var(--warning)"></div>
+        <div class="strip-card-title">Dual CTAs</div>
+        <p class="strip-card-desc">"Login" and "Start FREE Week" compete for attention, splitting conversion paths.</p>
+        <div class="strip-card-stage">Landing &middot; Stage 2</div>
+      </div>
+      <div class="strip-card">
+        <div class="strip-card-sev" style="background:var(--warning)"></div>
+        <div class="strip-card-title">No Trust Signals</div>
+        <p class="strip-card-desc">No logos or testimonials alongside social proof number.</p>
+        <div class="strip-card-stage">Landing &middot; Stage 2</div>
+      </div>
+      <div class="strip-card">
+        <div class="strip-card-sev" style="background:var(--positive)"></div>
+        <div class="strip-card-title">Strong Trial CTA</div>
+        <p class="strip-card-desc">"Start FREE Week" creates urgency and lowers friction effectively.</p>
+        <div class="strip-card-stage">Landing &middot; Stage 2</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <section class="cta-section" id="cta">
+    <h2 class="fd">Your Prioritized Fix Plan</h2>
+    <p>We've found the problems. Let us build the step-by-step fix plan.</p>
+    <button class="cta-btn">Get Your Fix Plan &rarr;</button>
+  </section>
+
+</div>
+
+<script>
+function showFindings(stage) {
+  document.querySelectorAll('.stage-gauge').forEach(g => g.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  // In a real app, this would swap the findings strip content.
+  // For prototype, just highlight the gauge.
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — Results v005</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   v005: Emotional impact + micro-interactions
+   - CSS animations for score reveal
+   - Revenue leak narrative framing
+   - Pulsing CTA urgency
+   - Hover depth on all interactive elements
+   Based on: v004
+   ═══════════════════════════════════════ */
+
+:root {
+  --base: #0B1120;
+  --surface-dim: #0d1322;
+  --surface: #0F172A;
+  --surface-low: #131B2E;
+  --surface-mid: #1A2340;
+  --surface-high: #1E293B;
+  --surface-highest: #243049;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --accent-gradient: linear-gradient(135deg, #F2C050, #D4A537);
+  --accent-glow: rgba(212, 165, 55, 0.15);
+  --text-primary: #E8E6E3;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --critical: #EF4444;
+  --critical-bg: rgba(239, 68, 68, 0.08);
+  --warning: #EAB308;
+  --warning-bg: rgba(234, 179, 8, 0.08);
+  --positive: #22C55E;
+  --positive-bg: rgba(34, 197, 94, 0.08);
+  --glass: rgba(26, 35, 64, 0.4);
+  --glass-border: rgba(78, 70, 54, 0.12);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--base);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body::after {
+  content: ''; position: fixed; inset: 0; opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999;
+}
+
+body::before {
+  content: ''; position: fixed; inset: 0; opacity: 0.035;
+  background-image: radial-gradient(circle at 1px 1px, rgba(148,163,184,0.3) 1px, transparent 0);
+  background-size: 32px 32px;
+  pointer-events: none; z-index: -1;
+}
+
+.skip-link { position: absolute; top: -100px; left: 16px; background: var(--accent); color: var(--base); padding: 8px 16px; border-radius: var(--radius-sm); font-weight: 600; z-index: 10000; transition: top 0.2s; text-decoration: none; }
+.skip-link:focus { top: 8px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ═══ ANIMATIONS ═══ */
+@keyframes scoreReveal {
+  from { opacity: 0; transform: scale(0.8) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes barFill {
+  from { width: 0; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes subtlePulse {
+  0%, 100% { box-shadow: 0 2px 8px rgba(212,165,55,0.15); }
+  50% { box-shadow: 0 4px 20px rgba(212,165,55,0.3); }
+}
+
+@keyframes dotPing {
+  0% { transform: scale(1); opacity: 1; }
+  75% { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+.animate-score { animation: scoreReveal 0.8s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-fade-up { animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-fade-up-1 { animation-delay: 0.1s; }
+.animate-fade-up-2 { animation-delay: 0.2s; }
+.animate-fade-up-3 { animation-delay: 0.3s; }
+.animate-fade-up-4 { animation-delay: 0.4s; }
+.animate-fade-up-5 { animation-delay: 0.5s; }
+
+/* ═══ TYPOGRAPHY ═══ */
+.font-display { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+.display-lg { font-size: clamp(2.5rem, 5vw + 1rem, 4rem); }
+.display-md { font-size: clamp(1.875rem, 3.5vw + 0.5rem, 2.75rem); }
+.display-sm { font-size: clamp(1.5rem, 2.5vw + 0.3rem, 2rem); }
+.title-lg { font-size: 1.25rem; font-weight: 600; }
+.title-md { font-size: 1.0625rem; font-weight: 600; }
+.label-md { font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); }
+.body-lg { font-size: 1.0625rem; line-height: 1.7; color: var(--text-secondary); }
+.body-md { font-size: 0.9375rem; line-height: 1.65; }
+.body-sm { font-size: 0.8125rem; line-height: 1.5; color: var(--text-secondary); }
+
+/* ═══ LAYOUT ═══ */
+.page { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+.narrow { max-width: 720px; margin-left: auto; margin-right: auto; }
+.section { padding: 80px 0; position: relative; }
+.section + .section { border-top: 1px solid rgba(78,70,54,0.06); }
+.section-hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 80px 0; }
+
+.split-grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; align-items: start; }
+@media (max-width: 768px) {
+  .split-grid { grid-template-columns: 1fr; gap: 32px; }
+  .section { padding: 48px 0; }
+  .section-hero { min-height: auto; }
+  .stage-nav { display: none; }
+  .hero-layout { flex-direction: column !important; gap: 32px !important; }
+  .stat-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ═══ TOP BANNER ═══ */
+.top-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  padding: 0 24px; height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(11,17,32,0.92);
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: blur(20px);
+}
+.logo { font-family: 'Instrument Serif', serif; font-size: 1.125rem; color: var(--text-primary); letter-spacing: 0.02em; }
+.logo span { color: var(--accent); }
+.banner-cta {
+  font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--accent); text-decoration: none; padding: 5px 14px; border-radius: 999px;
+  border: 1px solid rgba(212,165,55,0.2); transition: all 0.2s;
+}
+.banner-cta:hover { background: rgba(212,165,55,0.08); border-color: rgba(212,165,55,0.4); }
+
+/* ═══ STAGE NAV ═══ */
+.stage-nav { position: fixed; right: 28px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 20px; z-index: 100; }
+.stage-nav a { display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
+.stage-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface-highest); transition: all 0.3s ease; flex-shrink: 0; }
+.stage-label { font-size: 0.625rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); opacity: 0; transform: translateX(4px); transition: all 0.25s ease; white-space: nowrap; }
+.stage-nav a:hover .stage-label { opacity: 1; transform: translateX(0); }
+.stage-nav a.active .stage-dot { background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); width: 10px; height: 10px; }
+.stage-nav a[data-s="c"] .stage-dot { background: var(--critical); }
+.stage-nav a[data-s="w"] .stage-dot { background: var(--warning); }
+
+/* ═══ HERO ═══ */
+.hero-layout { display: flex; align-items: center; gap: 56px; }
+.hero-score-wrap { position: relative; flex-shrink: 0; }
+.hero-score-wrap::before {
+  content: ''; position: absolute; width: 250%; height: 250%; top: -75%; left: -75%;
+  background: radial-gradient(circle, rgba(239,68,68,0.06) 0%, transparent 55%);
+  pointer-events: none;
+}
+.hero-score {
+  font-size: clamp(6rem, 12vw, 9rem); font-weight: 400; line-height: 0.85;
+  color: var(--critical); position: relative;
+}
+.hero-suffix { font-family: 'JetBrains Mono', monospace; font-size: clamp(1rem, 2vw, 1.5rem); color: var(--text-muted); margin-left: 4px; }
+
+/* Revenue leak callout */
+.revenue-callout {
+  background: var(--critical-bg);
+  border: 1px solid rgba(239,68,68,0.12);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 12px;
+  max-width: 480px;
+}
+.revenue-callout-icon {
+  width: 36px; height: 36px; border-radius: 50%; background: rgba(239,68,68,0.12);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* ═══ STAGE BREAKDOWN ═══ */
+.stage-breakdown { display: flex; flex-direction: column; gap: 6px; }
+.stage-row {
+  display: grid; grid-template-columns: 100px 1fr 48px; gap: 16px; align-items: center;
+  padding: 10px 14px; border-radius: var(--radius-sm); transition: background 0.2s;
+  cursor: pointer; text-decoration: none; color: inherit;
+}
+.stage-row:hover { background: rgba(255,255,255,0.02); }
+.stage-row-name { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-secondary); }
+.stage-row-bar { height: 6px; background: var(--surface-mid); border-radius: 3px; overflow: hidden; }
+.stage-row-fill { height: 100%; border-radius: 3px; animation: barFill 1.2s cubic-bezier(0.22,1,0.36,1) both; }
+.stage-row:nth-child(1) .stage-row-fill { animation-delay: 0.2s; }
+.stage-row:nth-child(2) .stage-row-fill { animation-delay: 0.35s; }
+.stage-row:nth-child(3) .stage-row-fill { animation-delay: 0.5s; }
+.stage-row:nth-child(4) .stage-row-fill { animation-delay: 0.65s; }
+.stage-row:nth-child(5) .stage-row-fill { animation-delay: 0.8s; }
+.stage-row-score { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; text-align: right; }
+
+/* ═══ CARDS ═══ */
+.glass-card { background: var(--glass); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 28px; }
+.audit-card {
+  background: var(--surface-mid); border: 1px solid var(--glass-border); border-left: 2px solid var(--accent);
+  border-radius: var(--radius-md); padding: 20px 24px; transition: all 0.25s ease;
+}
+.audit-card:hover { background: var(--surface-high); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+.surface-card {
+  background: var(--surface-low); border-radius: var(--radius-md); padding: 24px;
+  border: 1px solid transparent; transition: all 0.2s ease;
+}
+.surface-card:hover { border-color: var(--glass-border); transform: translateY(-1px); }
+
+/* ═══ DEVICE ═══ */
+.device-laptop { background: var(--surface-mid); border-radius: var(--radius-md); padding: 12px 12px 0; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+.device-toolbar { height: 28px; background: var(--surface-high); border-radius: 8px 8px 0 0; margin: -12px -12px 12px; display: flex; align-items: center; padding: 0 12px; gap: 6px; }
+.device-toolbar-dot { width: 7px; height: 7px; border-radius: 50%; }
+.device-laptop .screen { border-radius: 4px 4px 0 0; overflow: hidden; aspect-ratio: 16/10; background: var(--surface-dim); position: relative; }
+
+/* ═══ ANNOTATION DOTS with pulse ═══ */
+.dot { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; position: relative; }
+.dot-critical { background: var(--critical); color: white; }
+.dot-warning { background: var(--warning); color: var(--base); }
+.dot-positive { background: var(--positive); color: white; }
+
+/* Pulse ring on screenshot dots */
+.dot-pulse::after {
+  content: ''; position: absolute; inset: -4px; border-radius: 50%;
+  border: 2px solid currentColor; opacity: 0;
+  animation: dotPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.dot-critical.dot-pulse::after { border-color: var(--critical); }
+.dot-warning.dot-pulse::after { border-color: var(--warning); }
+
+/* ═══ FINDINGS ═══ */
+.finding-item { display: flex; gap: 12px; padding: 10px 14px; border-radius: var(--radius-sm); transition: background 0.2s; }
+.finding-item:hover { background: rgba(255,255,255,0.02); }
+.finding-item + .finding-item { margin-top: 4px; }
+
+/* ═══ STATS ═══ */
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.stat-card { background: var(--surface-low); border-radius: var(--radius-md); padding: 24px; text-align: center; border: 1px solid transparent; transition: all 0.25s ease; }
+.stat-card:hover { border-color: var(--glass-border); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+.stat-number { font-family: 'JetBrains Mono', monospace; font-size: 1.75rem; font-weight: 500; line-height: 1; }
+.stat-label { font-size: 0.6875rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-top: 8px; }
+
+/* ═══ CHIPS ═══ */
+.chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 0.625rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.chip-critical { background: var(--critical-bg); color: var(--critical); }
+.chip-warning { background: var(--warning-bg); color: var(--warning); }
+.chip-positive { background: var(--positive-bg); color: var(--positive); }
+
+/* ═══ CTA BUTTON with subtle pulse ═══ */
+.btn-primary {
+  background: var(--accent-gradient); color: var(--base); border: none;
+  padding: 16px 44px; border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1rem; font-weight: 600;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+  transition: all 0.2s ease; animation: subtlePulse 3s ease-in-out infinite;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(212,165,55,0.3); animation: none; }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-ghost {
+  background: transparent; color: var(--text-secondary); border: 1px solid var(--glass-border);
+  padding: 10px 24px; border-radius: 10px; font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.8125rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease;
+}
+.btn-ghost:hover { color: var(--text-primary); border-color: var(--text-muted); }
+
+/* ═══ EMPTY STATE ═══ */
+.empty-state { background: var(--surface-low); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 48px 32px; text-align: center; }
+.empty-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--critical-bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+.empty-icon svg { width: 20px; height: 20px; color: var(--critical); }
+
+/* ═══ CHAT ═══ */
+.chat-panel { width: 380px; max-width: 100%; background: var(--glass); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+.chat-header { padding: 14px 20px; background: var(--surface-low); display: flex; align-items: center; gap: 10px; }
+.chat-avatar { width: 30px; height: 30px; border-radius: var(--radius-sm); background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; font-family: 'Instrument Serif', serif; font-size: 14px; color: var(--base); font-weight: 700; }
+.chat-messages { padding: 20px; display: flex; flex-direction: column; gap: 12px; max-height: 360px; }
+.msg { max-width: 85%; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.8125rem; line-height: 1.5; }
+.msg-assistant { background: var(--surface-low); align-self: flex-start; border-bottom-left-radius: 2px; }
+.msg-user { background: var(--surface-high); align-self: flex-end; border-bottom-right-radius: 2px; }
+.chat-input-bar { padding: 10px 14px; background: var(--surface-low); display: flex; gap: 8px; align-items: center; }
+.chat-input { flex: 1; background: var(--surface); border: 1px solid var(--glass-border); border-radius: 8px; padding: 8px 14px; color: var(--text-primary); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 0.8125rem; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.chat-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.chat-send { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-gradient); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.15s; }
+.chat-send:hover { transform: scale(1.08); }
+
+/* ═══ SECTION HEADER ═══ */
+.section-header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px; }
+
+/* ═══ UTILITIES ═══ */
+.text-accent { color: var(--accent); }
+.text-muted { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+.text-critical { color: var(--critical); }
+.text-warning { color: var(--warning); }
+.text-positive { color: var(--positive); }
+.text-center { text-align: center; }
+.mt-2 { margin-top: 8px; } .mt-3 { margin-top: 12px; } .mt-4 { margin-top: 16px; }
+.mt-6 { margin-top: 24px; } .mt-8 { margin-top: 32px; } .mt-10 { margin-top: 40px; }
+</style>
+</head>
+<body>
+
+<a href="#main" class="skip-link">Skip to results</a>
+
+<header class="top-banner" role="banner">
+  <div class="logo">FORGE<span>.</span></div>
+  <span class="label-md font-mono" style="color:var(--text-muted);letter-spacing:0.04em;">blotato.com</span>
+  <a href="#blueprint" class="banner-cta">Book strategy call</a>
+</header>
+
+<nav class="stage-nav" aria-label="Stages">
+  <a class="active" href="#hero"><span class="stage-dot"></span><span class="stage-label">Overview</span></a>
+  <a data-s="c" href="#traffic"><span class="stage-dot"></span><span class="stage-label">Traffic</span></a>
+  <a data-s="w" href="#landing"><span class="stage-dot"></span><span class="stage-label">Landing</span></a>
+  <a data-s="w" href="#capture"><span class="stage-dot"></span><span class="stage-label">Capture</span></a>
+  <a data-s="c" href="#offer"><span class="stage-dot"></span><span class="stage-label">Offer</span></a>
+  <a data-s="c" href="#followup"><span class="stage-dot"></span><span class="stage-label">Follow-up</span></a>
+  <a href="#blueprint"><span class="stage-dot"></span><span class="stage-label">Blueprint</span></a>
+</nav>
+
+<main id="main" class="page" style="padding-top:52px;">
+
+  <!-- ═══ HERO ═══ -->
+  <section id="hero" class="section-hero">
+    <div>
+      <span class="label-md animate-fade-up">Funnel Audit Complete</span>
+
+      <div class="hero-layout mt-10">
+        <div class="hero-score-wrap animate-score">
+          <div class="hero-score font-display">19<span class="hero-suffix">/100</span></div>
+        </div>
+        <div style="flex:1;">
+          <h1 class="font-display display-lg animate-fade-up animate-fade-up-1" style="max-width:480px;">
+            Your funnel is losing customers at every stage.
+          </h1>
+          <p class="body-lg mt-6 animate-fade-up animate-fade-up-2" style="max-width:420px;">
+            We scanned blotato.com across 5 conversion stages. Here's what's working, what's broken, and what's missing.
+          </p>
+
+          <!-- Revenue impact callout -->
+          <div class="revenue-callout mt-8 animate-fade-up animate-fade-up-3">
+            <div class="revenue-callout-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--critical)" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <div>
+              <div style="font-size:0.8125rem;font-weight:600;color:var(--critical);">Estimated Revenue Leak</div>
+              <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">3 missing funnel stages = ~60-80% of potential leads lost before conversion.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-breakdown mt-12 animate-fade-up animate-fade-up-4" style="max-width:640px;">
+        <a href="#traffic" class="stage-row">
+          <span class="stage-row-name">Traffic</span>
+          <div class="stage-row-bar"><div class="stage-row-fill" style="width:1%;background:var(--critical);min-width:3px;"></div></div>
+          <span class="stage-row-score text-critical">0</span>
+        </a>
+        <a href="#landing" class="stage-row">
+          <span class="stage-row-name">Landing</span>
+          <div class="stage-row-bar"><div class="stage-row-fill" style="width:35%;background:var(--warning);"></div></div>
+          <span class="stage-row-score text-warning">35</span>
+        </a>
+        <a href="#capture" class="stage-row">
+          <span class="stage-row-name">Capture</span>
+          <div class="stage-row-bar"><div class="stage-row-fill" style="width:45%;background:var(--warning);"></div></div>
+          <span class="stage-row-score text-warning">45</span>
+        </a>
+        <a href="#offer" class="stage-row">
+          <span class="stage-row-name">Offer</span>
+          <div class="stage-row-bar"><div class="stage-row-fill" style="width:15%;background:var(--critical);"></div></div>
+          <span class="stage-row-score text-critical">15</span>
+        </a>
+        <a href="#followup" class="stage-row">
+          <span class="stage-row-name">Follow-up</span>
+          <div class="stage-row-bar"><div class="stage-row-fill" style="width:1%;background:var(--critical);min-width:3px;"></div></div>
+          <span class="stage-row-score text-critical">0</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TRAFFIC (0/100) ═══ -->
+  <section id="traffic" class="section" aria-labelledby="t-h">
+    <div class="section-header">
+      <div><span class="label-md">Stage 1 of 5</span><h2 id="t-h" class="font-display display-md mt-3">Traffic Sources</h2></div>
+      <div style="display:flex;gap:8px;"><span class="chip chip-critical font-mono">0 / 100</span><span class="chip chip-critical">Critical</span></div>
+    </div>
+    <div class="empty-state" style="max-width:640px;">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <h3 class="title-lg">No Traffic Sources Detected</h3>
+      <p class="body-md mt-4 text-secondary" style="max-width:440px;margin:16px auto 0;">No social media profiles found. No Instagram, Facebook, TikTok, LinkedIn, or Google Business Profile.</p>
+      <p class="body-sm mt-4">You're invisible to every discovery channel.</p>
+    </div>
+  </section>
+
+  <!-- ═══ LANDING (35/100) ═══ -->
+  <section id="landing" class="section" aria-labelledby="l-h">
+    <div class="section-header">
+      <div><span class="label-md">Stage 2 of 5</span><h2 id="l-h" class="font-display display-md mt-3">Landing Experience</h2></div>
+      <div style="display:flex;gap:8px;"><span class="chip chip-warning font-mono">35 / 100</span><span class="chip chip-warning">Weak</span></div>
+    </div>
+    <div class="split-grid">
+      <div>
+        <div class="device-laptop">
+          <div class="device-toolbar">
+            <div class="device-toolbar-dot" style="background:#EF4444;"></div>
+            <div class="device-toolbar-dot" style="background:#EAB308;"></div>
+            <div class="device-toolbar-dot" style="background:#22C55E;"></div>
+            <span style="margin-left:8px;font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">blotato.com</span>
+          </div>
+          <div class="screen" style="background:linear-gradient(135deg,#1a1030,#2d1050,#1a1030);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;">
+            <div style="font-size:10px;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.1);padding:3px 10px;border-radius:999px;margin-bottom:12px;">10,387+ Business Owners</div>
+            <div style="font-size:22px;color:white;font-weight:700;text-align:center;line-height:1.2;">Make <span style="color:#FF6B9D;">1 week</span> of content<br>in <span style="color:#FF6B9D;">1 minute</span></div>
+            <div style="background:#FF6B9D;color:white;padding:6px 18px;border-radius:8px;margin-top:12px;font-size:11px;font-weight:600;">Start FREE Week</div>
+            <div class="dot dot-critical dot-pulse" style="position:absolute;top:18%;left:52%;">1</div>
+            <div class="dot dot-warning dot-pulse" style="position:absolute;top:44%;left:46%;">2</div>
+            <div class="dot dot-positive" style="position:absolute;top:70%;left:44%;">3</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <span class="label-md" style="display:block;margin-bottom:16px;">Key Findings</span>
+        <div class="finding-item"><div class="dot dot-critical">1</div><div><div class="title-md">Generic Headline</div><p class="body-sm mt-2">Visitors can't tell what Blotato does in 5 seconds.</p></div></div>
+        <div class="finding-item"><div class="dot dot-warning">2</div><div><div class="title-md">Dual CTAs Create Paralysis</div><p class="body-sm mt-2">"Login" and "Start FREE Week" compete for attention.</p></div></div>
+        <div class="finding-item"><div class="dot dot-warning">3</div><div><div class="title-md">No Trust Signals</div><p class="body-sm mt-2">No logos, testimonials, or badges alongside social proof.</p></div></div>
+        <div class="finding-item"><div class="dot dot-positive">4</div><div><div class="title-md">Strong Trial CTA</div><p class="body-sm mt-2">"Start FREE Week" creates time-bound urgency.</p></div></div>
+        <div class="audit-card mt-8">
+          <p class="body-md">Homepage fails to communicate what Blotato does in 5 seconds — causing immediate bounce.</p>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;"><span class="chip chip-warning font-mono">35/100</span><span class="body-sm">4 findings</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CAPTURE (45/100) ═══ -->
+  <section id="capture" class="section" aria-labelledby="c-h">
+    <div class="section-header">
+      <div><span class="label-md">Stage 3 of 5</span><h2 id="c-h" class="font-display display-md mt-3">Lead Capture</h2></div>
+      <div style="display:flex;gap:8px;"><span class="chip chip-warning font-mono">45 / 100</span><span class="chip chip-warning">Weak</span></div>
+    </div>
+    <div class="split-grid" style="grid-template-columns:1fr 1fr;">
+      <div>
+        <div class="finding-item"><div class="dot dot-critical">1</div><div><div class="title-md">No Email Capture Above Fold</div><p class="body-sm mt-2">Email field above fold would capture leads faster than full signup.</p></div></div>
+        <div class="finding-item"><div class="dot dot-warning">2</div><div><div class="title-md">No Lead Magnet</div><p class="body-sm mt-2">No downloadable resource to exchange for contact info.</p></div></div>
+        <div class="finding-item"><div class="dot dot-positive">3</div><div><div class="title-md">Free Trial Entry</div><p class="body-sm mt-2">Free week reduces friction, though requires full signup.</p></div></div>
+      </div>
+      <div>
+        <div class="audit-card">
+          <p class="body-md">Lead capture relies entirely on the free trial. Without email-first approach, you lose browsers who aren't ready to commit.</p>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:12px;"><span class="chip chip-warning font-mono">45/100</span><span class="body-sm">3 findings</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ OFFER (15/100) ═══ -->
+  <section id="offer" class="section" aria-labelledby="o-h">
+    <div class="section-header">
+      <div><span class="label-md">Stage 4 of 5</span><h2 id="o-h" class="font-display display-md mt-3">Offer Clarity</h2></div>
+      <div style="display:flex;gap:8px;"><span class="chip chip-critical font-mono">15 / 100</span><span class="chip chip-critical">Critical</span></div>
+    </div>
+    <div class="empty-state" style="max-width:640px;">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <h3 class="title-lg">Offer Is Unclear</h3>
+      <p class="body-md mt-4 text-secondary" style="max-width:440px;margin:16px auto 0;">Visitors can't determine pricing, what's included, or what happens after the free trial.</p>
+    </div>
+    <div class="stat-grid mt-10" style="max-width:640px;">
+      <div class="stat-card"><div class="stat-number text-critical">0</div><div class="stat-label">Pricing visible</div></div>
+      <div class="stat-card"><div class="stat-number text-critical">0</div><div class="stat-label">Feature comparison</div></div>
+      <div class="stat-card"><div class="stat-number text-warning">1</div><div class="stat-label">Free trial mention</div></div>
+    </div>
+  </section>
+
+  <!-- ═══ FOLLOW-UP (0/100) ═══ -->
+  <section id="followup" class="section" aria-labelledby="f-h">
+    <div class="section-header">
+      <div><span class="label-md">Stage 5 of 5</span><h2 id="f-h" class="font-display display-md mt-3">Follow-Up Systems</h2></div>
+      <div style="display:flex;gap:8px;"><span class="chip chip-critical font-mono">0 / 100</span><span class="chip chip-critical">Critical</span></div>
+    </div>
+    <div class="empty-state" style="max-width:640px;">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <h3 class="title-lg">No Follow-Up Detected</h3>
+      <p class="body-md mt-4 text-secondary" style="max-width:440px;margin:16px auto 0;">No retargeting, email sequences, or reengagement. Every leaving visitor is lost.</p>
+    </div>
+  </section>
+
+  <!-- ═══ BLUEPRINT CTA ═══ -->
+  <section id="blueprint" class="section" style="border-top:none;padding-top:40px;">
+    <div class="text-center">
+      <span class="label-md text-accent">What's Next</span>
+      <h2 class="font-display display-lg mt-3">Get Your Custom Blueprint</h2>
+      <p class="body-lg mt-6 narrow">We've identified the problems. Let us generate a step-by-step blueprint showing what to fix, in what order.</p>
+      <div class="mt-10">
+        <button class="btn-primary">Generate Your Blueprint <span style="margin-left:4px;">&rarr;</span></button>
+        <p class="body-sm mt-4">Free, no signup required. About 30 seconds.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CHAT ═══ -->
+  <section class="section" aria-labelledby="ch-h">
+    <div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="flex:1;min-width:260px;">
+        <span class="label-md">AI Consultant</span>
+        <h2 id="ch-h" class="font-display display-md mt-3" style="margin-bottom:24px;">Talk to Your Results</h2>
+        <p class="body-lg" style="max-width:420px;">Our AI reviews your specific results. It knows your findings, scores, and what to recommend.</p>
+        <p class="body-sm mt-4" style="max-width:420px;">Not a chatbot. A trained consultant that references YOUR data.</p>
+      </div>
+      <div class="chat-panel">
+        <div class="chat-header"><div class="chat-avatar">F</div><div><div style="font-size:0.875rem;font-weight:600;">Forge Consultant</div><div style="display:flex;align-items:center;gap:5px;margin-top:2px;"><div style="width:5px;height:5px;border-radius:50%;background:var(--positive);"></div><span style="font-size:0.625rem;color:var(--text-muted);">Online</span></div></div></div>
+        <div class="chat-messages">
+          <div class="msg msg-assistant">Hey — I just reviewed blotato's funnel scan.</div>
+          <div class="msg msg-assistant">Score is 19/100. Biggest gap: zero traffic sources.</div>
+          <div class="msg msg-assistant">Want me to walk through what I'd fix first?</div>
+          <div class="msg msg-user">Yes, what's most impactful?</div>
+        </div>
+        <div class="chat-input-bar"><input class="chat-input" placeholder="Ask about your results..." aria-label="Chat input" /><button class="chat-send" aria-label="Send"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--base)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>

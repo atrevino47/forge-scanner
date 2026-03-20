@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r12 Slide Deck / Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r12: Slide Deck / Presentation
+   Each "slide" is a full-viewport card centered on screen.
+   9 slides total. Dot navigation at bottom.
+   Keynote presentation embedded in a web page. */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+  --r: 16px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── DOT NAV (fixed right) ── */
+.dot-nav {
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 100;
+}
+
+.dot-nav a {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--card);
+  transition: all 0.3s;
+  display: block;
+}
+
+.dot-nav a:hover {
+  background: var(--secondary);
+  transform: scale(1.3);
+}
+
+/* ── SLIDE ── */
+.slide {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 80px;
+  scroll-snap-align: start;
+  position: relative;
+}
+
+.slide-card {
+  max-width: 960px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r);
+  padding: 64px 72px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.3);
+}
+
+/* Slide number */
+.slide-num {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+/* Logo in slide */
+.slide-logo {
+  position: absolute;
+  top: 24px;
+  left: 32px;
+  font-family: 'Instrument Serif', serif;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+.slide-logo b { color: var(--accent); font-weight: 400; }
+
+/* ── SLIDE 1: TITLE ── */
+.s1-kicker {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  margin-bottom: 24px;
+}
+
+.s1-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(3rem, 6vw + 1rem, 5rem);
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  max-width: 700px;
+}
+
+.s1-sub {
+  font-size: 1.125rem;
+  color: var(--secondary);
+  margin-top: 20px;
+  max-width: 400px;
+}
+
+.s1-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--glass-border);
+}
+
+/* ── SLIDE 2: SCORE REVEAL ── */
+.s2-score {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(8rem, 18vw, 14rem);
+  line-height: 0.8;
+  color: var(--critical);
+  text-align: center;
+}
+
+.s2-suf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  color: var(--muted);
+}
+
+.s2-label {
+  font-size: 1rem;
+  color: var(--secondary);
+  text-align: center;
+  margin-top: 24px;
+}
+
+.s2-revenue {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  border-radius: 999px;
+  padding: 10px 24px;
+  margin-top: 24px;
+  font-size: 0.875rem;
+}
+.s2-revenue strong { color: var(--critical); }
+
+/* ── SLIDE 3: BREAKDOWN CHART ── */
+.s3-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 24px;
+  justify-content: center;
+  margin-top: 40px;
+  padding: 0 40px;
+}
+
+.s3-bar-col {
+  flex: 1;
+  max-width: 120px;
+  text-align: center;
+}
+
+.s3-bar-track {
+  height: 200px;
+  background: var(--container);
+  border-radius: 8px 8px 0 0;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+
+.s3-bar-fill {
+  width: 100%;
+  border-radius: 8px 8px 0 0;
+  transition: height 1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.s3-bar-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-top: 12px;
+}
+
+.s3-bar-name {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+/* ── STAGE SLIDES (4-8) ── */
+.stage-slide-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.stage-slide-left {}
+
+.stage-slide-kicker {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.stage-slide-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 3.5vw + 0.5rem, 2.75rem);
+  letter-spacing: -0.02em;
+  margin-top: 8px;
+}
+
+.stage-slide-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 3rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.chip {
+  display: inline-block;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-top: 8px;
+}
+.chip-c { background: rgba(239, 68, 68, 0.08); color: var(--critical); }
+.chip-w { background: rgba(234, 179, 8, 0.08); color: var(--warning); }
+
+.findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fl-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  transition: all 0.2s;
+}
+.fl-item:hover { background: rgba(255,255,255,0.02); border-left-color: var(--glass-border); }
+
+.fl-dot {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; flex-shrink: 0;
+}
+.fl-c { background: var(--critical); color: white; }
+.fl-w { background: var(--warning); color: var(--base); }
+.fl-p { background: var(--positive); color: white; }
+
+.fl-title { font-size: 0.9375rem; font-weight: 700; }
+.fl-desc { font-size: 0.8125rem; color: var(--secondary); margin-top: 2px; }
+
+/* Empty state in slide */
+.slide-empty {
+  text-align: center;
+  padding: 40px;
+  background: rgba(239, 68, 68, 0.02);
+  border: 1px dashed rgba(239, 68, 68, 0.1);
+  border-radius: 12px;
+}
+.slide-empty h3 { font-size: 1.125rem; font-weight: 600; }
+.slide-empty p { font-size: 0.875rem; color: var(--secondary); margin-top: 8px; max-width: 400px; margin-left: auto; margin-right: auto; }
+
+/* ── SLIDE 9: CTA ── */
+.cta-slide {
+  text-align: center;
+}
+
+.cta-slide h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2.5rem, 5vw + 0.5rem, 4rem);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.cta-slide p {
+  font-size: 1.0625rem;
+  color: var(--secondary);
+  margin-top: 16px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 18px 56px;
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 40px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(212, 165, 55, 0.3);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .slide { padding: 24px; }
+  .slide-card { padding: 32px 24px; }
+  .dot-nav { right: 12px; gap: 8px; }
+  .dot-nav a { width: 6px; height: 6px; }
+  .s3-bars { flex-wrap: wrap; gap: 12px; }
+  .s3-bar-track { height: 120px; }
+  .stage-slide-header { flex-direction: column; gap: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-snap-type: none; }
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- DOT NAV -->
+<nav class="dot-nav" aria-label="Slide navigation">
+  <a href="#slide1" aria-label="Slide 1"></a>
+  <a href="#slide2" aria-label="Slide 2"></a>
+  <a href="#slide3" aria-label="Slide 3"></a>
+  <a href="#slide4" aria-label="Slide 4"></a>
+  <a href="#slide5" aria-label="Slide 5"></a>
+  <a href="#slide6" aria-label="Slide 6"></a>
+  <a href="#slide7" aria-label="Slide 7"></a>
+  <a href="#slide8" aria-label="Slide 8"></a>
+  <a href="#slide9" aria-label="Slide 9"></a>
+</nav>
+
+<!-- SLIDE 1: TITLE -->
+<section class="slide" id="slide1">
+  <div class="slide-card">
+    <div class="slide-logo">FORGE<b>.</b></div>
+    <div class="slide-num fm">01 / 09</div>
+    <div class="s1-kicker">Funnel Audit Report</div>
+    <h1 class="s1-title fd">Your Funnel Health Report</h1>
+    <p class="s1-sub">A complete analysis of blotato.com across 5 critical conversion stages.</p>
+    <div class="s1-url fm">blotato.com &middot; March 2026</div>
+  </div>
+</section>
+
+<!-- SLIDE 2: SCORE REVEAL -->
+<section class="slide" id="slide2">
+  <div class="slide-card" style="text-align:center">
+    <div class="slide-logo">FORGE<b>.</b></div>
+    <div class="slide-num fm">02 / 09</div>
+    <div style="font-size:0.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:0.14em;color:var(--muted);margin-bottom:24px">Overall Health Score</div>
+    <div class="s2-score fd">19<span class="s2-suf">/100</span></div>
+    <p class="s2-label">3 of 5 stages are critical. Industry average: 52/100.</p>
+    <div class="s2-revenue">
+      <strong>60-80% Revenue Leak</strong>
+      <span style="color:var(--secondary)">estimated</span>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 3: BREAKDOWN -->
+<section class="slide" id="slide3">
+  <div class="slide-card">
+    <div class="slide-logo">FORGE<b>.</b></div>
+    <div class="slide-num fm">03 / 09</div>
+    <h2 class="fd" style="font-size:1.75rem;text-align:center">Stage Breakdown</h2>
+    <div class="s3-bars">
+      <div class="s3-bar-col">
+        <div class="s3-bar-track"><div class="s3-bar-fill" style="height:2%;background:var(--critical);min-height:3px"></div></div>
+        <div class="s3-bar-score" style="color:var(--critical)">0</div>
+        <div class="s3-bar-name">Traffic</div>
+      </div>
+      <div class="s3-bar-col">
+        <div class="s3-bar-track"><div class="s3-bar-fill" style="height:35%;background:var(--warning)"></div></div>
+        <div class="s3-bar-score" style="color:var(--warning)">35</div>
+        <div class="s3-bar-name">Landing</div>
+      </div>
+      <div class="s3-bar-col">
+        <div class="s3-bar-track"><div class="s3-bar-fill" style="height:45%;background:var(--warning)"></div></div>
+        <div class="s3-bar-score" style="color:var(--warning)">45</div>
+        <div class="s3-bar-name">Capture</div>
+      </div>
+      <div class="s3-bar-col">
+        <div class="s3-bar-track"><div class="s3-bar-fill" style="height:15%;background:var(--critical)"></div></div>
+        <div class="s3-bar-score" style="color:var(--critical)">15</div>
+        <div class="s3-bar-name">Offer</div>
+      </div>
+      <div class="s3-bar-col">
+        <div class="s3-bar-track"><div class="s3-bar-fill" style="height:2%;background:var(--critical);min-height:3px"></div></div>
+        <div class="s3-bar-score" style="color:var(--critical)">0</div>
+        <div class="s3-bar-name">Follow-up</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 4: TRAFFIC -->
+<section class="slide" id="slide4">
+  <div class="slide-card">
+    <div class="slide-logo">FORGE<b>.</b></div>
+    <div class="slide-num fm">04 / 09</div>
+    <div class="stage-slide-header">
+      <div class="stage-slide-left">
+        <div class="stage-slide-kicker fm">Stage 01</div>
+        <h2 class="stage-slide-title fd">Traffic Sources</h2>
+        <div class="chip chip-c">Critical</div>
+      </div>
+      <div class="stage-slide-score" style="color:var(--critical)">0</div>
+    </div>
+    <div class="slide-empty">
+      <h3>No Traffic Sources Detected</h3>
+      <p>No social media profiles found. 100% of your traffic relies on direct search or word-of-mouth.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 5: LANDING -->
+<section class="slide" id="slide5">
+  <div class="slide-card">
+    <div class="slide-logo">FORGE<b>.</b></div>
+    <div class="slide-num fm">05 / 09</div>
+    <div class="stage-slide-header">
+      <div class="stage-slide-left">
+        <div class="stage-slide-kicker fm">Stage 02</div>
+        <h2 class="stage-slide-title fd">Landing Experience</h2>
+        <div class="chip chip-w">Weak</div>
+      </div>
+      <div class="stage-slide-score" style="color:var(--warning)">35</div>
+    </div>
+    <div class="findings-list">
+      <div class="fl-item"><div class="fl-dot fl-c">1</div><div><div class="fl-title">Generic Headline</div><p class="fl-desc">Visitors can't tell what Blotato does in 5 seconds.</p></div></div>
+      <div class="fl-item"><div class="fl-dot fl-w">2</div><div><div class="fl-title">Dual CTAs</div><p class="fl-desc">"Login" and "Start FREE Week" compete.</p></div></div>
+      <div class="fl-item"><div class="fl-dot fl-w">3</div><div><div class="fl-title">No Trust Signals</div><p class="fl-desc">No logos or testimonials alongside social proof.</p></div></div>
+      <div class="fl-item"><div class="fl-dot fl-p">4</div><div><div class="fl-title">Strong Trial CTA</div><p class="fl-desc">"Start FREE Week" creates urgency.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 6: CAPTURE -->
+<section class="slide" id="slide6">
+  <div class="slide-card">
+    <div class="slide-logo">FORGE<b>.</b></div>
+    <div class="slide-num fm">06 / 09</div>
+    <div class="stage-slide-header">
+      <div class="stage-slide-left">
+        <div class="stage-slide-kicker fm">Stage 03</div>
+        <h2 class="stage-slide-title fd">Lead Capture</h2>
+        <div class="chip chip-w">Weak</div>
+      </div>
+      <div class="stage-slide-score" style="color:var(--warning)">45</div>
+    </div>
+    <div class="findings-list">
+      <div class="fl-item"><div class="fl-dot fl-c">1</div><div><div class="fl-title">No Email Above Fold</div><p class="fl-desc">Email field would capture leads faster.</p></div></div>
+      <div class="fl-item"><div class="fl-dot fl-w">2</div><div><div class="fl-title">No Lead Magnet</div><p class="fl-desc">No resource to exchange for contact info.</p></div></div>
+      <div class="fl-item"><div class="fl-dot fl-p">3</div><div><div class="fl-title">Free Trial Entry</div><p class="fl-desc">Free week reduces friction.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 7: OFFER -->
+<section class="slide" id="slide7">
+  <div class="slide-card">
+    <div class="slide-logo">FORGE<b>.</b></div>
+    <div class="slide-num fm">07 / 09</div>
+    <div class="stage-slide-header">
+      <div class="stage-slide-left">
+        <div class="stage-slide-kicker fm">Stage 04</div>
+        <h2 class="stage-slide-title fd">Offer Clarity</h2>
+        <div class="chip chip-c">Critical</div>
+      </div>
+      <div class="stage-slide-score" style="color:var(--critical)">15</div>
+    </div>
+    <div class="slide-empty">
+      <h3>Offer Is Unclear</h3>
+      <p>No pricing page, no feature comparison, no FAQ. Visitors have to guess what they're signing up for.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 8: FOLLOW-UP -->
+<section class="slide" id="slide8">
+  <div class="slide-card">
+    <div class="slide-logo">FORGE<b>.</b></div>
+    <div class="slide-num fm">08 / 09</div>
+    <div class="stage-slide-header">
+      <div class="stage-slide-left">
+        <div class="stage-slide-kicker fm">Stage 05</div>
+        <h2 class="stage-slide-title fd">Follow-Up Systems</h2>
+        <div class="chip chip-c">Critical</div>
+      </div>
+      <div class="stage-slide-score" style="color:var(--critical)">0</div>
+    </div>
+    <div class="slide-empty">
+      <h3>No Follow-Up Detected</h3>
+      <p>No Facebook Pixel, no Google tag, no email sequences. Every leaving visitor is lost permanently.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SLIDE 9: CTA -->
+<section class="slide" id="slide9">
+  <div class="slide-card">
+    <div class="slide-logo">FORGE<b>.</b></div>
+    <div class="slide-num fm">09 / 09</div>
+    <div class="cta-slide">
+      <h2 class="fd">Ready to Fix Your Funnel?</h2>
+      <p>We'll build your prioritized action plan in order of revenue impact.</p>
+      <button class="cta-btn">Get Your Fix Plan &rarr;</button>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

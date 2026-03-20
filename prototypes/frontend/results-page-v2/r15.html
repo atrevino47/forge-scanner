@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r15 Synthesis</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r15: Synthesis — Best of All
+   Layout from r08 (executive summary + progressive disclosure)
+   Data viz from r11 (before/after creates desire)
+   Typography from r07 (brutalist scale + negative space)
+   Interaction from r08 (details/summary for depth control)
+   Narrative from r14 (conversational tone in the intro)
+   Heatmap density from r13 (aggregate bar)
+   Split-screen clarity from r09 (fixed left panel for orientation)
+
+   Result: A focused single-column report that starts conversational,
+   shows a before/after comparison for motivation, then uses
+   expandable accordions for stage-by-stage detail. The user controls
+   information depth. */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+  --r: 12px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Dot grid */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.3) 1px, transparent 0);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── STICKY HEADER ── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 17, 32, 0.94);
+  backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--glass-border);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.125rem;
+  letter-spacing: 0.04em;
+}
+.logo b { color: var(--accent); font-weight: 400; }
+
+.header-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--muted);
+  background: var(--container);
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+}
+
+.header-score {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-score-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--critical);
+}
+
+.header-score-suf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.header-cta {
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.header-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(212, 165, 55, 0.3);
+}
+
+/* ── PAGE ── */
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+
+/* ── SECTION 1: CONVERSATIONAL INTRO (from r14) ── */
+.intro {
+  padding: 64px 0 48px;
+}
+
+.intro-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.intro-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: 16px;
+  color: var(--base);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.intro-meta {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.intro-submeta {
+  font-size: 0.6875rem;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+/* Big conversational headline (r07 + r14 fusion) */
+.intro h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2.5rem, 5vw + 1rem, 3.75rem);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  max-width: 600px;
+}
+
+.intro-body {
+  font-size: 1.0625rem;
+  color: var(--secondary);
+  margin-top: 16px;
+  max-width: 520px;
+  line-height: 1.7;
+}
+
+/* ── SECTION 2: SCORE + STAGE BAR (compact from r08) ── */
+.score-section {
+  padding: 40px 0;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.score-big {
+  font-family: 'Instrument Serif', serif;
+  font-size: 5rem;
+  line-height: 0.85;
+  color: var(--critical);
+  flex-shrink: 0;
+}
+
+.score-suf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  color: var(--muted);
+  vertical-align: top;
+  margin-left: 4px;
+}
+
+.score-detail {
+  flex: 1;
+}
+
+.stage-mini-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.stage-mini {
+  flex: 1;
+  text-align: center;
+}
+
+.stage-mini-bar {
+  height: 6px;
+  background: var(--card);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.stage-mini-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.stage-mini-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.stage-mini-name {
+  font-size: 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Revenue alert (from r08) */
+.revenue-alert {
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.rev-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rev-text strong { font-size: 0.8125rem; color: var(--critical); }
+.rev-text span { font-size: 0.75rem; color: var(--secondary); }
+
+/* ── SECTION 3: BEFORE/AFTER COMPARISON (from r11) ── */
+.comparison {
+  padding: 48px 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.comparison-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.comparison-scores {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cs-box {
+  text-align: center;
+}
+
+.cs-label {
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.cs-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.cs-arrow {
+  color: var(--accent);
+  font-size: 1.25rem;
+}
+
+/* Before/after rows */
+.ba-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 40px 1fr;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  align-items: center;
+}
+
+.ba-row:last-child { border-bottom: none; }
+
+.ba-stage {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.ba-stage-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.5rem;
+  color: var(--muted);
+  display: block;
+}
+
+.ba-current, .ba-optimized {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ba-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--card);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ba-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.ba-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  width: 24px;
+}
+
+.ba-delta {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  color: var(--positive);
+  font-weight: 500;
+}
+
+/* ── SECTION 4: EXPANDABLE STAGES (from r08) ── */
+.stages {
+  padding: 40px 0;
+}
+
+details.accordion {
+  border-bottom: 1px solid var(--glass-border);
+}
+
+details.accordion summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+  cursor: pointer;
+  list-style: none;
+  transition: background 0.2s;
+}
+details.accordion summary::-webkit-details-marker { display: none; }
+details.accordion summary:hover { background: rgba(255, 255, 255, 0.01); }
+
+.sum-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sum-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  color: var(--muted);
+  width: 20px;
+}
+
+.sum-name {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.sum-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sum-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.sum-chip {
+  font-size: 0.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+.chip-c { background: rgba(239, 68, 68, 0.08); color: var(--critical); }
+.chip-w { background: rgba(234, 179, 8, 0.08); color: var(--warning); }
+
+.sum-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  transition: transform 0.3s;
+}
+details[open] .sum-chevron { transform: rotate(180deg); }
+
+/* Expanded content */
+.stage-body {
+  padding: 0 0 28px 34px;
+}
+
+/* Device (from base) */
+.device {
+  background: var(--container);
+  border-radius: var(--r);
+  padding: 10px 10px 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  max-width: 480px;
+  margin-bottom: 20px;
+}
+
+.device-bar {
+  height: 24px;
+  background: var(--card);
+  border-radius: 6px 6px 0 0;
+  margin: -10px -10px 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 5px;
+}
+
+.device-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+.device-screen {
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg, #1a1030, #2d1050, #1a1030);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+
+/* Annotation dots */
+.anno {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; position: absolute;
+}
+.anno-c { background: var(--critical); color: white; }
+.anno-w { background: var(--warning); color: var(--base); }
+.anno-p { background: var(--positive); color: white; }
+
+/* Findings (from r07 brutalist style) */
+.findings {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.finding {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  border-left: 2px solid transparent;
+  border-radius: 0 6px 6px 0;
+  transition: all 0.2s;
+}
+.finding:hover {
+  background: rgba(255, 255, 255, 0.02);
+  padding-left: 18px;
+  border-left-color: var(--glass-border);
+}
+
+.f-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; flex-shrink: 0;
+}
+.f-c { background: var(--critical); color: white; }
+.f-w { background: var(--warning); color: var(--base); }
+.f-p { background: var(--positive); color: white; }
+
+.f-title { font-size: 0.9375rem; font-weight: 700; }
+.f-desc { font-size: 0.8125rem; color: var(--secondary); margin-top: 2px; line-height: 1.5; }
+
+/* Summary card (from base) */
+.summary-card {
+  background: var(--container);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 16px 20px;
+  margin-top: 14px;
+}
+.summary-card p { font-size: 0.875rem; line-height: 1.6; }
+.summary-card-meta {
+  display: flex; align-items: center; gap: 8px; margin-top: 8px;
+}
+
+/* Empty state */
+.empty-state {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 40px 28px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.empty-state::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+.empty-state h3 { font-size: 1rem; font-weight: 600; position: relative; }
+.empty-state p { font-size: 0.8125rem; color: var(--secondary); max-width: 400px; margin: 10px auto 0; position: relative; }
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+  max-width: 400px;
+}
+.stat-box {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+}
+.stat-num { font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 500; }
+.stat-label { font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-top: 4px; }
+
+/* ── SECTION 5: CTA (from r14 conversational style) ── */
+.final-cta {
+  padding: 48px 0 120px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.cta-narrator {
+  display: flex;
+  gap: 14px;
+}
+
+.cta-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: 16px;
+  color: var(--base);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.cta-content { flex: 1; }
+
+.cta-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.cta-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.cta-card {
+  background: rgba(212, 165, 55, 0.04);
+  border: 1px solid rgba(212, 165, 55, 0.12);
+  border-radius: 12px;
+  padding: 28px;
+  text-align: center;
+}
+
+.cta-card h3 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.cta-card p {
+  font-size: 0.875rem;
+  color: var(--secondary);
+  margin-top: 8px;
+}
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 16px 48px;
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(212, 165, 55, 0.3);
+}
+
+.cta-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 10px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .page { padding: 0 20px; }
+  .intro { padding: 40px 0 32px; }
+  .score-row { flex-direction: column; gap: 16px; align-items: flex-start; }
+  .score-big { font-size: 3.5rem; }
+  .stage-mini-row { flex-wrap: wrap; }
+  .ba-row { grid-template-columns: 1fr; gap: 8px; }
+  .ba-delta { display: none; }
+  .stage-body { padding-left: 0; }
+  .stats-row { grid-template-columns: 1fr; }
+  .comparison-header { flex-direction: column; gap: 16px; align-items: flex-start; }
+  .header-score { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo">FORGE<b>.</b></div>
+    <span class="header-url">blotato.com</span>
+  </div>
+  <div class="header-score">
+    <span class="header-score-num">19</span><span class="header-score-suf">/100</span>
+  </div>
+  <button class="header-cta">Book Strategy Call &rarr;</button>
+</header>
+
+<div class="page">
+
+  <!-- SECTION 1: CONVERSATIONAL INTRO -->
+  <section class="intro">
+    <div class="intro-avatar-row">
+      <div class="intro-avatar">F</div>
+      <div>
+        <div class="intro-meta">Forge Consultant</div>
+        <div class="intro-submeta">Funnel audit complete &middot; Just now</div>
+      </div>
+    </div>
+    <h1 class="fd">Your funnel has critical gaps at every stage.</h1>
+    <p class="intro-body">I analyzed blotato.com across 5 conversion stages. Three are completely broken, and the remaining two have significant weaknesses. Here's the full breakdown.</p>
+  </section>
+
+  <!-- SECTION 2: SCORE + STAGE BARS -->
+  <section class="score-section">
+    <div class="score-row">
+      <div>
+        <span class="score-big fd">19<span class="score-suf">/100</span></span>
+      </div>
+      <div class="score-detail">
+        <div class="stage-mini-row">
+          <div class="stage-mini">
+            <div class="stage-mini-bar"><div class="stage-mini-fill" style="width:2%;background:var(--critical);min-width:2px"></div></div>
+            <div class="stage-mini-score" style="color:var(--critical)">0</div>
+            <div class="stage-mini-name">Traffic</div>
+          </div>
+          <div class="stage-mini">
+            <div class="stage-mini-bar"><div class="stage-mini-fill" style="width:35%;background:var(--warning)"></div></div>
+            <div class="stage-mini-score" style="color:var(--warning)">35</div>
+            <div class="stage-mini-name">Landing</div>
+          </div>
+          <div class="stage-mini">
+            <div class="stage-mini-bar"><div class="stage-mini-fill" style="width:45%;background:var(--warning)"></div></div>
+            <div class="stage-mini-score" style="color:var(--warning)">45</div>
+            <div class="stage-mini-name">Capture</div>
+          </div>
+          <div class="stage-mini">
+            <div class="stage-mini-bar"><div class="stage-mini-fill" style="width:15%;background:var(--critical)"></div></div>
+            <div class="stage-mini-score" style="color:var(--critical)">15</div>
+            <div class="stage-mini-name">Offer</div>
+          </div>
+          <div class="stage-mini">
+            <div class="stage-mini-bar"><div class="stage-mini-fill" style="width:2%;background:var(--critical);min-width:2px"></div></div>
+            <div class="stage-mini-score" style="color:var(--critical)">0</div>
+            <div class="stage-mini-name">Follow-up</div>
+          </div>
+        </div>
+        <div class="revenue-alert">
+          <div class="rev-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--critical)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <div class="rev-text"><strong>60-80% Revenue Leak</strong> <span>&mdash; 3 of 5 stages critical. Industry avg: 52/100.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: BEFORE/AFTER COMPARISON -->
+  <section class="comparison">
+    <div class="comparison-header">
+      <span class="section-label">Gap Analysis</span>
+      <div class="comparison-scores">
+        <div class="cs-box">
+          <div class="cs-label">Now</div>
+          <div class="cs-num" style="color:var(--critical)">19</div>
+        </div>
+        <span class="cs-arrow">&rarr;</span>
+        <div class="cs-box">
+          <div class="cs-label">Possible</div>
+          <div class="cs-num" style="color:var(--positive)">72</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ba-row">
+      <div class="ba-stage"><span class="ba-stage-num fm">01</span>Traffic</div>
+      <div class="ba-current"><span class="ba-num" style="color:var(--critical)">0</span><div class="ba-bar"><div class="ba-fill" style="width:2%;background:var(--critical);min-width:2px"></div></div></div>
+      <div class="ba-delta">+55</div>
+      <div class="ba-optimized"><span class="ba-num" style="color:var(--positive)">55</span><div class="ba-bar"><div class="ba-fill" style="width:55%;background:var(--positive)"></div></div></div>
+    </div>
+    <div class="ba-row">
+      <div class="ba-stage"><span class="ba-stage-num fm">02</span>Landing</div>
+      <div class="ba-current"><span class="ba-num" style="color:var(--warning)">35</span><div class="ba-bar"><div class="ba-fill" style="width:35%;background:var(--warning)"></div></div></div>
+      <div class="ba-delta">+40</div>
+      <div class="ba-optimized"><span class="ba-num" style="color:var(--positive)">75</span><div class="ba-bar"><div class="ba-fill" style="width:75%;background:var(--positive)"></div></div></div>
+    </div>
+    <div class="ba-row">
+      <div class="ba-stage"><span class="ba-stage-num fm">03</span>Capture</div>
+      <div class="ba-current"><span class="ba-num" style="color:var(--warning)">45</span><div class="ba-bar"><div class="ba-fill" style="width:45%;background:var(--warning)"></div></div></div>
+      <div class="ba-delta">+35</div>
+      <div class="ba-optimized"><span class="ba-num" style="color:var(--positive)">80</span><div class="ba-bar"><div class="ba-fill" style="width:80%;background:var(--positive)"></div></div></div>
+    </div>
+    <div class="ba-row">
+      <div class="ba-stage"><span class="ba-stage-num fm">04</span>Offer</div>
+      <div class="ba-current"><span class="ba-num" style="color:var(--critical)">15</span><div class="ba-bar"><div class="ba-fill" style="width:15%;background:var(--critical)"></div></div></div>
+      <div class="ba-delta">+55</div>
+      <div class="ba-optimized"><span class="ba-num" style="color:var(--positive)">70</span><div class="ba-bar"><div class="ba-fill" style="width:70%;background:var(--positive)"></div></div></div>
+    </div>
+    <div class="ba-row">
+      <div class="ba-stage"><span class="ba-stage-num fm">05</span>Follow-up</div>
+      <div class="ba-current"><span class="ba-num" style="color:var(--critical)">0</span><div class="ba-bar"><div class="ba-fill" style="width:2%;background:var(--critical);min-width:2px"></div></div></div>
+      <div class="ba-delta">+80</div>
+      <div class="ba-optimized"><span class="ba-num" style="color:var(--positive)">80</span><div class="ba-bar"><div class="ba-fill" style="width:80%;background:var(--positive)"></div></div></div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: EXPANDABLE STAGES -->
+  <section class="stages">
+    <div class="section-label" style="margin-bottom:8px">Detailed Breakdown</div>
+
+    <!-- Traffic -->
+    <details class="accordion">
+      <summary>
+        <div class="sum-left"><span class="sum-num fm">01</span><span class="sum-name">Traffic Sources</span></div>
+        <div class="sum-right"><span class="sum-score" style="color:var(--critical)">0/100</span><span class="sum-chip chip-c">Critical</span><svg class="sum-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </summary>
+      <div class="stage-body">
+        <div class="empty-state">
+          <h3>No Traffic Sources Detected</h3>
+          <p>No social media profiles found. 100% of your traffic relies on direct search or word-of-mouth.</p>
+        </div>
+      </div>
+    </details>
+
+    <!-- Landing -->
+    <details class="accordion" open>
+      <summary>
+        <div class="sum-left"><span class="sum-num fm">02</span><span class="sum-name">Landing Experience</span></div>
+        <div class="sum-right"><span class="sum-score" style="color:var(--warning)">35/100</span><span class="sum-chip chip-w">Weak</span><svg class="sum-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </summary>
+      <div class="stage-body">
+        <div class="device">
+          <div class="device-bar">
+            <div class="device-dot" style="background:#EF4444"></div>
+            <div class="device-dot" style="background:#EAB308"></div>
+            <div class="device-dot" style="background:#22C55E"></div>
+            <span class="fm" style="margin-left:6px;font-size:9px;color:var(--muted)">blotato.com</span>
+          </div>
+          <div class="device-screen">
+            <div style="font-size:9px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.1);padding:2px 8px;border-radius:999px;margin-bottom:10px">10,387+ Business Owners</div>
+            <div style="font-size:18px;color:white;font-weight:700;text-align:center;line-height:1.2">Make <span style="color:#FF6B9D">1 week</span> of content<br>in <span style="color:#FF6B9D">1 minute</span></div>
+            <div style="background:#FF6B9D;color:white;padding:4px 14px;border-radius:6px;margin-top:10px;font-size:10px;font-weight:600">Start FREE Week</div>
+            <div class="anno anno-c" style="top:18%;left:52%">1</div>
+            <div class="anno anno-w" style="top:44%;left:46%">2</div>
+            <div class="anno anno-p" style="top:70%;left:44%">3</div>
+          </div>
+        </div>
+        <div class="findings">
+          <div class="finding"><div class="f-dot f-c">1</div><div><div class="f-title">Generic Headline</div><p class="f-desc">Visitors can't tell what Blotato does in 5 seconds. No product category mentioned.</p></div></div>
+          <div class="finding"><div class="f-dot f-w">2</div><div><div class="f-title">Dual CTAs</div><p class="f-desc">"Login" and "Start FREE Week" compete for attention.</p></div></div>
+          <div class="finding"><div class="f-dot f-w">3</div><div><div class="f-title">No Trust Signals</div><p class="f-desc">No logos or testimonials alongside social proof.</p></div></div>
+          <div class="finding"><div class="f-dot f-p">4</div><div><div class="f-title">Strong Trial CTA</div><p class="f-desc">"Start FREE Week" creates urgency and lowers friction.</p></div></div>
+        </div>
+        <div class="summary-card">
+          <p>Homepage fails to communicate what Blotato does in 5 seconds.</p>
+          <div class="summary-card-meta">
+            <span class="sum-chip chip-w fm" style="font-size:0.5625rem">35/100</span>
+            <span style="font-size:0.75rem;color:var(--secondary)">4 findings</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Capture -->
+    <details class="accordion">
+      <summary>
+        <div class="sum-left"><span class="sum-num fm">03</span><span class="sum-name">Lead Capture</span></div>
+        <div class="sum-right"><span class="sum-score" style="color:var(--warning)">45/100</span><span class="sum-chip chip-w">Weak</span><svg class="sum-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </summary>
+      <div class="stage-body">
+        <div class="findings">
+          <div class="finding"><div class="f-dot f-c">1</div><div><div class="f-title">No Email Above Fold</div><p class="f-desc">Email field would capture leads faster.</p></div></div>
+          <div class="finding"><div class="f-dot f-w">2</div><div><div class="f-title">No Lead Magnet</div><p class="f-desc">No resource to exchange for contact info.</p></div></div>
+          <div class="finding"><div class="f-dot f-p">3</div><div><div class="f-title">Free Trial Entry</div><p class="f-desc">Free week reduces friction.</p></div></div>
+        </div>
+        <div class="summary-card">
+          <p>Lead capture relies on free trial only. No email-first approach.</p>
+          <div class="summary-card-meta">
+            <span class="sum-chip chip-w fm" style="font-size:0.5625rem">45/100</span>
+            <span style="font-size:0.75rem;color:var(--secondary)">3 findings</span>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Offer -->
+    <details class="accordion">
+      <summary>
+        <div class="sum-left"><span class="sum-num fm">04</span><span class="sum-name">Offer Clarity</span></div>
+        <div class="sum-right"><span class="sum-score" style="color:var(--critical)">15/100</span><span class="sum-chip chip-c">Critical</span><svg class="sum-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </summary>
+      <div class="stage-body">
+        <div class="empty-state">
+          <h3>Offer Is Unclear</h3>
+          <p>No pricing page, no feature comparison, no FAQ.</p>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-num" style="color:var(--critical)">0</div><div class="stat-label">Pricing</div></div>
+          <div class="stat-box"><div class="stat-num" style="color:var(--critical)">0</div><div class="stat-label">Features</div></div>
+          <div class="stat-box"><div class="stat-num" style="color:var(--warning)">1</div><div class="stat-label">Trial</div></div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Follow-up -->
+    <details class="accordion">
+      <summary>
+        <div class="sum-left"><span class="sum-num fm">05</span><span class="sum-name">Follow-Up Systems</span></div>
+        <div class="sum-right"><span class="sum-score" style="color:var(--critical)">0/100</span><span class="sum-chip chip-c">Critical</span><svg class="sum-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div>
+      </summary>
+      <div class="stage-body">
+        <div class="empty-state">
+          <h3>No Follow-Up Detected</h3>
+          <p>No Facebook Pixel, no Google tag, no email sequences. Every leaving visitor is lost permanently.</p>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  <!-- SECTION 5: CTA -->
+  <section class="final-cta">
+    <div class="cta-narrator">
+      <div class="cta-avatar">F</div>
+      <div class="cta-content">
+        <div class="cta-name">Forge Consultant</div>
+        <p class="cta-text">I've mapped every failure point and ranked them by revenue impact. Ready for your fix plan?</p>
+        <div class="cta-card">
+          <h3 class="fd">Your Prioritized Fix Plan</h3>
+          <p>AI-generated. Ordered by revenue impact. 30 seconds.</p>
+          <button class="cta-btn">Get Your Fix Plan &rarr;</button>
+          <p class="cta-sub">Free. No signup required.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>

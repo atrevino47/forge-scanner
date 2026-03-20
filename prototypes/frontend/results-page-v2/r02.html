@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r02 Magazine/Editorial Spread</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r02: Magazine / Editorial Spread
+   Bloomberg-style data journalism layout.
+   Large editorial typography, chapter structure, pull quotes,
+   two-column text, generous whitespace. */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Grain */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── MASTHEAD ── */
+.masthead {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 32px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.masthead-logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.25rem;
+  letter-spacing: 0.04em;
+}
+.masthead-logo b { color: var(--accent); font-weight: 400; }
+
+.masthead-meta {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.masthead-meta span {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+/* ── COVER SECTION ── */
+.cover {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 120px 32px 100px;
+  text-align: center;
+}
+
+.cover-kicker {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  margin-bottom: 24px;
+}
+
+.cover h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(3.5rem, 8vw + 1rem, 6rem);
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.cover-deck {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--secondary);
+  max-width: 580px;
+  margin: 32px auto 0;
+}
+
+/* Score as editorial infographic */
+.score-infographic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  margin-top: 64px;
+  padding: 48px 0;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.score-giant {
+  font-family: 'Instrument Serif', serif;
+  font-size: 8rem;
+  line-height: 0.85;
+  color: var(--critical);
+  position: relative;
+}
+.score-giant::after {
+  content: '/100';
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.25rem;
+  color: var(--muted);
+  position: absolute;
+  bottom: 8px;
+  margin-left: 8px;
+}
+
+.score-breakdown {
+  text-align: left;
+}
+
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+.score-row + .score-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.score-row-name {
+  width: 120px;
+  font-size: 0.8125rem;
+  color: var(--secondary);
+}
+
+.score-row-bar {
+  width: 120px;
+  height: 3px;
+  background: var(--card);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.score-row-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.score-row-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: 32px;
+  text-align: right;
+}
+
+/* ── CHAPTER ── */
+.chapter {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 120px 32px;
+  position: relative;
+}
+
+.chapter + .chapter {
+  border-top: 1px solid var(--glass-border);
+}
+
+.chapter-number {
+  font-family: 'Instrument Serif', serif;
+  font-size: 8rem;
+  line-height: 0.8;
+  color: rgba(255, 255, 255, 0.03);
+  position: absolute;
+  top: 80px;
+  right: 32px;
+  pointer-events: none;
+}
+
+.chapter-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.chapter h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2.5rem, 5vw + 0.5rem, 4rem);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  max-width: 600px;
+}
+
+.chapter-score-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.chapter-score-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+.badge-critical { background: rgba(239, 68, 68, 0.1); color: var(--critical); }
+.badge-warning { background: rgba(234, 179, 8, 0.1); color: var(--warning); }
+
+.chapter-severity {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Two-column text */
+.two-col {
+  column-count: 2;
+  column-gap: 48px;
+  column-rule: 1px solid var(--glass-border);
+  margin-top: 48px;
+  font-size: 0.9375rem;
+  line-height: 1.75;
+  color: var(--secondary);
+}
+
+.two-col p + p {
+  margin-top: 16px;
+}
+
+/* Finding items in editorial style */
+.finding-editorial {
+  margin-top: 48px;
+}
+
+.finding-item {
+  display: flex;
+  gap: 20px;
+  padding: 24px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.finding-marker {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.marker-crit { background: var(--critical); color: white; }
+.marker-warn { background: var(--warning); color: var(--base); }
+.marker-pos { background: var(--positive); color: white; }
+
+.finding-item h3 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.finding-item p {
+  font-size: 0.875rem;
+  color: var(--secondary);
+  line-height: 1.6;
+}
+
+/* Pull quotes */
+.pull-quote {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 80px 32px;
+  text-align: center;
+  position: relative;
+}
+
+.pull-quote::before {
+  content: '';
+  width: 40px;
+  height: 2px;
+  background: var(--accent);
+  display: block;
+  margin: 0 auto 32px;
+}
+
+.pull-quote blockquote {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.5rem, 3vw + 0.5rem, 2.25rem);
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  color: var(--secondary);
+  font-style: italic;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Empty chapter state */
+.chapter-empty {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 56px 40px;
+  text-align: center;
+  margin-top: 48px;
+  position: relative;
+  overflow: hidden;
+}
+.chapter-empty::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+.chapter-empty h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.chapter-empty p {
+  font-size: 0.9375rem;
+  color: var(--secondary);
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+/* Stats in editorial style */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--glass-border);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 32px;
+  max-width: 540px;
+}
+
+.stat-cell {
+  background: var(--surface);
+  padding: 24px;
+  text-align: center;
+}
+
+.stat-cell-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.stat-cell-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+/* ── CTA SECTION ── */
+.cta-section {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 120px 32px;
+  text-align: center;
+  border-top: 1px solid var(--glass-border);
+}
+
+.cta-section h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2.5rem, 5vw + 0.5rem, 4rem);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.cta-section p {
+  font-size: 1.125rem;
+  color: var(--secondary);
+  margin-top: 16px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 18px 52px;
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 40px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(212, 165, 55, 0.3);
+}
+
+.cta-sub {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  margin-top: 16px;
+}
+
+/* Revenue callout — editorial style */
+.revenue-strip {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.revenue-strip-inner {
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.08);
+  border-radius: 12px;
+  padding: 32px 40px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.revenue-strip-num {
+  font-family: 'Instrument Serif', serif;
+  font-size: 3rem;
+  color: var(--critical);
+  white-space: nowrap;
+}
+.revenue-strip-text {
+  font-size: 0.9375rem;
+  color: var(--secondary);
+  line-height: 1.6;
+}
+
+/* Screenshot in editorial context */
+.screenshot-editorial {
+  margin-top: 48px;
+  background: var(--container);
+  border-radius: 12px;
+  padding: 12px 12px 0;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.25);
+  max-width: 580px;
+}
+
+.screenshot-bar {
+  height: 28px;
+  background: var(--card);
+  border-radius: 8px 8px 0 0;
+  margin: -12px -12px 12px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 6px;
+}
+
+.screenshot-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+.screenshot-viewport {
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg, #1a1030, #2d1050, #1a1030);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  position: relative;
+}
+
+/* Annotation dots */
+.dot-anno {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; position: absolute;
+}
+.dot-crit { background: var(--critical); color: white; }
+.dot-warn { background: var(--warning); color: var(--base); }
+.dot-pos { background: var(--positive); color: white; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .two-col { column-count: 1; }
+  .score-infographic { flex-direction: column; gap: 32px; }
+  .score-giant { font-size: 5rem; }
+  .chapter-number { display: none; }
+  .chapter { padding: 80px 24px; }
+  .cover { padding: 80px 24px 60px; }
+  .revenue-strip-inner { flex-direction: column; text-align: center; }
+  .stat-strip { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="masthead-logo">FORGE<b>.</b></div>
+  <div class="masthead-meta">
+    <span class="fm">blotato.com</span>
+    <span>Funnel Audit Report</span>
+    <span>March 2026</span>
+  </div>
+</header>
+
+<!-- COVER -->
+<section class="cover">
+  <div class="cover-kicker">Funnel Audit Report</div>
+  <h1 class="fd">A Funnel Leaking at Every Stage</h1>
+  <p class="cover-deck">We analyzed blotato.com across five conversion stages. The results reveal systemic failures from traffic acquisition through post-visit follow-up.</p>
+
+  <div class="score-infographic">
+    <div class="score-giant fd">19</div>
+    <div class="score-breakdown">
+      <div class="score-row">
+        <span class="score-row-name">Traffic</span>
+        <div class="score-row-bar"><div class="score-row-fill" style="width:2%;background:var(--critical);min-width:2px"></div></div>
+        <span class="score-row-num" style="color:var(--critical)">0</span>
+      </div>
+      <div class="score-row">
+        <span class="score-row-name">Landing</span>
+        <div class="score-row-bar"><div class="score-row-fill" style="width:35%;background:var(--warning)"></div></div>
+        <span class="score-row-num" style="color:var(--warning)">35</span>
+      </div>
+      <div class="score-row">
+        <span class="score-row-name">Capture</span>
+        <div class="score-row-bar"><div class="score-row-fill" style="width:45%;background:var(--warning)"></div></div>
+        <span class="score-row-num" style="color:var(--warning)">45</span>
+      </div>
+      <div class="score-row">
+        <span class="score-row-name">Offer</span>
+        <div class="score-row-bar"><div class="score-row-fill" style="width:15%;background:var(--critical)"></div></div>
+        <span class="score-row-num" style="color:var(--critical)">15</span>
+      </div>
+      <div class="score-row">
+        <span class="score-row-name">Follow-up</span>
+        <div class="score-row-bar"><div class="score-row-fill" style="width:2%;background:var(--critical);min-width:2px"></div></div>
+        <span class="score-row-num" style="color:var(--critical)">0</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVENUE CALLOUT -->
+<div class="revenue-strip">
+  <div class="revenue-strip-inner">
+    <div class="revenue-strip-num fd">60-80%</div>
+    <div class="revenue-strip-text">Estimated revenue leak. Three of five funnel stages are either missing entirely or critically broken, meaning the majority of potential customers never reach a conversion point.</div>
+  </div>
+</div>
+
+<!-- CHAPTER 1: TRAFFIC -->
+<section class="chapter">
+  <div class="chapter-number fd">01</div>
+  <div class="chapter-label">Chapter One</div>
+  <h2 class="fd">Traffic Sources</h2>
+  <div class="chapter-score-line">
+    <span class="chapter-score-badge badge-critical fm">0 / 100</span>
+    <span class="chapter-severity" style="color:var(--critical)">Critical</span>
+  </div>
+  <div class="chapter-empty">
+    <h3>No Traffic Sources Detected</h3>
+    <p>No social media profiles found. 100% of your traffic relies on direct search or word-of-mouth. Without diversified traffic sources, every downstream optimization is meaningless.</p>
+  </div>
+</section>
+
+<!-- PULL QUOTE -->
+<div class="pull-quote">
+  <blockquote>"Without traffic sources, every other optimization is meaningless."</blockquote>
+</div>
+
+<!-- CHAPTER 2: LANDING -->
+<section class="chapter">
+  <div class="chapter-number fd">02</div>
+  <div class="chapter-label">Chapter Two</div>
+  <h2 class="fd">Landing Experience</h2>
+  <div class="chapter-score-line">
+    <span class="chapter-score-badge badge-warning fm">35 / 100</span>
+    <span class="chapter-severity" style="color:var(--warning)">Weak</span>
+  </div>
+
+  <div class="two-col">
+    <p>Your landing page has the bones of something effective. The social proof counter ("10,387+ Business Owners") and the free trial CTA both demonstrate awareness of conversion best practices. But critical first-impression issues undermine these strengths.</p>
+    <p>The headline fails to communicate what Blotato actually does. A visitor arriving from a cold source has no way to categorize the product within 5 seconds. Competing CTAs split attention, and the absence of trust signals (logos, testimonials, case studies) means the social proof number lacks credibility.</p>
+  </div>
+
+  <div style="display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start;margin-top:48px">
+    <div class="screenshot-editorial">
+      <div class="screenshot-bar">
+        <div class="screenshot-dot" style="background:#EF4444"></div>
+        <div class="screenshot-dot" style="background:#EAB308"></div>
+        <div class="screenshot-dot" style="background:#22C55E"></div>
+        <span class="fm" style="margin-left:8px;font-size:10px;color:var(--muted)">blotato.com</span>
+      </div>
+      <div class="screenshot-viewport">
+        <div style="font-size:10px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.1);padding:3px 10px;border-radius:999px;margin-bottom:12px">10,387+ Business Owners</div>
+        <div style="font-size:22px;color:white;font-weight:700;text-align:center;line-height:1.2">Make <span style="color:#FF6B9D">1 week</span> of content<br>in <span style="color:#FF6B9D">1 minute</span></div>
+        <div style="background:#FF6B9D;color:white;padding:6px 18px;border-radius:8px;margin-top:12px;font-size:11px;font-weight:600">Start FREE Week</div>
+        <div class="dot-anno dot-crit" style="top:18%;left:52%">1</div>
+        <div class="dot-anno dot-warn" style="top:44%;left:46%">2</div>
+        <div class="dot-anno dot-pos" style="top:70%;left:44%">3</div>
+      </div>
+    </div>
+
+    <div class="finding-editorial" style="flex:1;min-width:260px;margin-top:0">
+      <div class="finding-item">
+        <div class="finding-marker marker-crit">1</div>
+        <div>
+          <h3>Generic Headline</h3>
+          <p>Visitors can't tell what Blotato does in 5 seconds. No product category mentioned.</p>
+        </div>
+      </div>
+      <div class="finding-item">
+        <div class="finding-marker marker-warn">2</div>
+        <div>
+          <h3>Dual CTAs</h3>
+          <p>"Login" and "Start FREE Week" compete for attention, splitting conversion paths.</p>
+        </div>
+      </div>
+      <div class="finding-item">
+        <div class="finding-marker marker-warn">3</div>
+        <div>
+          <h3>No Trust Signals</h3>
+          <p>No logos or testimonials alongside social proof.</p>
+        </div>
+      </div>
+      <div class="finding-item">
+        <div class="finding-marker marker-pos">4</div>
+        <div>
+          <h3>Strong Trial CTA</h3>
+          <p>"Start FREE Week" creates urgency and lowers friction effectively.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PULL QUOTE -->
+<div class="pull-quote">
+  <blockquote>"Your landing page has potential, but critical first-impression issues are driving visitors away."</blockquote>
+</div>
+
+<!-- CHAPTER 3: CAPTURE -->
+<section class="chapter">
+  <div class="chapter-number fd">03</div>
+  <div class="chapter-label">Chapter Three</div>
+  <h2 class="fd">Lead Capture</h2>
+  <div class="chapter-score-line">
+    <span class="chapter-score-badge badge-warning fm">45 / 100</span>
+    <span class="chapter-severity" style="color:var(--warning)">Weak</span>
+  </div>
+
+  <div class="two-col">
+    <p>Lead capture relies entirely on the free trial signup. While the free week offer effectively reduces friction, there is no secondary capture mechanism for visitors who aren't ready to commit to a trial.</p>
+    <p>An email capture above the fold, a lead magnet resource, or even a newsletter signup would create a low-commitment entry point for hesitant visitors. Currently, it's all-or-nothing: either they start a trial, or they leave forever.</p>
+  </div>
+
+  <div class="finding-editorial">
+    <div class="finding-item">
+      <div class="finding-marker marker-crit">1</div>
+      <div><h3>No Email Above Fold</h3><p>An email field would capture leads faster than requiring a full signup flow.</p></div>
+    </div>
+    <div class="finding-item">
+      <div class="finding-marker marker-warn">2</div>
+      <div><h3>No Lead Magnet</h3><p>No resource to exchange for contact info. Missed opportunity to build a nurture list.</p></div>
+    </div>
+    <div class="finding-item">
+      <div class="finding-marker marker-pos">3</div>
+      <div><h3>Free Trial Entry</h3><p>Free week reduces friction and provides a clear conversion path.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- CHAPTER 4: OFFER -->
+<section class="chapter">
+  <div class="chapter-number fd">04</div>
+  <div class="chapter-label">Chapter Four</div>
+  <h2 class="fd">Offer Clarity</h2>
+  <div class="chapter-score-line">
+    <span class="chapter-score-badge badge-critical fm">15 / 100</span>
+    <span class="chapter-severity" style="color:var(--critical)">Critical</span>
+  </div>
+
+  <div class="chapter-empty">
+    <h3>Offer Is Unclear</h3>
+    <p>No pricing page, no feature comparison, no FAQ. Visitors have to guess what they're signing up for.</p>
+  </div>
+
+  <div class="stat-strip">
+    <div class="stat-cell">
+      <div class="stat-cell-num" style="color:var(--critical)">0</div>
+      <div class="stat-cell-label">Pricing visible</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-cell-num" style="color:var(--critical)">0</div>
+      <div class="stat-cell-label">Feature comparison</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-cell-num" style="color:var(--warning)">1</div>
+      <div class="stat-cell-label">Free trial mention</div>
+    </div>
+  </div>
+</section>
+
+<!-- PULL QUOTE -->
+<div class="pull-quote">
+  <blockquote>"Even captured leads can't understand what they're buying."</blockquote>
+</div>
+
+<!-- CHAPTER 5: FOLLOW-UP -->
+<section class="chapter">
+  <div class="chapter-number fd">05</div>
+  <div class="chapter-label">Chapter Five</div>
+  <h2 class="fd">Follow-Up Systems</h2>
+  <div class="chapter-score-line">
+    <span class="chapter-score-badge badge-critical fm">0 / 100</span>
+    <span class="chapter-severity" style="color:var(--critical)">Critical</span>
+  </div>
+
+  <div class="chapter-empty">
+    <h3>No Follow-Up Detected</h3>
+    <p>No Facebook Pixel, no Google tag, no email sequences. Every leaving visitor is lost permanently. You cannot retarget, you cannot nurture, you cannot recover.</p>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="fd">Your Prioritized Fix Plan</h2>
+  <p>We've mapped every failure point. Let us build the step-by-step recovery plan.</p>
+  <div><button class="cta-btn">Get Your Fix Plan &rarr;</button></div>
+  <p class="cta-sub">Free. No signup. AI-generated in 30 seconds.</p>
+</section>
+
+</body>
+</html>

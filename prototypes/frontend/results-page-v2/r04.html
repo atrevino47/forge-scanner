@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r04 Severity-First Priority Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r04: Severity-First Priority Board
+   Three-column Kanban layout: Critical / Warning / Good.
+   Findings sorted by severity, not by stage.
+   Answers "what's most urgent?" */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+  --r: 12px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── TOP BAR ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 17, 32, 0.94);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 32px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo { font-family: 'Instrument Serif', serif; font-size: 1.125rem; }
+.logo b { color: var(--accent); font-weight: 400; }
+
+.topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.topbar-score {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.topbar-score-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--critical);
+}
+
+.topbar-score-suf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.topbar-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+.cta-btn-sm {
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 7px 18px;
+  border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-btn-sm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(212, 165, 55, 0.25);
+}
+
+/* ── HEADER ── */
+.page-header {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 32px 0;
+}
+
+.page-header h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 4vw + 0.5rem, 3rem);
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+}
+
+.page-header p {
+  font-size: 0.9375rem;
+  color: var(--secondary);
+  margin-top: 8px;
+  max-width: 500px;
+}
+
+/* Severity summary bar */
+.severity-summary {
+  display: flex;
+  gap: 24px;
+  margin-top: 24px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.sev-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sev-count-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.sev-count-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+.sev-count-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── KANBAN BOARD ── */
+.board {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Column */
+.column {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.column-header {
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.column-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.column-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.column-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.column-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  background: var(--container);
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: var(--secondary);
+}
+
+.column-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 200px;
+}
+
+/* Finding card */
+.finding-card {
+  background: var(--container);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 18px;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: default;
+}
+
+.finding-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.finding-card-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.finding-card-desc {
+  font-size: 0.8125rem;
+  color: var(--secondary);
+  line-height: 1.5;
+}
+
+.finding-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.finding-stage-tag {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--secondary);
+}
+
+.finding-severity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* ── EMPTY COLUMN STATE ── */
+.column-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+/* Stage detail cards inside critical/warning */
+.stage-absence-card {
+  background: var(--container);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stage-absence-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 3px;
+}
+
+.stage-absence-card.crit-border::before { background: var(--critical); }
+.stage-absence-card.warn-border::before { background: var(--warning); }
+
+.stage-absence-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.stage-absence-stage {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.stage-absence-desc {
+  font-size: 0.8125rem;
+  color: var(--secondary);
+  line-height: 1.5;
+}
+
+/* ── CTA at bottom ── */
+.board-cta {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 32px 80px;
+  text-align: center;
+}
+
+.board-cta-inner {
+  background: rgba(212, 165, 55, 0.04);
+  border: 1px solid rgba(212, 165, 55, 0.1);
+  border-radius: 16px;
+  padding: 48px;
+}
+
+.board-cta h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.75rem, 3vw + 0.5rem, 2.5rem);
+  letter-spacing: -0.02em;
+}
+
+.board-cta p {
+  font-size: 0.9375rem;
+  color: var(--secondary);
+  margin-top: 12px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-btn-lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 16px 44px;
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 28px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-btn-lg:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(212, 165, 55, 0.3);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+  .board { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 768px) {
+  .board { grid-template-columns: 1fr; padding: 20px; }
+  .severity-summary { flex-wrap: wrap; }
+  .page-header { padding: 28px 20px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="logo">FORGE<b>.</b></div>
+  <div class="topbar-center">
+    <div class="topbar-score">
+      <span class="topbar-score-num">19</span>
+      <span class="topbar-score-suf">/100</span>
+    </div>
+    <span class="topbar-url fm">blotato.com</span>
+  </div>
+  <button class="cta-btn-sm">Book Strategy Call</button>
+</header>
+
+<!-- HEADER -->
+<div class="page-header">
+  <h1 class="fd">Priority Board</h1>
+  <p>Every finding from your funnel audit, organized by severity. Fix the left column first.</p>
+
+  <div class="severity-summary">
+    <div class="sev-count">
+      <div class="sev-count-dot" style="background:var(--critical)"></div>
+      <span class="sev-count-num" style="color:var(--critical)">7</span>
+      <span class="sev-count-label">Critical</span>
+    </div>
+    <div class="sev-count">
+      <div class="sev-count-dot" style="background:var(--warning)"></div>
+      <span class="sev-count-num" style="color:var(--warning)">3</span>
+      <span class="sev-count-label">Warning</span>
+    </div>
+    <div class="sev-count">
+      <div class="sev-count-dot" style="background:var(--positive)"></div>
+      <span class="sev-count-num" style="color:var(--positive)">2</span>
+      <span class="sev-count-label">Good</span>
+    </div>
+  </div>
+</div>
+
+<!-- KANBAN BOARD -->
+<div class="board">
+
+  <!-- CRITICAL COLUMN -->
+  <div class="column">
+    <div class="column-header">
+      <div class="column-header-left">
+        <div class="column-indicator" style="background:var(--critical)"></div>
+        <span class="column-title" style="color:var(--critical)">Critical</span>
+      </div>
+      <span class="column-count fm">7</span>
+    </div>
+    <div class="column-body">
+      <div class="stage-absence-card crit-border">
+        <div class="stage-absence-stage">Traffic &middot; Stage 1</div>
+        <div class="stage-absence-title">No Traffic Sources</div>
+        <p class="stage-absence-desc">No social media profiles found. 100% reliance on direct/search.</p>
+      </div>
+
+      <div class="finding-card">
+        <div class="finding-card-title">Generic Headline</div>
+        <p class="finding-card-desc">Visitors can't tell what Blotato does in 5 seconds. No product category mentioned.</p>
+        <div class="finding-card-meta">
+          <span class="finding-stage-tag">Landing</span>
+          <div class="finding-severity-dot" style="background:var(--critical)"></div>
+        </div>
+      </div>
+
+      <div class="finding-card">
+        <div class="finding-card-title">No Email Above Fold</div>
+        <p class="finding-card-desc">Email field would capture leads faster than full signup.</p>
+        <div class="finding-card-meta">
+          <span class="finding-stage-tag">Capture</span>
+          <div class="finding-severity-dot" style="background:var(--critical)"></div>
+        </div>
+      </div>
+
+      <div class="stage-absence-card crit-border">
+        <div class="stage-absence-stage">Offer &middot; Stage 4</div>
+        <div class="stage-absence-title">Offer Is Unclear</div>
+        <p class="stage-absence-desc">No pricing page, no feature comparison, no FAQ.</p>
+      </div>
+
+      <div class="finding-card">
+        <div class="finding-card-title">No Pricing Visible</div>
+        <p class="finding-card-desc">Visitors must guess what they're signing up for.</p>
+        <div class="finding-card-meta">
+          <span class="finding-stage-tag">Offer</span>
+          <div class="finding-severity-dot" style="background:var(--critical)"></div>
+        </div>
+      </div>
+
+      <div class="stage-absence-card crit-border">
+        <div class="stage-absence-stage">Follow-up &middot; Stage 5</div>
+        <div class="stage-absence-title">No Follow-Up Systems</div>
+        <p class="stage-absence-desc">No pixel, no tags, no email sequences. Every visitor lost permanently.</p>
+      </div>
+
+      <div class="finding-card">
+        <div class="finding-card-title">No Retargeting</div>
+        <p class="finding-card-desc">No Facebook Pixel or Google tag. Cannot recover leaving visitors.</p>
+        <div class="finding-card-meta">
+          <span class="finding-stage-tag">Follow-up</span>
+          <div class="finding-severity-dot" style="background:var(--critical)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WARNING COLUMN -->
+  <div class="column">
+    <div class="column-header">
+      <div class="column-header-left">
+        <div class="column-indicator" style="background:var(--warning)"></div>
+        <span class="column-title" style="color:var(--warning)">Warning</span>
+      </div>
+      <span class="column-count fm">3</span>
+    </div>
+    <div class="column-body">
+      <div class="finding-card">
+        <div class="finding-card-title">Dual CTAs</div>
+        <p class="finding-card-desc">"Login" and "Start FREE Week" compete for attention, splitting conversion paths.</p>
+        <div class="finding-card-meta">
+          <span class="finding-stage-tag">Landing</span>
+          <div class="finding-severity-dot" style="background:var(--warning)"></div>
+        </div>
+      </div>
+
+      <div class="finding-card">
+        <div class="finding-card-title">No Trust Signals</div>
+        <p class="finding-card-desc">No logos or testimonials alongside social proof number.</p>
+        <div class="finding-card-meta">
+          <span class="finding-stage-tag">Landing</span>
+          <div class="finding-severity-dot" style="background:var(--warning)"></div>
+        </div>
+      </div>
+
+      <div class="finding-card">
+        <div class="finding-card-title">No Lead Magnet</div>
+        <p class="finding-card-desc">No resource to exchange for contact info. All-or-nothing approach.</p>
+        <div class="finding-card-meta">
+          <span class="finding-stage-tag">Capture</span>
+          <div class="finding-severity-dot" style="background:var(--warning)"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOOD COLUMN -->
+  <div class="column">
+    <div class="column-header">
+      <div class="column-header-left">
+        <div class="column-indicator" style="background:var(--positive)"></div>
+        <span class="column-title" style="color:var(--positive)">Working</span>
+      </div>
+      <span class="column-count fm">2</span>
+    </div>
+    <div class="column-body">
+      <div class="finding-card">
+        <div class="finding-card-title">Strong Trial CTA</div>
+        <p class="finding-card-desc">"Start FREE Week" creates urgency and lowers friction effectively.</p>
+        <div class="finding-card-meta">
+          <span class="finding-stage-tag">Landing</span>
+          <div class="finding-severity-dot" style="background:var(--positive)"></div>
+        </div>
+      </div>
+
+      <div class="finding-card">
+        <div class="finding-card-title">Free Trial Entry</div>
+        <p class="finding-card-desc">Free week reduces friction and provides clear conversion path.</p>
+        <div class="finding-card-meta">
+          <span class="finding-stage-tag">Capture</span>
+          <div class="finding-severity-dot" style="background:var(--positive)"></div>
+        </div>
+      </div>
+
+      <div class="column-empty" style="margin-top:auto">
+        <p>These are the only two things working well in your funnel.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CTA -->
+<div class="board-cta">
+  <div class="board-cta-inner">
+    <h2 class="fd">7 Critical Issues. Where Do You Start?</h2>
+    <p>We'll build your prioritized action plan in order of revenue impact.</p>
+    <button class="cta-btn-lg">Get Prioritized Fix Plan &rarr;</button>
+  </div>
+</div>
+
+</body>
+</html>
