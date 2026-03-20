@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FORGE — Brand Book</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* ── NEW FORGE PALETTE ── */
+    --forge-orange: #E8530E;
+    --forge-orange-light: #FF6B2B;
+    --forge-orange-glow: #FF8A50;
+    --forge-orange-deep: #C4410A;
+    --forge-orange-subtle: #FFF0E8;
+    --forge-orange-50: #FFF7F2;
+    --forge-orange-100: #FFEAD9;
+    --forge-orange-200: #FFD4B3;
+    --forge-orange-300: #FFB07A;
+    --forge-orange-400: #FF8A50;
+    --forge-orange-500: #FF6B2B;
+    --forge-orange-600: #E8530E;
+    --forge-orange-700: #C4410A;
+    --forge-orange-800: #9A3308;
+    --forge-orange-900: #6B2406;
+
+    /* Neutrals — warm undertone */
+    --forge-white: #FAFAF7;
+    --forge-off-white: #F5F4F0;
+    --forge-light-gray: #ECEAE4;
+    --forge-mid-gray: #B8B5AD;
+    --forge-text-secondary: #6B6860;
+    --forge-text-primary: #1A1917;
+    --forge-dark: #141413;
+    --forge-dark-surface: #1E1E1C;
+    --forge-dark-card: #282826;
+    --forge-dark-border: rgba(255, 107, 43, 0.12);
+    --forge-dark-text: #F0EFE9;
+    --forge-dark-text-muted: #9A9890;
+
+    /* Semantic */
+    --forge-success: #2D8C4E;
+    --forge-warning: #D4890A;
+    --forge-critical: #D93636;
+    --forge-info: #2B7BD4;
+
+    /* Typography */
+    --font-display: 'Outfit', sans-serif;
+    --font-body: 'Space Grotesk', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Spacing */
+    --section-gap: 140px;
+    --content-width: 1080px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--forge-white);
+    color: var(--forge-text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ── NAVIGATION ── */
+  .nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(250, 250, 247, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(26, 25, 23, 0.06);
+    transition: all 0.4s ease;
+  }
+  .nav.dark-active {
+    background: rgba(20, 20, 19, 0.9);
+    border-bottom-color: rgba(255, 107, 43, 0.1);
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+    color: var(--forge-text-primary);
+    transition: color 0.4s;
+  }
+  .nav.dark-active .nav-logo { color: var(--forge-dark-text); }
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--forge-text-secondary);
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--forge-orange); }
+  .nav.dark-active .nav-links a { color: var(--forge-dark-text-muted); }
+  .nav.dark-active .nav-links a:hover { color: var(--forge-orange-light); }
+
+  /* ── SECTIONS ── */
+  .section {
+    max-width: var(--content-width);
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+  .section-gap { padding-top: var(--section-gap); }
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--forge-orange);
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(36px, 5vw, 56px);
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .section-subtitle {
+    font-size: 18px;
+    color: var(--forge-text-secondary);
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    right: -200px;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(232, 83, 14, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: var(--forge-orange-50);
+    border: 1px solid var(--forge-orange-200);
+    border-radius: 100px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--forge-orange-700);
+    margin-bottom: 40px;
+    letter-spacing: 0.5px;
+  }
+  .hero-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(56px, 9vw, 120px);
+    letter-spacing: -4px;
+    line-height: 0.95;
+    margin-bottom: 32px;
+  }
+  .hero-title .accent {
+    color: var(--forge-orange);
+    position: relative;
+  }
+  .hero-desc {
+    font-size: 20px;
+    color: var(--forge-text-secondary);
+    max-width: 480px;
+    line-height: 1.7;
+    font-weight: 400;
+  }
+  .hero-version {
+    position: absolute;
+    bottom: 40px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--forge-mid-gray);
+    letter-spacing: 1px;
+  }
+
+  /* ── PHILOSOPHY ── */
+  .philosophy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 60px;
+  }
+  .philosophy-card {
+    padding: 40px;
+    border: 1px solid var(--forge-light-gray);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+  }
+  .philosophy-card:hover {
+    border-color: var(--forge-orange-200);
+    background: var(--forge-orange-50);
+  }
+  .philosophy-card h3 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 12px;
+    letter-spacing: -0.5px;
+  }
+  .philosophy-card p {
+    color: var(--forge-text-secondary);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  /* ── COLOR PALETTE ── */
+  .color-hero {
+    width: 100%;
+    height: 320px;
+    border-radius: 20px;
+    background: var(--forge-orange);
+    display: flex;
+    align-items: flex-end;
+    padding: 40px;
+    margin-top: 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .color-hero::after {
+    content: 'F';
+    position: absolute;
+    top: -40px;
+    right: -20px;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 400px;
+    color: rgba(255, 255, 255, 0.08);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .color-hero-label {
+    color: white;
+  }
+  .color-hero-label h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 32px;
+    letter-spacing: -1px;
+  }
+  .color-hero-label span {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    opacity: 0.7;
+  }
+
+  .color-ramp {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 4px;
+    margin-top: 20px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .color-swatch {
+    height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding-bottom: 8px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    position: relative;
+    transition: transform 0.2s;
+  }
+  .color-swatch:hover { transform: scaleY(1.15); transform-origin: bottom; }
+  .color-swatch .swatch-label {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .color-swatch .swatch-hex {
+    opacity: 0.7;
+    font-size: 9px;
+    margin-top: 2px;
+  }
+
+  .color-neutrals {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-top: 40px;
+  }
+  .neutral-swatch {
+    height: 100px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .neutral-swatch .n-name { font-weight: 500; margin-bottom: 2px; }
+  .neutral-swatch .n-hex { opacity: 0.6; }
+
+  /* ── TYPOGRAPHY ── */
+  .type-showcase {
+    margin-top: 60px;
+  }
+  .type-specimen {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--forge-light-gray);
+  }
+  .type-specimen:last-child { border-bottom: none; }
+  .type-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .type-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: var(--forge-orange-100);
+    color: var(--forge-orange-700);
+  }
+  .type-name {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--forge-text-secondary);
+  }
+  .type-display-sample {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(42px, 6vw, 72px);
+    letter-spacing: -2px;
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+  .type-body-sample {
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.8;
+    color: var(--forge-text-secondary);
+    max-width: 640px;
+  }
+  .type-mono-sample {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--forge-text-secondary);
+    background: var(--forge-off-white);
+    padding: 24px 32px;
+    border-radius: 12px;
+  }
+  .type-scale {
+    margin-top: 60px;
+  }
+  .scale-row {
+    display: flex;
+    align-items: baseline;
+    gap: 24px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--forge-light-gray);
+  }
+  .scale-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--forge-mid-gray);
+    min-width: 80px;
+    letter-spacing: 0.5px;
+  }
+  .scale-sample {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  /* ── VOICE ── */
+  .voice-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin-top: 60px;
+    border: 1px solid var(--forge-light-gray);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .voice-item {
+    padding: 40px;
+    border-right: 1px solid var(--forge-light-gray);
+    border-bottom: 1px solid var(--forge-light-gray);
+  }
+  .voice-item:nth-child(2n) { border-right: none; }
+  .voice-item:nth-child(n+3) { border-bottom: none; }
+  .voice-do {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--forge-success);
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .voice-dont {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--forge-critical);
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .voice-example {
+    font-size: 15px;
+    color: var(--forge-text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ── DARK MODE SHOWCASE ── */
+  .dark-section {
+    background: var(--forge-dark);
+    margin-top: var(--section-gap);
+    padding: 100px 0;
+    position: relative;
+  }
+  .dark-section .section-label { color: var(--forge-orange-light); }
+  .dark-section .section-title { color: var(--forge-dark-text); }
+  .dark-section .section-subtitle { color: var(--forge-dark-text-muted); }
+
+  .dark-tokens {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 60px;
+  }
+  .dark-token {
+    height: 100px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    border: 1px solid var(--forge-dark-border);
+  }
+  .dark-token .n-name {
+    font-weight: 500;
+    margin-bottom: 2px;
+    color: var(--forge-dark-text);
+  }
+  .dark-token .n-hex {
+    color: var(--forge-dark-text-muted);
+    opacity: 0.7;
+  }
+
+  /* ── COMPONENT EXAMPLES ── */
+  .components-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 60px;
+  }
+  .comp-card {
+    padding: 40px;
+    border: 1px solid var(--forge-light-gray);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .comp-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--forge-mid-gray);
+  }
+
+  /* Buttons */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    background: var(--forge-orange);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: -0.2px;
+  }
+  .btn-primary:hover { background: var(--forge-orange-deep); transform: translateY(-1px); }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    background: transparent;
+    color: var(--forge-text-primary);
+    border: 1.5px solid var(--forge-text-primary);
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: -0.2px;
+  }
+  .btn-secondary:hover { background: var(--forge-text-primary); color: var(--forge-white); }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 32px;
+    background: transparent;
+    color: var(--forge-orange);
+    border: 1.5px solid var(--forge-orange);
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: -0.2px;
+  }
+  .btn-ghost:hover { background: var(--forge-orange); color: white; }
+
+  /* Input */
+  .input-example {
+    width: 100%;
+    padding: 14px 20px;
+    border: 1.5px solid var(--forge-light-gray);
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 15px;
+    background: var(--forge-white);
+    color: var(--forge-text-primary);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .input-example:focus { border-color: var(--forge-orange); }
+  .input-example::placeholder { color: var(--forge-mid-gray); }
+
+  /* Badge */
+  .badge {
+    display: inline-flex;
+    padding: 4px 14px;
+    border-radius: 100px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+  .badge-orange { background: var(--forge-orange-100); color: var(--forge-orange-700); }
+  .badge-dark { background: var(--forge-text-primary); color: var(--forge-white); }
+  .badge-outline { background: transparent; border: 1px solid var(--forge-light-gray); color: var(--forge-text-secondary); }
+
+  /* Card */
+  .example-card {
+    background: white;
+    border: 1px solid var(--forge-light-gray);
+    border-radius: 16px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .example-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--forge-orange);
+  }
+
+  /* ── LOGO SECTION ── */
+  .logo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 60px;
+  }
+  .logo-box {
+    height: 240px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .logo-box-light {
+    background: var(--forge-off-white);
+    border: 1px solid var(--forge-light-gray);
+  }
+  .logo-box-dark {
+    background: var(--forge-dark);
+  }
+  .logo-box-orange {
+    background: var(--forge-orange);
+  }
+  .logo-box-photo {
+    background: linear-gradient(135deg, #2a3040, #1a1f2a);
+  }
+  .logo-text {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 48px;
+    letter-spacing: -2px;
+  }
+  .logo-box .usage-label {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0.5;
+  }
+
+  /* ── SPACING / GRID ── */
+  .spacing-demo {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    margin-top: 60px;
+    flex-wrap: wrap;
+  }
+  .spacing-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .spacing-visual {
+    background: var(--forge-orange-100);
+    border: 1px dashed var(--forge-orange-300);
+    border-radius: 6px;
+    width: 60px;
+  }
+  .spacing-value {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--forge-text-secondary);
+  }
+
+  /* ── MOCKUP SECTION ── */
+  .mockup-container {
+    margin-top: 60px;
+    background: var(--forge-off-white);
+    border-radius: 20px;
+    padding: 48px;
+    border: 1px solid var(--forge-light-gray);
+  }
+  .mockup-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--forge-light-gray);
+    margin-bottom: 32px;
+  }
+  .mockup-nav-brand {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.5px;
+  }
+  .mockup-nav-cta {
+    padding: 10px 20px;
+    background: var(--forge-orange);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .mockup-hero-block {
+    background: white;
+    border-radius: 16px;
+    padding: 64px 48px;
+    text-align: center;
+    border: 1px solid var(--forge-light-gray);
+  }
+  .mockup-hero-block h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 36px;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+  .mockup-hero-block p {
+    color: var(--forge-text-secondary);
+    font-size: 16px;
+    margin-bottom: 32px;
+  }
+  .mockup-input-group {
+    display: flex;
+    gap: 8px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+  .mockup-input-group input {
+    flex: 1;
+    padding: 14px 20px;
+    border: 1.5px solid var(--forge-light-gray);
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    outline: none;
+    background: var(--forge-off-white);
+  }
+  .mockup-input-group button {
+    padding: 14px 24px;
+    background: var(--forge-orange);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* ── DARK MOCKUP ── */
+  .dark-mockup {
+    background: var(--forge-dark-surface);
+    border-radius: 20px;
+    padding: 48px;
+    margin-top: 40px;
+    border: 1px solid var(--forge-dark-border);
+  }
+  .dark-mockup-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--forge-dark-card);
+    border-radius: 12px;
+    border: 1px solid var(--forge-dark-border);
+    margin-bottom: 32px;
+  }
+  .dark-mockup-nav .mockup-nav-brand { color: var(--forge-dark-text); }
+  .dark-mockup-hero {
+    background: var(--forge-dark-card);
+    border-radius: 16px;
+    padding: 64px 48px;
+    text-align: center;
+    border: 1px solid var(--forge-dark-border);
+  }
+  .dark-mockup-hero h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 36px;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+    color: var(--forge-dark-text);
+  }
+  .dark-mockup-hero p {
+    color: var(--forge-dark-text-muted);
+    font-size: 16px;
+    margin-bottom: 32px;
+  }
+  .dark-mockup-hero input {
+    background: var(--forge-dark);
+    border-color: var(--forge-dark-border);
+    color: var(--forge-dark-text);
+  }
+  .dark-mockup-hero input::placeholder { color: var(--forge-dark-text-muted); }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    padding: 80px 40px;
+    margin-top: var(--section-gap);
+    border-top: 1px solid var(--forge-light-gray);
+  }
+  .footer-logo {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 28px;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+  .footer p {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--forge-mid-gray);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .philosophy-grid,
+    .components-grid,
+    .voice-grid,
+    .logo-grid { grid-template-columns: 1fr; }
+    .color-ramp { grid-template-columns: repeat(3, 1fr); }
+    .section { padding: 0 24px; }
+    .nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ NAVIGATION ═══ -->
+<nav class="nav" id="mainNav">
+  <div class="nav-logo">FORGE</div>
+  <ul class="nav-links">
+    <li><a href="#philosophy">Philosophy</a></li>
+    <li><a href="#color">Color</a></li>
+    <li><a href="#typography">Type</a></li>
+    <li><a href="#voice">Voice</a></li>
+    <li><a href="#components">Components</a></li>
+    <li><a href="#darkmode">Dark mode</a></li>
+  </ul>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="hero-badge">&#9670; Brand guidelines — v2.0</div>
+  <h1 class="hero-title">
+    <span class="accent">FORGE</span><br>
+    Brand Book
+  </h1>
+  <p class="hero-desc">Forge is an identity. It's how you build yourself. Not hiding in shadows — standing in the open, bold and unapologetic.</p>
+  <div class="hero-version">FORGE DIGITAL &mdash; MARCH 2026</div>
+</section>
+
+<!-- ═══ PHILOSOPHY ═══ -->
+<section class="section section-gap" id="philosophy">
+  <div class="section-label">01 — Philosophy</div>
+  <h2 class="section-title">Built to be seen.</h2>
+  <p class="section-subtitle">Forge doesn't hide. It's not a cult. It's not mysterious. It's the fire that shapes raw material into something unbreakable. Light, powerful, unmistakable.</p>
+
+  <div class="philosophy-grid">
+    <div class="philosophy-card">
+      <h3>Light over shadow</h3>
+      <p>The old brand lived in the dark — deep navy, hidden corners, whispered gold. The new Forge steps into the light. Clean backgrounds, open space, nothing to hide. Confidence doesn't need a dark room.</p>
+    </div>
+    <div class="philosophy-card">
+      <h3>Orange is the signal</h3>
+      <p>Not gold. Not subtle. Forge Orange is a declaration — the color of molten metal, of a fire that demands your attention. It interrupts whatever you were imagining and replaces it with something real.</p>
+    </div>
+    <div class="philosophy-card">
+      <h3>Identity, not aesthetic</h3>
+      <p>Forge isn't a brand you wear on your sleeve. It's the system you build yourself through. Every touchpoint should feel like infrastructure — engineered, intentional, built to perform.</p>
+    </div>
+    <div class="philosophy-card">
+      <h3>Technical clarity</h3>
+      <p>No fluff. No marketing speak. Forge communicates like a builder talks to another builder — with precision, with numbers, with proof. Every word earns its space.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ COLOR ═══ -->
+<section class="section section-gap" id="color">
+  <div class="section-label">02 — Color system</div>
+  <h2 class="section-title">Forge Orange.</h2>
+  <p class="section-subtitle">One dominant color. Warm neutrals. No competing accents. The orange does the talking — everything else supports it.</p>
+
+  <div class="color-hero">
+    <div class="color-hero-label">
+      <h3>Forge Orange</h3>
+      <span>#E8530E &mdash; Primary</span>
+    </div>
+  </div>
+
+  <div class="color-ramp">
+    <div class="color-swatch" style="background: #FFF7F2;"><span class="swatch-label" style="color: var(--forge-orange-800);">50</span><span class="swatch-hex" style="color: var(--forge-orange-700);">#FFF7F2</span></div>
+    <div class="color-swatch" style="background: #FFEAD9;"><span class="swatch-label" style="color: var(--forge-orange-800);">100</span><span class="swatch-hex" style="color: var(--forge-orange-700);">#FFEAD9</span></div>
+    <div class="color-swatch" style="background: #FFD4B3;"><span class="swatch-label" style="color: var(--forge-orange-800);">200</span><span class="swatch-hex" style="color: var(--forge-orange-700);">#FFD4B3</span></div>
+    <div class="color-swatch" style="background: #FFB07A;"><span class="swatch-label" style="color: var(--forge-orange-800);">300</span><span class="swatch-hex" style="color: var(--forge-orange-800);">#FFB07A</span></div>
+    <div class="color-swatch" style="background: #FF8A50;"><span class="swatch-label" style="color: white;">400</span><span class="swatch-hex" style="color: rgba(255,255,255,0.7);">#FF8A50</span></div>
+    <div class="color-swatch" style="background: #FF6B2B;"><span class="swatch-label" style="color: white;">500</span><span class="swatch-hex" style="color: rgba(255,255,255,0.7);">#FF6B2B</span></div>
+    <div class="color-swatch" style="background: #E8530E;"><span class="swatch-label" style="color: white;">600</span><span class="swatch-hex" style="color: rgba(255,255,255,0.7);">#E8530E</span></div>
+    <div class="color-swatch" style="background: #C4410A;"><span class="swatch-label" style="color: white;">700</span><span class="swatch-hex" style="color: rgba(255,255,255,0.7);">#C4410A</span></div>
+    <div class="color-swatch" style="background: #6B2406;"><span class="swatch-label" style="color: white;">900</span><span class="swatch-hex" style="color: rgba(255,255,255,0.7);">#6B2406</span></div>
+  </div>
+
+  <h3 style="font-family: var(--font-display); font-weight: 700; font-size: 22px; margin-top: 60px; letter-spacing: -0.5px;">Light mode neutrals</h3>
+  <p style="color: var(--forge-text-secondary); font-size: 15px; margin-top: 8px;">Warm undertones. Never clinical white. Never cold gray.</p>
+  <div class="color-neutrals">
+    <div class="neutral-swatch" style="background: #FAFAF7;"><span class="n-name">White</span><span class="n-hex">#FAFAF7</span></div>
+    <div class="neutral-swatch" style="background: #F5F4F0;"><span class="n-name">Off-white</span><span class="n-hex">#F5F4F0</span></div>
+    <div class="neutral-swatch" style="background: #ECEAE4;"><span class="n-name">Light gray</span><span class="n-hex">#ECEAE4</span></div>
+    <div class="neutral-swatch" style="background: #B8B5AD; color: white;"><span class="n-name">Mid gray</span><span class="n-hex">#B8B5AD</span></div>
+    <div class="neutral-swatch" style="background: #6B6860; color: white;"><span class="n-name">Text muted</span><span class="n-hex">#6B6860</span></div>
+    <div class="neutral-swatch" style="background: #1A1917; color: white;"><span class="n-name">Text primary</span><span class="n-hex">#1A1917</span></div>
+  </div>
+
+  <h3 style="font-family: var(--font-display); font-weight: 700; font-size: 22px; margin-top: 60px; letter-spacing: -0.5px;">Semantic colors</h3>
+  <div class="color-neutrals" style="margin-top: 16px;">
+    <div class="neutral-swatch" style="background: #2D8C4E; color: white;"><span class="n-name">Success</span><span class="n-hex">#2D8C4E</span></div>
+    <div class="neutral-swatch" style="background: #D4890A; color: white;"><span class="n-name">Warning</span><span class="n-hex">#D4890A</span></div>
+    <div class="neutral-swatch" style="background: #D93636; color: white;"><span class="n-name">Critical</span><span class="n-hex">#D93636</span></div>
+    <div class="neutral-swatch" style="background: #2B7BD4; color: white;"><span class="n-name">Info</span><span class="n-hex">#2B7BD4</span></div>
+  </div>
+</section>
+
+<!-- ═══ TYPOGRAPHY ═══ -->
+<section class="section section-gap" id="typography">
+  <div class="section-label">03 — Typography</div>
+  <h2 class="section-title">Three fonts.<br>Zero noise.</h2>
+  <p class="section-subtitle">Outfit for impact. Space Grotesk for clarity. JetBrains Mono for precision. Each one earns its role.</p>
+
+  <div class="type-showcase">
+    <div class="type-specimen">
+      <div class="type-meta">
+        <span class="type-tag">Display</span>
+        <span class="type-name">Outfit &mdash; 800 / 700</span>
+      </div>
+      <div class="type-display-sample">Build systems<br>that sell for you.</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">
+        <span class="type-tag">Body</span>
+        <span class="type-name">Space Grotesk &mdash; 400 / 500</span>
+      </div>
+      <div class="type-body-sample">Forge Digital is an AI-powered sales infrastructure partner for US businesses doing $500K–$5M in annual revenue. We don't sell marketing services. We sell revenue infrastructure — the complete system that turns strangers into customers.</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">
+        <span class="type-tag">Mono</span>
+        <span class="type-name">JetBrains Mono &mdash; 400 / 500</span>
+      </div>
+      <div class="type-mono-sample">
+        scan.status = "complete"<br>
+        funnel.score = 72<br>
+        leads.captured = 3,847<br>
+        revenue.recovered = $284,000
+      </div>
+    </div>
+  </div>
+
+  <div class="type-scale">
+    <h3 style="font-family: var(--font-display); font-weight: 700; font-size: 22px; margin-bottom: 24px; letter-spacing: -0.5px;">Type scale</h3>
+    <div class="scale-row">
+      <span class="scale-label">Hero</span>
+      <span class="scale-sample" style="font-size: 56px; font-weight: 900; letter-spacing: -2px;">FORGE</span>
+    </div>
+    <div class="scale-row">
+      <span class="scale-label">H1 — 42px</span>
+      <span class="scale-sample" style="font-size: 42px;">Build yourself.</span>
+    </div>
+    <div class="scale-row">
+      <span class="scale-label">H2 — 32px</span>
+      <span class="scale-sample" style="font-size: 32px;">Revenue infrastructure</span>
+    </div>
+    <div class="scale-row">
+      <span class="scale-label">H3 — 24px</span>
+      <span class="scale-sample" style="font-size: 24px;">Your funnel has 4 critical gaps</span>
+    </div>
+    <div class="scale-row">
+      <span class="scale-label">Body — 16px</span>
+      <span class="scale-sample" style="font-size: 16px; font-weight: 400; font-family: var(--font-body);">We scanned 247 touchpoints across your sales funnel.</span>
+    </div>
+    <div class="scale-row">
+      <span class="scale-label">Small — 13px</span>
+      <span class="scale-sample" style="font-size: 13px; font-weight: 400; font-family: var(--font-body); color: var(--forge-text-secondary);">Last updated 3 minutes ago</span>
+    </div>
+    <div class="scale-row">
+      <span class="scale-label">Mono — 12px</span>
+      <span class="scale-sample" style="font-size: 12px; font-weight: 400; font-family: var(--font-mono); color: var(--forge-text-secondary);">audit.forgedigital.com</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ VOICE ═══ -->
+<section class="section section-gap" id="voice">
+  <div class="section-label">04 — Voice &amp; Tone</div>
+  <h2 class="section-title">Direct. Technical.<br>Never corporate.</h2>
+  <p class="section-subtitle">Forge talks like a builder talks to another builder. No fluff, no buzzwords, no "in today's digital landscape" garbage.</p>
+
+  <div class="voice-grid">
+    <div class="voice-item">
+      <div class="voice-do">&#10003; Do this</div>
+      <div class="voice-example">"Your homepage has zero lead capture. You're paying for traffic that disappears."</div>
+    </div>
+    <div class="voice-item">
+      <div class="voice-dont">&#10005; Not this</div>
+      <div class="voice-example">"We've identified several areas of opportunity for optimizing your digital presence and enhancing engagement metrics."</div>
+    </div>
+    <div class="voice-item">
+      <div class="voice-do">&#10003; Do this</div>
+      <div class="voice-example">"We build AI-powered sales systems. You get more customers. That's it."</div>
+    </div>
+    <div class="voice-item">
+      <div class="voice-dont">&#10005; Not this</div>
+      <div class="voice-example">"Leveraging cutting-edge artificial intelligence solutions to drive transformative growth in your customer acquisition pipeline."</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LOGO ═══ -->
+<section class="section section-gap" id="logo">
+  <div class="section-label">05 — Logo usage</div>
+  <h2 class="section-title">The wordmark.</h2>
+  <p class="section-subtitle">FORGE is always set in Outfit Black (900). All caps. Tight tracking. The wordmark is the logo. No symbol, no icon — the name is the identity.</p>
+
+  <div class="logo-grid">
+    <div class="logo-box logo-box-light">
+      <span class="logo-text" style="color: var(--forge-text-primary);">FORGE</span>
+      <span class="usage-label" style="color: var(--forge-text-secondary);">On light</span>
+    </div>
+    <div class="logo-box logo-box-dark">
+      <span class="logo-text" style="color: var(--forge-dark-text);">FORGE</span>
+      <span class="usage-label" style="color: var(--forge-dark-text-muted);">On dark</span>
+    </div>
+    <div class="logo-box logo-box-orange">
+      <span class="logo-text" style="color: white;">FORGE</span>
+      <span class="usage-label" style="color: rgba(255,255,255,0.5);">On orange</span>
+    </div>
+    <div class="logo-box logo-box-photo">
+      <span class="logo-text" style="color: white;">FORGE</span>
+      <span class="usage-label" style="color: rgba(255,255,255,0.4);">On photo</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ COMPONENTS ═══ -->
+<section class="section section-gap" id="components">
+  <div class="section-label">06 — Components</div>
+  <h2 class="section-title">System pieces.</h2>
+  <p class="section-subtitle">Every component follows the same rules: warm neutrals, Forge Orange accents, no decoration for decoration's sake.</p>
+
+  <div class="components-grid">
+    <div class="comp-card">
+      <span class="comp-label">Buttons</span>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+        <button class="btn-primary">Scan my funnel &#8594;</button>
+        <button class="btn-secondary">Learn more</button>
+        <button class="btn-ghost">Book a call</button>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <span class="comp-label">Input</span>
+      <input class="input-example" placeholder="Enter your website URL..." type="text">
+      <input class="input-example" placeholder="you@company.com" type="email" style="margin-top: 12px;">
+    </div>
+
+    <div class="comp-card">
+      <span class="comp-label">Badges</span>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+        <span class="badge badge-orange">Founding client</span>
+        <span class="badge badge-dark">AI-powered</span>
+        <span class="badge badge-outline">3 spots left</span>
+        <span class="badge" style="background: #E8F5EC; color: #1B6B35;">Scan complete</span>
+        <span class="badge" style="background: #FFF3E0; color: #9A5C00;">In progress</span>
+        <span class="badge" style="background: #FCEAEA; color: #A82828;">Critical</span>
+      </div>
+    </div>
+
+    <div class="comp-card">
+      <span class="comp-label">Card with accent</span>
+      <div class="example-card">
+        <div style="font-family: var(--font-mono); font-size: 11px; color: var(--forge-orange); letter-spacing: 0.5px; margin-bottom: 12px;">FUNNEL SCORE</div>
+        <div style="font-family: var(--font-display); font-weight: 800; font-size: 48px; letter-spacing: -2px; margin-bottom: 8px;">72<span style="font-size: 24px; color: var(--forge-mid-gray);">/100</span></div>
+        <div style="font-size: 14px; color: var(--forge-text-secondary);">Your funnel is leaking revenue at 3 critical points.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ SPACING ═══ -->
+<section class="section section-gap">
+  <div class="section-label">07 — Spacing system</div>
+  <h2 class="section-title">Breathing room.</h2>
+  <p class="section-subtitle">8px base unit. Generous whitespace. Let the content breathe — cramped design signals amateur work.</p>
+
+  <div class="spacing-demo">
+    <div class="spacing-block"><div class="spacing-visual" style="height: 8px;"></div><span class="spacing-value">8px</span></div>
+    <div class="spacing-block"><div class="spacing-visual" style="height: 16px;"></div><span class="spacing-value">16px</span></div>
+    <div class="spacing-block"><div class="spacing-visual" style="height: 24px;"></div><span class="spacing-value">24px</span></div>
+    <div class="spacing-block"><div class="spacing-visual" style="height: 32px;"></div><span class="spacing-value">32px</span></div>
+    <div class="spacing-block"><div class="spacing-visual" style="height: 48px;"></div><span class="spacing-value">48px</span></div>
+    <div class="spacing-block"><div class="spacing-visual" style="height: 64px;"></div><span class="spacing-value">64px</span></div>
+    <div class="spacing-block"><div class="spacing-visual" style="height: 96px;"></div><span class="spacing-value">96px</span></div>
+    <div class="spacing-block"><div class="spacing-visual" style="height: 128px;"></div><span class="spacing-value">128px</span></div>
+  </div>
+</section>
+
+<!-- ═══ DARK MODE ═══ -->
+<div class="dark-section" id="darkmode">
+  <div class="section">
+    <div class="section-label">08 — Dark mode</div>
+    <h2 class="section-title">The complement.</h2>
+    <p class="section-subtitle">Dark mode isn't the primary — it's the companion. Warm charcoal base, not cold navy. Orange stays the star. Used for tool interfaces, admin dashboards, and the scan experience.</p>
+
+    <div class="dark-tokens">
+      <div class="dark-token" style="background: #141413;"><span class="n-name">Base</span><span class="n-hex">#141413</span></div>
+      <div class="dark-token" style="background: #1E1E1C;"><span class="n-name">Surface</span><span class="n-hex">#1E1E1C</span></div>
+      <div class="dark-token" style="background: #282826;"><span class="n-name">Card</span><span class="n-hex">#282826</span></div>
+      <div class="dark-token" style="background: #353533;"><span class="n-name">Elevated</span><span class="n-hex">#353533</span></div>
+      <div class="dark-token" style="background: var(--forge-orange);"><span class="n-name" style="color: white;">Accent</span><span class="n-hex" style="color: rgba(255,255,255,0.7);">#E8530E</span></div>
+      <div class="dark-token" style="background: #F0EFE9;"><span class="n-name" style="color: #1A1917;">Text</span><span class="n-hex" style="color: #6B6860;">#F0EFE9</span></div>
+      <div class="dark-token" style="background: #9A9890;"><span class="n-name" style="color: white;">Muted</span><span class="n-hex" style="color: rgba(255,255,255,0.7);">#9A9890</span></div>
+    </div>
+
+    <!-- Dark mode mockup -->
+    <div class="dark-mockup">
+      <div class="dark-mockup-nav">
+        <span class="mockup-nav-brand">FORGE</span>
+        <button class="mockup-nav-cta">Book a free strategy call</button>
+      </div>
+      <div class="dark-mockup-hero">
+        <h2>Your funnel is <span style="color: var(--forge-orange);">leaking revenue.</span></h2>
+        <p>Enter your URL and we'll show you exactly where — with screenshots, AI analysis, and a fix-it blueprint. Free.</p>
+        <div class="mockup-input-group">
+          <input placeholder="yourwebsite.com" style="background: var(--forge-dark); border-color: var(--forge-dark-border); color: var(--forge-dark-text);">
+          <button style="background: var(--forge-orange); color: white; border: none; border-radius: 10px; font-family: var(--font-body); font-weight: 600; padding: 14px 24px; cursor: pointer;">Scan my funnel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LIGHT MODE MOCKUP ═══ -->
+<section class="section section-gap">
+  <div class="section-label">09 — Application</div>
+  <h2 class="section-title">Light mode primary.</h2>
+  <p class="section-subtitle">The scanner landing page, content, social, and all public-facing touchpoints lead with light mode. Open, inviting, powerful.</p>
+
+  <div class="mockup-container">
+    <div class="mockup-nav">
+      <span class="mockup-nav-brand">FORGE</span>
+      <button class="mockup-nav-cta">Book a free strategy call</button>
+    </div>
+    <div class="mockup-hero-block">
+      <h2>Your funnel is <span style="color: var(--forge-orange);">leaking revenue.</span></h2>
+      <p>Enter your URL and we'll show you exactly where — with screenshots, AI analysis, and a fix-it blueprint. Free.</p>
+      <div class="mockup-input-group">
+        <input placeholder="yourwebsite.com">
+        <button>Scan my funnel</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CSS TOKENS REFERENCE ═══ -->
+<section class="section section-gap">
+  <div class="section-label">10 — Token reference</div>
+  <h2 class="section-title">Copy-paste ready.</h2>
+  <p class="section-subtitle">Drop these CSS variables into your project. Everything cascades from here.</p>
+
+  <div style="background: var(--forge-off-white); border-radius: 16px; padding: 32px; margin-top: 40px; font-family: var(--font-mono); font-size: 13px; line-height: 2; color: var(--forge-text-secondary); overflow-x: auto;">
+    <div style="color: var(--forge-mid-gray);">/* Forge Digital — Brand Tokens v2.0 */</div>
+    <div style="color: var(--forge-mid-gray);">/* Light mode (primary) */</div>
+    <div>:root {</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-orange</span>: #E8530E;</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-orange-light</span>: #FF6B2B;</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-orange-deep</span>: #C4410A;</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-bg</span>: #FAFAF7;</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-surface</span>: #F5F4F0;</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-border</span>: #ECEAE4;</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-text</span>: #1A1917;</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-text-muted</span>: #6B6860;</div>
+    <div>}</div>
+    <br>
+    <div style="color: var(--forge-mid-gray);">/* Dark mode (complement) */</div>
+    <div>.dark {</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-bg</span>: #141413;</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-surface</span>: #1E1E1C;</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-card</span>: #282826;</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-border</span>: rgba(255, 107, 43, 0.12);</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-text</span>: #F0EFE9;</div>
+    <div>&nbsp;&nbsp;<span style="color: var(--forge-orange);">--forge-text-muted</span>: #9A9890;</div>
+    <div>}</div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <div class="footer-logo" style="color: var(--forge-orange);">FORGE</div>
+  <p>Brand guidelines v2.0 &mdash; March 2026</p>
+  <p style="margin-top: 4px;">Forge Digital &mdash; Built by Adri&aacute;n Trevi&ntilde;o</p>
+</footer>
+
+<script>
+  // Nav dark mode toggle on scroll
+  const darkSection = document.querySelector('.dark-section');
+  const nav = document.getElementById('mainNav');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        nav.classList.add('dark-active');
+      } else {
+        nav.classList.remove('dark-active');
+      }
+    });
+  }, { threshold: 0.3 });
+
+  observer.observe(darkSection);
+
+  // Smooth reveal on scroll
+  const reveals = document.querySelectorAll('.section-gap, .dark-section');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  reveals.forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(30px)';
+    el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+    revealObserver.observe(el);
+  });
+</script>
+
+</body>
+</html>
