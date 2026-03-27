@@ -1,5 +1,7 @@
 // src/lib/ai/playbook-loader.ts
-import { readFileSync } from 'fs';
+// Reads Hormozi knowledge files from vault. Uses in-process caching —
+// files are read once on first access, then served from memory.
+import { readFile } from 'fs/promises';
 import { resolve } from 'path';
 import type { ObjectionType } from './objection-classifier';
 
@@ -9,14 +11,15 @@ const SECTION_HEADERS: Record<string, string> = {
 };
 
 let cachedPlaybook: string | null = null;
+let cachedPrinciples: string | null = null;
 
-function getPlaybookContent(): string {
+async function getPlaybookContent(): Promise<string> {
   if (cachedPlaybook) return cachedPlaybook;
   const knowledgePath = process.env.SALES_KNOWLEDGE_PATH;
   if (!knowledgePath) { console.warn('[playbook-loader] SALES_KNOWLEDGE_PATH not set'); return ''; }
   try {
     const playbookPath = resolve(process.cwd(), knowledgePath, 'objection-playbook.md');
-    cachedPlaybook = readFileSync(playbookPath, 'utf-8');
+    cachedPlaybook = await readFile(playbookPath, 'utf-8');
     return cachedPlaybook;
   } catch (error) {
     console.error('[playbook-loader] Failed to read playbook:', error);
@@ -24,11 +27,11 @@ function getPlaybookContent(): string {
   }
 }
 
-export function loadPlaybookSection(objectionType: ObjectionType): string | null {
+export async function loadPlaybookSection(objectionType: ObjectionType): Promise<string | null> {
   if (objectionType === 'none' || objectionType === 'ready_to_book') return null;
   const header = SECTION_HEADERS[objectionType];
   if (!header) return null;
-  const content = getPlaybookContent();
+  const content = await getPlaybookContent();
   if (!content) return null;
   const sectionStart = content.indexOf(header);
   if (sectionStart === -1) return null;
@@ -40,16 +43,21 @@ export function loadPlaybookSection(objectionType: ObjectionType): string | null
   return section.trim();
 }
 
-export function loadCorePrinciples(): string {
+export async function loadCorePrinciples(): Promise<string> {
+  if (cachedPrinciples) return cachedPrinciples;
   const knowledgePath = process.env.SALES_KNOWLEDGE_PATH;
   if (!knowledgePath) { console.warn('[playbook-loader] SALES_KNOWLEDGE_PATH not set'); return ''; }
   try {
     const principlesPath = resolve(process.cwd(), knowledgePath, 'core-principles.md');
-    return readFileSync(principlesPath, 'utf-8');
+    cachedPrinciples = await readFile(principlesPath, 'utf-8');
+    return cachedPrinciples;
   } catch (error) {
     console.error('[playbook-loader] Failed to read core principles:', error);
     return '';
   }
 }
 
-export function clearPlaybookCache(): void { cachedPlaybook = null; }
+export function clearCache(): void {
+  cachedPlaybook = null;
+  cachedPrinciples = null;
+}

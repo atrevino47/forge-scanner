@@ -293,7 +293,7 @@ These are intentional tradeoffs. Agents who don't read this list will waste time
 
 ### Code quality
 - `tsc --noEmit` must pass with **zero errors** after every change
-- `npm run build` must succeed
+- `bun run build` must succeed
 - No `any` types. No `@ts-ignore`. No `@ts-expect-error`.
 - Zod validation on ALL API inputs
 - Every async has try/catch. Every AI JSON parse wrapped in try/catch with fallback.
@@ -332,12 +332,12 @@ Three public pages. Two admin pages. Cal.com is always a modal overlay, never it
 ## Key commands
 
 ```bash
-npm run dev            # Start dev server
-npm run build          # Production build (must succeed)
-npx tsc --noEmit       # TypeScript check (must be zero errors)
-npm run lint           # ESLint
-npx supabase start     # Local Supabase
-npx supabase db push   # Push migrations to remote
+bun run dev            # Start dev server
+bun run build          # Production build (must succeed)
+bunx tsc --noEmit      # TypeScript check (must be zero errors)
+bun run lint           # ESLint
+bunx supabase start    # Local Supabase
+bunx supabase db push  # Push migrations to remote
 ```
 
 ---

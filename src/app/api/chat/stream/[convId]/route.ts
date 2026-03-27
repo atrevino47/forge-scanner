@@ -162,7 +162,7 @@ export async function GET(
       const meta = latestUserMessage.metadata as Record<string, unknown>;
       const objectionType = meta.objection_type as ObjectionType | undefined;
       if (objectionType && objectionType !== 'none' && objectionType !== 'ready_to_book') {
-        activeObjectionContext = loadPlaybookSection(objectionType);
+        activeObjectionContext = await loadPlaybookSection(objectionType);
       }
     }
 
@@ -173,7 +173,7 @@ export async function GET(
     const scanResult = buildScanResult(scan, stagesData, screenshotsData);
 
     // Build the system prompt
-    const systemPrompt = buildSalesAgentSystemPrompt({
+    const systemPrompt = await buildSalesAgentSystemPrompt({
       scanResult,
       businessName: lead.business_name,
       leadName: lead.full_name,

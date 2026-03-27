@@ -37,7 +37,7 @@ export interface SalesAgentPromptParams {
   messageCount?: number;                   // for adaptive intensity
 }
 
-export function buildFullSalesAgentPrompt(params: SalesAgentPromptParams): string {
+export async function buildFullSalesAgentPrompt(params: SalesAgentPromptParams): Promise<string> {
   const {
     scanResult,
     blueprint,
@@ -51,7 +51,7 @@ export function buildFullSalesAgentPrompt(params: SalesAgentPromptParams): strin
   const weakestStage = findWeakestStage(scanResult);
   const channelRules = getChannelRules(channel);
   const screenshotIndex = buildScreenshotIndex(scanResult);
-  const corePrinciples = loadCorePrinciples();
+  const corePrinciples = await loadCorePrinciples();
 
   const intensityLevel = (params.messageCount ?? 0) <= 3 ? 'warm'
     : (params.messageCount ?? 0) <= 6 ? 'direct' : 'closer';

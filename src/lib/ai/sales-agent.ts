@@ -15,7 +15,7 @@ import { getWhatsAppFollowupPrompt, type WhatsAppSequencePosition } from '../pro
 // Signature matches what Backend already calls
 // ============================================================
 
-export function buildSalesAgentSystemPrompt(params: {
+export async function buildSalesAgentSystemPrompt(params: {
   scanResult: ScanResult;
   businessName?: string | null;
   leadName?: string | null;
@@ -23,10 +23,10 @@ export function buildSalesAgentSystemPrompt(params: {
   channel?: Channel;
   activeObjectionContext?: string | null;
   messageCount?: number;
-}): string {
+}): Promise<string> {
   const biz = params.businessName || extractDomain(params.scanResult.websiteUrl);
 
-  return buildFullSalesAgentPrompt({
+  return await buildFullSalesAgentPrompt({
     scanResult: params.scanResult,
     blueprint: params.blueprint,
     channel: params.channel ?? 'web',
