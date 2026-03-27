@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { createServiceClient } from '@/lib/db/client';
 import { streamWithSonnet } from '@/lib/ai/client';
 import { buildSalesAgentSystemPrompt } from '@/lib/ai/sales-agent';
+import { loadPlaybookSection } from '@/lib/ai/playbook-loader';
+import type { ObjectionType } from '@/lib/ai/objection-classifier';
 import type { ApiError } from '@/../contracts/api';
 import type { ChatSSEEvent } from '@/../contracts/events';
 import type { Annotation } from '@/../contracts/types';
@@ -150,6 +152,23 @@ export async function GET(
     const screenshotsData = screenshotsResult.data ?? [];
     const messagesData = messagesResult.data ?? [];
 
+    // Check if the latest user message has an objection classification
+    const latestUserMessage = [...messagesData]
+      .reverse()
+      .find((m) => m.role === 'user');
+
+    let activeObjectionContext: string | null = null;
+    if (latestUserMessage?.metadata) {
+      const meta = latestUserMessage.metadata as Record<string, unknown>;
+      const objectionType = meta.objection_type as ObjectionType | undefined;
+      if (objectionType && objectionType !== 'none' && objectionType !== 'ready_to_book') {
+        activeObjectionContext = loadPlaybookSection(objectionType);
+      }
+    }
+
+    // Count user messages for adaptive intensity
+    const messageCount = messagesData.filter((m) => m.role === 'user').length;
+
     // Build ScanResult for the system prompt
     const scanResult = buildScanResult(scan, stagesData, screenshotsData);
 
@@ -158,6 +177,8 @@ export async function GET(
       scanResult,
       businessName: lead.business_name,
       leadName: lead.full_name,
+      activeObjectionContext,
+      messageCount,
     });
 
     // Convert messages to the format streamWithSonnet expects
