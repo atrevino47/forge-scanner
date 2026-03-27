@@ -1,0 +1,10 @@
+{
+  "leads": [],
+  "lastUpdated": null,
+  "stats": {
+    "totalScans": 0,
+    "conversationsStarted": 0,
+    "bookings": 0,
+    "payments": 0
+  }
+}
