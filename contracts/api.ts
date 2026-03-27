@@ -113,7 +113,7 @@ export interface TriggerFollowupRequest {
 export interface TriggerFollowupResponse {
   scheduled: boolean;
   sequenceId: string;
-  firstMessageAt: string; // ISO timestamp
+  firstMessageAt: string | null; // ISO timestamp, null when no email to schedule for
 }
 
 // POST /api/followup/scrape-contact

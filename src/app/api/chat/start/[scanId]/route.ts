@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createServiceClient } from '@/lib/db/client';
 import { generateInitialMessage } from '@/lib/ai/sales-agent';
 import type { StartChatResponse, ApiError } from '@/../contracts/api';
+import { writeVaultEvent } from '@/lib/vault/event-writer';
 import type {
   DbScan,
   DbLead,
@@ -200,6 +201,16 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    writeVaultEvent({
+      type: 'conversation_started',
+      scanId,
+      leadEmail: lead.email,
+      leadPhone: lead.phone,
+      businessName: lead.business_name,
+      websiteUrl: scan.website_url,
+      chatChannel: 'web',
+    });
 
     // Store the initial assistant message
     const { error: msgError } = await supabase.from('messages').insert({

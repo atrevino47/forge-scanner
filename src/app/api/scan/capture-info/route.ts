@@ -4,6 +4,7 @@ import type { CaptureInfoResponse, ApiError } from '@/../contracts/api';
 import type { Lead, DetectedSocials } from '@/../contracts/types';
 import { createServiceClient } from '@/lib/db/client';
 import { apiError } from '@/lib/api-utils';
+import { writeVaultEvent } from '@/lib/vault/event-writer';
 
 // ============================================================
 // POST /api/scan/capture-info
@@ -150,6 +151,15 @@ export async function POST(
         500
       );
     }
+
+    writeVaultEvent({
+      type: 'lead_captured',
+      scanId: parsed.data.scanId,
+      leadEmail: parsed.data.email,
+      leadPhone: parsed.data.phone,
+      businessName: parsed.data.businessName,
+      details: { captureMethod: 'direct' },
+    });
 
     // (d) If providedSocials is present, update scans.provided_socials
     if (providedSocials) {
