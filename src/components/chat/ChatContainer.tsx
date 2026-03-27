@@ -105,7 +105,7 @@ export function ChatContainer({
             id: 'error',
             role: 'assistant',
             content:
-              '[COPY: chat initialization error message]',
+              'Something went wrong starting the chat. Please refresh the page and try again.',
           },
         ]);
       })
@@ -249,7 +249,7 @@ export function ChatContainer({
           {
             id: `err-${Date.now()}`,
             role: 'assistant',
-            content: '[COPY: message send error]',
+            content: 'Failed to send your message. Please try again.',
           },
         ]);
       }
@@ -277,7 +277,7 @@ export function ChatContainer({
       <div className="flex items-center justify-between border-b border-forge-border px-4 py-3">
         <div>
           <p className="font-display text-sm tracking-display text-forge-text">
-            [COPY: chat agent name]
+            Forge Advisor
           </p>
           <p className="text-[10px] text-forge-text-muted">
             {isStreaming ? 'Typing...' : 'Online'}

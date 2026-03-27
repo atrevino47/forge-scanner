@@ -24,10 +24,10 @@ export function DataCard({ screenshotId, calcomUrl }: DataCardProps) {
           </div>
           <div>
             <p className="font-body text-sm font-semibold text-forge-text">
-              [COPY: book a strategy call]
+              Book a Free Strategy Call
             </p>
             <p className="text-xs text-forge-text-muted">
-              [COPY: book call description in chat]
+              30 minutes with Adrian — we'll walk through your scan and map out a game plan.
             </p>
           </div>
         </div>
