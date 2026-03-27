@@ -1,5 +1,7 @@
 // src/lib/vault/queue-writer.ts
-import { writeFileSync, mkdirSync } from 'fs';
+// Writes follow-up queue entries for the Sales Orchestrator.
+// Uses async I/O to avoid blocking the event loop in route handlers.
+import { mkdir, writeFile } from 'fs/promises';
 import { resolve } from 'path';
 
 export interface QueueEntryData {
@@ -20,8 +22,13 @@ export interface QueueEntryData {
 const QUEUE_DIR = resolve(process.cwd(), 'sales/queues/pending');
 
 export function writeQueueEntry(data: QueueEntryData): void {
+  // Fire-and-forget async write — never blocks the caller
+  void writeQueueEntryAsync(data);
+}
+
+async function writeQueueEntryAsync(data: QueueEntryData): Promise<void> {
   try {
-    mkdirSync(QUEUE_DIR, { recursive: true });
+    await mkdir(QUEUE_DIR, { recursive: true });
     const filename = `${data.scanId}-pos${data.sequencePosition}.md`;
     const filepath = resolve(QUEUE_DIR, filename);
     const content = `# FOLLOW-UP: ${data.scanId}-pos${data.sequencePosition}
@@ -45,7 +52,7 @@ export function writeQueueEntry(data: QueueEntryData): void {
 ## Send Result
 [To be filled when sent]
 `;
-    writeFileSync(filepath, content, 'utf-8');
+    await writeFile(filepath, content, 'utf-8');
     console.log(`[vault-queue] Wrote follow-up entry → ${filename}`);
   } catch (error) {
     console.error(`[vault-queue] Failed to write queue entry:`, error);

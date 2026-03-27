@@ -17,8 +17,8 @@ Categories:
 - "price": Prospect concerned about cost. Triggers: "too expensive", "can't afford", "how much", "budget", "pricing"
 - "fit": Prospect doubts relevance. Triggers: "not for me", "my business is different", "too small", "does this work for"
 - "authority": Prospect defers to others. Triggers: "talk to spouse", "partner", "ask my team", "not the only decision maker"
-- "avoidance": Prospect disengaging. Triggers: "get back to you", "send me info", "let me look into it", vague non-committal
-- "stall": Prospect engaged but stuck. Signs: repeating same concern, topic changes, "yeah but...", circular responses
+- "avoidance": Prospect DISENGAGING — pulling away from the conversation entirely. Triggers: "get back to you", "send me info", "let me look into it", requesting to be contacted later, asking for written materials instead of continuing. Key signal: they want to END the current interaction.
+- "stall": Prospect still ENGAGED but stuck in a loop. Signs: repeating the same concern after it was addressed, "yeah but...", agreeing then circling back, asking the same question differently. Key signal: they WANT to keep talking but can't move past a specific block.
 - "ready_to_book": Prospect showing buying intent. Signs: asking about scheduling, next steps, availability, "how do I sign up"
 - "none": Normal conversation, no objection or buying signal detected
 

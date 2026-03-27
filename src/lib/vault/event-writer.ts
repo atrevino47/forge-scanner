@@ -1,5 +1,7 @@
 // src/lib/vault/event-writer.ts
-import { writeFileSync, mkdirSync } from 'fs';
+// Writes structured event files to the vault for the Sales Orchestrator.
+// Uses async I/O to avoid blocking the event loop in route handlers.
+import { mkdir, writeFile } from 'fs/promises';
 import { resolve } from 'path';
 
 export type VaultEventType =
@@ -26,8 +28,13 @@ const VAULT_EVENTS_DIR = resolve(
 );
 
 export function writeVaultEvent(data: VaultEventData): void {
+  // Fire-and-forget async write — never blocks the caller
+  void writeVaultEventAsync(data);
+}
+
+async function writeVaultEventAsync(data: VaultEventData): Promise<void> {
   try {
-    mkdirSync(VAULT_EVENTS_DIR, { recursive: true });
+    await mkdir(VAULT_EVENTS_DIR, { recursive: true });
     const timestamp = new Date().toISOString();
     const safeTimestamp = timestamp.replace(/[:.]/g, '-');
     const filename = `${safeTimestamp}-${data.type}.md`;
@@ -43,7 +50,7 @@ export function writeVaultEvent(data: VaultEventData): void {
 **Chat Channel:** ${data.chatChannel ?? 'web'}
 **Details:** ${data.details ? JSON.stringify(data.details, null, 2) : 'none'}
 `;
-    writeFileSync(filepath, content, 'utf-8');
+    await writeFile(filepath, content, 'utf-8');
     console.log(`[vault-event] Wrote ${data.type} → ${filename}`);
   } catch (error) {
     console.error(`[vault-event] Failed to write ${data.type}:`, error);
