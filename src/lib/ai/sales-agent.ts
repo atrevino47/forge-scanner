@@ -21,6 +21,8 @@ export function buildSalesAgentSystemPrompt(params: {
   leadName?: string | null;
   blueprint?: BlueprintData | null;
   channel?: Channel;
+  activeObjectionContext?: string | null;
+  messageCount?: number;
 }): string {
   const biz = params.businessName || extractDomain(params.scanResult.websiteUrl);
 
@@ -31,6 +33,8 @@ export function buildSalesAgentSystemPrompt(params: {
     businessName: biz,
     leadName: params.leadName,
     calcomUrl: process.env.NEXT_PUBLIC_CALCOM_EMBED_URL,
+    activeObjectionContext: params.activeObjectionContext,
+    messageCount: params.messageCount,
   });
 }
 
