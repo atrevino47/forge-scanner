@@ -70,10 +70,11 @@ export function ChatMessage({
     >
       <div
         className={cn(
-          'max-w-[80%] rounded-2xl px-4 py-2.5',
+          'max-w-[80%] rounded-2xl px-4 py-2.5 transition-opacity duration-300',
           isUser
             ? 'rounded-br-sm bg-forge-accent/15 text-forge-text'
             : 'rounded-bl-sm bg-forge-surface text-forge-text',
+          isStreaming && 'opacity-85',
         )}
       >
         <p className="font-body text-sm leading-relaxed whitespace-pre-wrap">
