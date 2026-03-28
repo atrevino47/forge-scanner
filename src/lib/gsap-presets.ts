@@ -70,3 +70,31 @@ export function fadeSlideRight(overrides?: gsap.TweenVars): PresetConfig {
     },
   };
 }
+
+/** Scale out to slightly smaller — use for dismiss animations */
+export function scaleOut(overrides?: gsap.TweenVars): PresetConfig {
+  return {
+    from: { opacity: 1, scale: 1 },
+    vars: {
+      opacity: 0,
+      scale: 0.9,
+      duration: 0.25,
+      ease: 'power2.in',
+      ...overrides,
+    },
+  };
+}
+
+/** Pop in with overshoot — use for attention elements, badges */
+export function popIn(overrides?: gsap.TweenVars): PresetConfig {
+  return {
+    from: { opacity: 0, scale: 0.8 },
+    vars: {
+      opacity: 1,
+      scale: 1,
+      duration: 0.4,
+      ease: 'back.out(1.7)',
+      ...overrides,
+    },
+  };
+}
