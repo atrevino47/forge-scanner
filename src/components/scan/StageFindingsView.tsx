@@ -142,48 +142,53 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
               </div>
             </div>
 
-            {/* Screenshot with Annotation Dots */}
-            <div className="relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={primaryScreenshot.thumbnailUrl}
-                alt={`${STAGE_LABELS[stage]} screenshot`}
-                className="w-full"
-                loading="lazy"
-              />
-              {/* Annotation dots */}
-              {primaryScreenshot.annotations.map((annotation, i) => (
-                <button
-                  key={annotation.id}
-                  data-sf-dot=""
-                  onClick={() => setActiveAnnotation(
-                    activeAnnotation?.id === annotation.id ? null : annotation
-                  )}
-                  className={`absolute w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white shadow-lg ${
-                    annotation.type === 'critical' || annotation.type === 'warning'
-                      ? 'bg-forge-accent shadow-[0_0_12px_rgba(232,83,14,0.6)]'
-                      : annotation.type === 'positive'
-                        ? 'bg-forge-positive shadow-[0_0_12px_rgba(45,140,78,0.6)]'
-                        : 'bg-forge-opportunity shadow-[0_0_12px_rgba(43,123,212,0.6)]'
-                  }`}
-                  style={{
-                    left: `${annotation.position.x}%`,
-                    top: `${annotation.position.y}%`,
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                >
-                  {i + 1}
-                </button>
-              ))}
-
-              {/* Active popover */}
-              {activeAnnotation && (
-                <AnnotationPopover
-                  annotation={activeAnnotation}
-                  onClose={() => setActiveAnnotation(null)}
+            {/* Scrollable screenshot viewport — phone-screen height, user scrolls to see full page */}
+            <div className="max-h-[480px] overflow-y-auto overscroll-contain">
+              {/* Screenshot with Annotation Dots — relative wrapper matches full image size for % positioning */}
+              <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={primaryScreenshot.thumbnailUrl}
+                  alt={`${STAGE_LABELS[stage]} screenshot`}
+                  className="w-full block"
+                  loading="lazy"
                 />
-              )}
+                {/* Annotation dots — positioned relative to full image dimensions */}
+                {primaryScreenshot.annotations.map((annotation, i) => (
+                  <button
+                    key={annotation.id}
+                    data-sf-dot=""
+                    onClick={() => setActiveAnnotation(
+                      activeAnnotation?.id === annotation.id ? null : annotation
+                    )}
+                    className={`absolute w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white shadow-lg cursor-pointer z-10 ${
+                      annotation.type === 'critical' || annotation.type === 'warning'
+                        ? 'bg-forge-accent shadow-[0_0_12px_rgba(232,83,14,0.6)]'
+                        : annotation.type === 'positive'
+                          ? 'bg-forge-positive shadow-[0_0_12px_rgba(45,140,78,0.6)]'
+                          : 'bg-forge-opportunity shadow-[0_0_12px_rgba(43,123,212,0.6)]'
+                    }`}
+                    style={{
+                      left: `${annotation.position.x}%`,
+                      top: `${annotation.position.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+                {/* Active popover */}
+                {activeAnnotation && (
+                  <AnnotationPopover
+                    annotation={activeAnnotation}
+                    onClose={() => setActiveAnnotation(null)}
+                  />
+                )}
+              </div>
             </div>
+            {/* Scroll hint — subtle gradient at bottom of viewport */}
+            <div className="h-6 bg-gradient-to-t from-forge-card to-transparent -mt-6 relative z-[5] pointer-events-none" />
           </div>
         </section>
       )}
