@@ -53,11 +53,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<TriggerFo
       details: { reason },
     });
 
-    const triggerMap: Record<string, 'conversation_abandoned' | 'bounced' | 'no_chat'> = {
-      exit_intent: 'conversation_abandoned',
-      no_booking: 'conversation_abandoned',
-      abandoned_scan: 'bounced',
-    };
+    const sequenceId = `seq_${crypto.randomUUID()}`;
+    const firstMessageAt = new Date(Date.now() + 45 * 1000).toISOString();
 
     if (lead.email) {
       const { data: stages } = await supabase
@@ -75,6 +72,31 @@ export async function POST(request: NextRequest): Promise<NextResponse<TriggerFo
         .slice(0, 3)
         .map((f) => f.title);
 
+      // Insert follow-up sequence into DB (3-touch: 45s, 24h, 72h)
+      const triggerReasonMap: Record<string, string> = {
+        exit_intent: 'exit_intent',
+        no_booking: 'no_booking',
+        abandoned_scan: 'abandoned_scan',
+      };
+
+      const followupRows = [
+        { lead_id: leadId, scan_id: scanId, channel: 'email', status: 'pending', reason: triggerReasonMap[reason], scheduled_at: firstMessageAt, sequence_id: sequenceId, sequence_step: 1 },
+        { lead_id: leadId, scan_id: scanId, channel: 'email', status: 'pending', reason: triggerReasonMap[reason], scheduled_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), sequence_id: sequenceId, sequence_step: 2 },
+        { lead_id: leadId, scan_id: scanId, channel: 'email', status: 'pending', reason: triggerReasonMap[reason], scheduled_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(), sequence_id: sequenceId, sequence_step: 3 },
+      ];
+
+      const { error: followupError } = await supabase.from('followups').insert(followupRows);
+      if (followupError) {
+        console.error('[followup/trigger] Failed to insert followup rows:', followupError.message);
+      }
+
+      // Also write to vault queue for Sales Orchestrator visibility
+      const triggerMap: Record<string, 'conversation_abandoned' | 'bounced' | 'no_chat'> = {
+        exit_intent: 'conversation_abandoned',
+        no_booking: 'conversation_abandoned',
+        abandoned_scan: 'bounced',
+      };
+
       writeQueueEntry({
         scanId,
         leadEmail: lead.email,
@@ -83,7 +105,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<TriggerFo
         trigger: triggerMap[reason] ?? 'conversation_abandoned',
         sequencePosition: 1,
         channel: 'email',
-        scheduledFor: new Date(Date.now() + 45 * 1000).toISOString(),
+        scheduledFor: firstMessageAt,
         weakestStage: weakest?.stage ?? 'unknown',
         weakestScore: weakest?.summary?.score ?? 0,
         criticalFindings,
@@ -91,11 +113,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<TriggerFo
       });
     }
 
-    const sequenceId = `seq_${crypto.randomUUID()}`;
     const response: TriggerFollowupResponse = {
       scheduled: !!lead.email,
       sequenceId,
-      firstMessageAt: lead.email ? new Date(Date.now() + 45 * 1000).toISOString() : null,
+      firstMessageAt: lead.email ? firstMessageAt : null,
     };
 
     return NextResponse.json(response, { status: 200 });
