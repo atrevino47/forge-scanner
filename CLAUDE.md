@@ -116,21 +116,22 @@ import { getScanResults } from '@/lib/db/queries';
 
 ## Design system
 
-### Brand tokens (CSS variables in globals.css)
+### Brand tokens (CSS variables in globals.css) — Brand v2 Light Mode
 ```css
---forge-base: #0B1120;         /* Page background */
---forge-surface: #0F172A;      /* Cards, nav */
---forge-card: #1E293B;         /* Elevated cards */
---forge-accent: #D4A537;       /* Gold — CTAs, hovers */
---forge-accent-hover: #E5B84A;
---forge-text: #F8FAFC;         /* Primary text */
---forge-text-muted: #94A3B8;   /* Secondary text */
---forge-glass: rgba(30, 41, 59, 0.5);
---forge-glass-border: rgba(212, 165, 55, 0.12);
---forge-critical: #EF4444;     /* Red dots */
---forge-warning: #F59E0B;      /* Amber dots */
---forge-opportunity: #3B82F6;  /* Blue dots */
---forge-positive: #22C55E;     /* Green dots */
+--forge-base: #FAFAF7;         /* Page background (warm white) */
+--forge-surface: #F5F4F0;      /* Cards, nav */
+--forge-card: #ECEAE4;         /* Elevated cards */
+--forge-accent: #E8530E;       /* Forge Orange — CTAs, hovers */
+--forge-accent-bright: #FF6B2B;
+--forge-text: #1A1917;         /* Primary text (near-black) */
+--forge-text-secondary: #6B6860; /* Secondary text */
+--forge-text-muted: #B8B5AD;   /* Muted text */
+--forge-glass: rgba(250, 250, 247, 0.92);
+--forge-glass-border: #ECEAE4;
+--forge-critical: #D93636;     /* Red dots */
+--forge-warning: #D4890A;      /* Amber dots */
+--forge-opportunity: #2B7BD4;  /* Blue dots */
+--forge-positive: #2D8C4E;     /* Green dots */
 ```
 
 ### Design system files
@@ -138,10 +139,10 @@ import { getScanResults } from '@/lib/db/queries';
 - `src/lib/gsap-presets.ts` — Animation preset factories (`fadeSlideUp`, `scaleIn`, `clipReveal`, `fadeSlideRight`, `scaleOut`, `popIn`)
 
 ### Typography — three specific fonts, already loaded
-- **Display/Headlines:** Instrument Serif (`font-display` class, `t.font.display` in JS)
+- **Display/Headlines:** Outfit (`font-display` class, `t.font.display` in JS), weight 800/700
   - `letter-spacing: -0.02em`, `line-height: 1.08`
   - Use `clamp()` for responsive sizing, NOT breakpoint stacking
-- **Body:** Plus Jakarta Sans (`font-body` class, `t.font.body` in JS)
+- **Body:** Space Grotesk (`font-body` class, `t.font.body` in JS)
   - `line-height: 1.65`
 - **Mono/Data:** JetBrains Mono (`font-mono` class, `t.font.mono` in JS)
 - NEVER use system defaults for display text
@@ -192,7 +193,7 @@ import { getScanResults } from '@/lib/db/queries';
 - Same animation params on every element in a section
 
 ### Visual identity
-- Dark mode default. No toggle on public pages.
+- Light mode default (Brand v2). No toggle on public pages.
 - Glassmorphism: `backdrop-filter: blur(16px)`, translucent cards, subtle glow borders.
 - Gold accents on hover + CTAs only — not everywhere.
 - Screenshots displayed large, as cards — not thumbnails. Each is a narrative beat.
