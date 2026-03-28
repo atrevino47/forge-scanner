@@ -22,21 +22,21 @@
  */
 
 :root {
-  --base: #FAFAF7; --surface: #FFFFFF; --container: #F5F4F0; --card: #ECEAE4; --elevated: #E2E0DA;
+  --base: #FAFAF7; --surface: #F5F4F0; --container: #F5F4F0; --card: #ECEAE4; --elevated: #E2E0DA;
   --accent: #E8530E; --accent-bright: #FF6B2B; --accent-glow: rgba(232, 83, 14, 0.1);
   --text: #1A1917; --secondary: #6B6860; --muted: #B8B5AD;
   --critical: #D93636; --critical-bg: rgba(217, 54, 54, 0.06);
   --warning: #D4890A; --warning-bg: rgba(212, 137, 10, 0.06);
   --positive: #2D8C4E; --positive-bg: rgba(45, 140, 78, 0.06);
   --opportunity: #2B7BD4; --opportunity-bg: rgba(43, 123, 212, 0.06);
-  --glass-border: rgba(26, 25, 23, 0.06); --glass-border-warm: rgba(232, 83, 14, 0.04);
+  --glass-border: #ECEAE4; --glass-border-warm: rgba(232, 83, 14, 0.04);
   --r: 12px;
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-snap-type: y mandatory; scroll-behavior: smooth; }
 body { background: var(--base); color: var(--text); font-family: 'Space Grotesk', sans-serif; line-height: 1.65; -webkit-font-smoothing: antialiased; }
-body::after { content: ''; position: fixed; inset: 0; opacity: 0.015; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); pointer-events: none; z-index: 9999; }
+/* grain overlay removed — brandbook: "whitespace is the design" */
 body::before { content: ''; position: fixed; inset: 0; opacity: 0.03; background-image: radial-gradient(circle at 1px 1px, rgba(26, 25, 23, 0.04) 1px, transparent 0); background-size: 40px 40px; pointer-events: none; z-index: -1; }
 a.skip { position: absolute; top: -100px; left: 16px; background: var(--accent); color: var(--base); padding: 8px 16px; border-radius: 8px; font-weight: 600; z-index: 10000; transition: top 0.2s; text-decoration: none; }
 a.skip:focus { top: 8px; }
@@ -53,7 +53,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 /* Banner (s12) */
 .banner { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 52px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; background: rgba(250, 250, 247, 0.92); backdrop-filter: blur(24px); border-bottom: 1px solid rgba(255, 107, 43, 0.08); }
 .logo { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 1.25rem; letter-spacing: -0.5px; }
-.logo b { display: none; }
+.logo-ai { color: var(--accent); }
 .banner-meta { display: flex; align-items: center; gap: 20px; }
 .banner-url { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
 .banner-status { display: flex; align-items: center; gap: 5px; font-family: 'Space Grotesk', sans-serif; font-size: 0.625rem; font-weight: 600; color: var(--positive); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -92,6 +92,11 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .chip-c { background: var(--critical-bg); color: var(--critical); }
 .chip-w { background: var(--warning-bg); color: var(--warning); }
 .chip-p { background: var(--positive-bg); color: var(--positive); }
+/* Brand identity: hero gradient glow + "F" watermark */
+#hero::before { content: ''; position: absolute; top: -200px; right: -200px; width: 700px; height: 700px; background: radial-gradient(circle, rgba(232,83,14,0.07) 0%, transparent 70%); pointer-events: none; z-index: 0; }
+#hero::after { content: 'F'; position: absolute; top: -50px; right: -30px; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 380px; color: rgba(26,25,23,0.03); line-height: 1; pointer-events: none; z-index: 0; }
+#hero .slide-inner { position: relative; z-index: 1; }
+
 .hero-title { font-size: clamp(2.5rem, 5vw + 1rem, 4rem); max-width: 600px; }
 .hero-sub { font-size: 1.0625rem; color: var(--secondary); margin-top: 16px; max-width: 480px; }
 .hero-score-badge { display: inline-flex; align-items: center; gap: 12px; margin-top: 24px; padding: 12px 24px; background: var(--surface); border: 1px solid var(--glass-border); border-radius: var(--r); }
@@ -101,8 +106,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .timeline-strip::before { content: ''; position: absolute; top: 28px; left: 40px; right: 40px; height: 3px; border-radius: 2px; z-index: 0; opacity: 0.15; background: linear-gradient(90deg, var(--critical) 0%, var(--critical) 20%, var(--warning) 35%, var(--warning) 55%, var(--critical) 70%, var(--critical) 100%); }
 .tl-node { flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2; padding: 8px; border-radius: 12px; cursor: default; }
 .tl-dot { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-size: 0.875rem; font-weight: 600; z-index: 2; }
-.tl-dot-critical { background: var(--critical); color: white; box-shadow: 0 0 0 4px rgba(217, 54, 54, 0.15), 0 0 24px rgba(217, 54, 54, 0.2); }
-.tl-dot-warning { background: var(--warning); color: white; box-shadow: 0 0 0 4px rgba(212, 137, 10, 0.15), 0 0 24px rgba(212, 137, 10, 0.15); }
+.tl-dot-critical { background: var(--critical); color: white; box-shadow: 0 0 0 4px rgba(217, 54, 54, 0.1), 0 0 16px rgba(217, 54, 54, 0.12); }
+.tl-dot-warning { background: var(--warning); color: white; box-shadow: 0 0 0 4px rgba(212, 137, 10, 0.1), 0 0 16px rgba(212, 137, 10, 0.1); }
 .tl-name { font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 12px; color: var(--secondary); }
 .tl-score-label { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; margin-top: 4px; font-weight: 500; }
 .tl-connector { flex: 0 0 auto; width: 48px; height: 3px; border-radius: 2px; z-index: 1; margin-top: 26px; }
@@ -110,18 +115,18 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .tl-conn-warning { background: var(--warning); opacity: 0.35; }
 .tl-dropoff { font-family: 'JetBrains Mono', monospace; font-size: 0.5625rem; color: var(--critical); background: var(--critical-bg); padding: 3px 8px; border-radius: 6px; margin-top: 8px; white-space: nowrap; border: 1px solid rgba(217, 54, 54, 0.08); }
 .tl-findings { margin-top: 16px; width: 100%; display: flex; flex-direction: column; gap: 6px; }
-.tl-finding-card { background: rgba(30, 30, 28, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 107, 43, 0.15); border-radius: 10px; padding: 10px 12px; transition: all 0.25s; cursor: default; }
-.tl-finding-card:hover { background: rgba(40, 40, 38, 0.8); transform: translateY(-2px); }
+.tl-finding-card { background: var(--surface); border: 1px solid var(--card); border-radius: 10px; padding: 10px 12px; transition: all 0.25s; cursor: default; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.tl-finding-card:hover { background: var(--container); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 .tl-finding-sev { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; box-shadow: 0 0 6px currentColor; }
 .tl-finding-title { font-size: 0.6875rem; font-weight: 600; display: inline; vertical-align: middle; }
-.tl-empty-card { background: rgba(30, 30, 28, 0.5); backdrop-filter: blur(8px); border: 1px dashed rgba(217, 54, 54, 0.15); border-radius: 10px; padding: 14px; text-align: center; }
+.tl-empty-card { background: var(--container); border: 1px dashed rgba(217, 54, 54, 0.15); border-radius: 10px; padding: 14px; text-align: center; }
 .tl-empty-card p { font-size: 0.625rem; color: var(--muted); line-height: 1.45; }
 .stage-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 40px; }
 .stage-num { font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
 .stage-title { font-size: clamp(2rem, 3.5vw + 0.5rem, 3rem); margin-top: 4px; }
 .stage-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px; align-items: start; }
 .devices-wrapper { display: flex; align-items: flex-end; gap: 20px; }
-.device-laptop { flex: 1; background: var(--container); border-radius: 12px 12px 0 0; overflow: hidden; box-shadow: 0 2px 0 0 #ECEAE4, 0 20px 60px rgba(0, 0, 0, 0.4); }
+.device-laptop { flex: 1; background: var(--container); border-radius: 12px 12px 0 0; overflow: hidden; box-shadow: 0 2px 0 0 #ECEAE4, 0 12px 40px rgba(0, 0, 0, 0.1); }
 .browser-chrome { height: 36px; background: #F5F4F0; display: flex; align-items: center; padding: 0 14px; gap: 8px; border-bottom: 1px solid rgba(0, 0, 0, 0.03); }
 .browser-dots { display: flex; gap: 6px; margin-right: 8px; }
 .browser-dots span { width: 10px; height: 10px; border-radius: 50%; }
@@ -132,10 +137,10 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .browser-lock { width: 10px; height: 10px; color: var(--positive); opacity: 0.6; }
 .browser-url-text { font-family: 'JetBrains Mono', monospace; font-size: 0.625rem; color: var(--muted); }
 .device-screen { aspect-ratio: 16 / 10; background: var(--base); position: relative; overflow: hidden; }
-.device-phone { width: 140px; flex-shrink: 0; background: var(--container); border-radius: 20px; padding: 8px; box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35); }
+.device-phone { width: 140px; flex-shrink: 0; background: var(--container); border-radius: 20px; padding: 8px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1); }
 .phone-notch { width: 60px; height: 18px; background: var(--container); border-radius: 0 0 12px 12px; margin: -8px auto 6px; }
 .phone-screen { border-radius: 12px; overflow: hidden; aspect-ratio: 9 / 16; background: var(--base); }
-.phone-home-bar { width: 48px; height: 4px; background: rgba(255, 255, 255, 0.15); border-radius: 2px; margin: 6px auto 2px; }
+.phone-home-bar { width: 48px; height: 4px; background: rgba(0, 0, 0, 0.1); border-radius: 2px; margin: 6px auto 2px; }
 .mock-site { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: linear-gradient(135deg, #1a1030 0%, #2d1050 50%, #1a1030 100%); }
 .mock-badge { font-size: 9px; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.1); padding: 3px 10px; border-radius: 999px; margin-bottom: 12px; }
 .mock-headline { font-size: 20px; color: white; font-weight: 700; text-align: center; line-height: 1.2; }
@@ -145,7 +150,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .mock-site-phone .mock-badge { font-size: 5px; padding: 2px 6px; margin-bottom: 6px; }
 .mock-site-phone .mock-headline { font-size: 10px; }
 .mock-site-phone .mock-cta { font-size: 6px; padding: 3px 8px; border-radius: 4px; margin-top: 6px; }
-.ann-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; position: absolute; z-index: 5; cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.ann-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; position: absolute; z-index: 5; cursor: pointer; transition: all 0.25s; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
 .ann-dot:hover { transform: scale(1.25); }
 .ann-c { background: var(--critical); color: white; }
 .ann-w { background: var(--warning); color: white; }
@@ -157,7 +162,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 .finding-positive { border-left-color: var(--positive); }
 .finding:hover { background: rgba(0, 0, 0, 0.015); transform: translateX(6px); }
 .finding + .finding { margin-top: 6px; }
-.finding-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+.finding-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
 .finding-header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .finding-title { font-size: 0.9375rem; font-weight: 700; }
 .finding-sev-chip { display: inline-flex; padding: 2px 8px; border-radius: 999px; font-size: 0.5625rem; font-weight: 700; text-transform: uppercase; }
@@ -269,7 +274,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
   background: linear-gradient(135deg, #FF6B2B, #E8530E);
   color: var(--base); border: none;
   padding: 20px 56px;
-  border-radius: 14px;
+  border-radius: 9px;
   font-family: 'Space Grotesk', sans-serif;
   font-size: 1.0625rem; font-weight: 700;
   cursor: pointer; margin-top: 40px;
@@ -325,6 +330,41 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outlin
 }
 
 .cta-note { font-size: 0.8125rem; color: var(--muted); margin-top: 16px; position: relative; z-index: 1; }
+
+/* ═══ BRAND v2: SECTION ALTERNATION + DARK CTA ═══ */
+
+/* Striped sections get container background */
+#s-traffic, #s-capture, #s-followup, #beforeafter { background: var(--container); }
+
+/* Cards inside striped sections flip to white for separation */
+#s-traffic .empty-state,
+#s-capture .finding, #s-capture .stage-summary,
+#s-followup .empty-state,
+#beforeafter .ba-col-before, #beforeafter .ba-col-after { background: #FFFFFF; }
+
+/* Dark CTA close */
+#cta { background: #141413; }
+#cta .slide-inner { position: relative; z-index: 1; }
+#cta .fm { color: var(--accent) !important; }
+#cta .cta-title { color: #F0EFE9; }
+#cta .cta-sub { color: #9A9890; }
+#cta .cta-social-proof { color: #9A9890; }
+#cta .cta-social-proof strong { color: #F0EFE9; }
+#cta .cta-note { color: #9A9890; }
+#cta .cta-trust-item { color: #6B6860; }
+#cta .cta-trust-item svg { stroke: #6B6860; }
+#cta .cta-section::before { background: radial-gradient(ellipse, rgba(232, 83, 14, 0.12) 0%, rgba(232, 83, 14, 0.03) 40%, transparent 70%); }
+
+/* ═══ BRAND v2: WARM HOVER STATES ═══ */
+
+.finding:hover,
+.tl-finding-card:hover,
+.priority-card:hover,
+.stat-card:hover,
+.stage-summary:hover {
+  background: #FFF7F2 !important;
+  border-color: #FFD4B3 !important;
+}
 
 /* ═══ s22: DEFINITIVE SYNTHESIS — FINAL POLISH ═══ */
 
@@ -400,13 +440,13 @@ html {
  *   - Empty state dashed borders (subtle)
  */
 
-/* Warm tint on all glass borders — warm neutral with orange undertone */
+/* Warm tint on card borders — subtle in light mode */
 .stat-card,
 .priority-card,
 .tl-finding-card,
 .hero-score-badge,
 .stage-summary {
-  border-color: rgba(255, 107, 43, 0.12);
+  border-color: rgba(26, 25, 23, 0.06);
 }
 
 /* Opportunity blue for "Working Well" roadmap column */
@@ -620,109 +660,92 @@ html {
   .finding-desc { white-space: normal; }
 }
 
-/* ═══ s17: GLASS DEPTH SYSTEM ═══ */
+/* ═══ s17: LIGHT MODE DEPTH SYSTEM ═══ */
 /*
- * Depth tiers:
- *   Tier 0 (base):     --base #141413 — page background
- *   Tier 1 (surface):  rgba(30, 30, 28, 0.6) + blur(12px)
- *   Tier 2 (glass):    rgba(40, 40, 38, 0.5) + blur(16px) + inner highlight
- *   Tier 3 (elevated): rgba(62, 62, 60, 0.6) + blur(20px) + stronger highlight
+ * Light-mode depth tiers (replaces dark glass for Brand v2 light):
+ *   Tier 0 (base):     --base #FAFAF7 — page background
+ *   Tier 1 (surface):  #FFFFFF — cards on page, subtle shadow
+ *   Tier 2 (elevated): #FFFFFF — elevated cards, stronger shadow
+ *   Tier 3 (overlay):  rgba(255,255,255,0.92) + blur — banner, tooltips
  */
 
-/* Stat cards: glass tier 2 */
+/* Stat cards: tier 2 elevated */
 .stat-card {
-  background: rgba(30, 30, 28, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 107, 43, 0.12);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.02);
+  background: var(--surface);
+  border: 1px solid var(--card);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
 }
 
-/* Stage summary cards: glass tier 2 */
+/* Stage summary cards: tier 2 with accent border */
 .stage-summary {
-  background: rgba(40, 40, 38, 0.5);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 107, 43, 0.12);
+  background: var(--surface);
+  border: 1px solid var(--card);
   border-left: 3px solid var(--accent);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
 }
-.stage-summary:hover { background: rgba(53, 53, 51, 0.6); }
+.stage-summary:hover { background: var(--container); }
 
-/* Finding cards: glass tier 1 */
+/* Finding cards: tier 1 surface */
 .finding {
-  background: rgba(30, 30, 28, 0.3);
-  border: 1px solid rgba(255, 107, 43, 0.06);
+  background: var(--surface);
+  border: 1px solid var(--card);
   border-left: 3px solid transparent;
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.015);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
 }
 .finding-critical { border-left-color: var(--critical); }
 .finding-warning { border-left-color: var(--warning); }
 .finding-positive { border-left-color: var(--positive); }
-.finding:hover { background: rgba(40, 40, 38, 0.4); }
+.finding:hover { background: var(--container); }
 
-/* Timeline finding cards: glass tier 1 */
+/* Timeline finding cards: tier 1 */
 .tl-finding-card {
-  background: rgba(30, 30, 28, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 107, 43, 0.12);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.015);
+  background: var(--surface);
+  border: 1px solid var(--card);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
-.tl-finding-card:hover { background: rgba(40, 40, 38, 0.7); }
+.tl-finding-card:hover { background: var(--container); }
 
-/* Priority cards: glass tier 1 */
+/* Priority cards: tier 1 */
 .priority-card {
-  background: rgba(30, 30, 28, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 107, 43, 0.1);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.015);
+  background: var(--surface);
+  border: 1px solid var(--card);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
-.priority-card:hover { background: rgba(40, 40, 38, 0.6); }
+.priority-card:hover { background: var(--container); }
 
-/* Hero score badge: glass tier 2 */
+/* Hero score badge: tier 2 elevated */
 .hero-score-badge {
-  background: rgba(30, 30, 28, 0.6);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 107, 43, 0.12);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.02);
+  background: var(--surface);
+  border: 1px solid var(--card);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-/* Empty state: glass tier 1 */
+/* Empty state: tier 1 with dashed border */
 .empty-state {
-  background: rgba(30, 30, 28, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 2px dashed rgba(217, 54, 54, 0.1);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.015);
+  background: var(--surface);
+  border: 2px dashed rgba(217, 54, 54, 0.12);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
 }
 
-/* BA delta card: glass tier 2 */
+/* BA delta card: tier 2 with gradient tint */
 .ba-delta {
   background: linear-gradient(135deg, rgba(45, 140, 78, 0.04) 0%, rgba(232, 83, 14, 0.04) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
 }
 
-/* Warm tint on glass borders */
+/* Timeline empty cards */
 .tl-empty-card {
-  background: rgba(30, 30, 28, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px dashed rgba(217, 54, 54, 0.12);
-  box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.015);
+  background: var(--container);
+  border: 1px dashed rgba(217, 54, 54, 0.15);
 }
 
-/* Banner: elevated glass */
+/* Banner: frosted overlay */
 .banner {
-  background: rgba(250, 250, 247, 0.85);
+  background: rgba(250, 250, 247, 0.88);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(255, 107, 43, 0.1);
-  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.015);
+  border-bottom: 1px solid rgba(26, 25, 23, 0.06);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.02);
 }
 
 /* ═══ s16: TYPOGRAPHY REFINEMENT ═══ */
@@ -826,7 +849,7 @@ body { line-height: 1.65; }
 
 /* Finding cards: subtle horizontal shift */
 .finding { cursor: pointer; }
-.finding:hover { background: rgba(0, 0, 0, 0.015); transform: translateX(4px); }
+.finding:hover { background: var(--container); transform: translateX(4px); }
 
 /* Timeline node dots: gentle scale on parent hover */
 .tl-node { cursor: pointer; }
@@ -834,7 +857,7 @@ body { line-height: 1.65; }
 
 /* Stat cards: lift with elevated shadow */
 .stat-card { cursor: pointer; }
-.stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06); }
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); }
 
 /* CTA button: wide glow */
 .cta-btn { cursor: pointer; }
@@ -852,17 +875,17 @@ body { line-height: 1.65; }
 .priority-card:hover {
   background: var(--container);
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   border-left-width: 3px;
 }
 
 /* Stage summary cards */
 .stage-summary { cursor: pointer; }
-.stage-summary:hover { background: var(--card); transform: translateY(-2px); }
+.stage-summary:hover { background: var(--container); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
 
 /* Timeline finding cards */
 .tl-finding-card { cursor: pointer; }
-.tl-finding-card:hover { background: rgba(40, 40, 38, 0.8); transform: translateY(-2px); }
+.tl-finding-card:hover { background: var(--container); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
 
 /* Annotation dots */
 .ann-dot { cursor: pointer; }
@@ -873,7 +896,7 @@ body { line-height: 1.65; }
 
 /* Empty impact badge */
 .empty-impact { cursor: default; transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
-.empty-impact:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); }
+.empty-impact:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06); }
 
 /* ═══ s14: MOBILE RESPONSIVENESS ═══ */
 @media (max-width: 768px) {
@@ -995,7 +1018,7 @@ body { line-height: 1.65; }
 </head>
 <body>
 <a href="#main" class="skip">Skip to results</a>
-<header class="banner" role="banner"><div class="logo">FORGE</div><div class="banner-meta"><span class="banner-url">blotato.com<span style="width:1px;height:16px;background:var(--glass-border);display:inline-block;vertical-align:middle;margin:0 8px;"></span><span class="banner-status"><span class="banner-status-dot" aria-hidden="true"></span>Scan complete</span></span><a href="#cta" class="cta-pill" aria-label="Book a strategy call">Book Strategy Call</a></div></header>
+<header class="banner" role="banner"><div class="logo">FORGE<span class="logo-ai">WITH.AI</span></div><div class="banner-meta"><span class="banner-url">blotato.com<span style="width:1px;height:16px;background:var(--glass-border);display:inline-block;vertical-align:middle;margin:0 8px;"></span><span class="banner-status"><span class="banner-status-dot" aria-hidden="true"></span>Scan complete</span></span><a href="#cta" class="cta-pill" aria-label="Book a strategy call">Book Strategy Call</a></div></header>
 <nav class="slide-nav" aria-label="Page sections"><a href="#hero" class="active nav-accent" title="Overview" aria-label="Navigate to Overview"><span class="nav-label">Overview</span></a><a href="#s-traffic" class="nav-critical" title="Traffic" aria-label="Navigate to Traffic Sources"><span class="nav-label">Traffic</span></a><a href="#s-landing" class="nav-warning" title="Landing" aria-label="Navigate to Landing Experience"><span class="nav-label">Landing</span></a><a href="#s-capture" class="nav-warning" title="Capture" aria-label="Navigate to Lead Capture"><span class="nav-label">Capture</span></a><a href="#s-offer" class="nav-critical" title="Offer" aria-label="Navigate to Offer & Conversion"><span class="nav-label">Offer</span></a><a href="#s-followup" class="nav-critical" title="Follow-up" aria-label="Navigate to Follow-Up Systems"><span class="nav-label">Follow-up</span></a><a href="#health" class="nav-accent" title="Health Score" aria-label="Navigate to Health Score"><span class="nav-label">Health Score</span></a><a href="#beforeafter" class="nav-positive" title="Potential" aria-label="Navigate to Transformation Potential"><span class="nav-label">Potential</span></a><a href="#roadmap" class="nav-accent" title="Roadmap" aria-label="Navigate to Implementation Roadmap"><span class="nav-label">Roadmap</span></a><a href="#cta" class="nav-accent" title="Next Steps" aria-label="Navigate to Next Steps"><span class="nav-label">Next Steps</span></a></nav>
 
 <main id="main">
@@ -1004,16 +1027,16 @@ body { line-height: 1.65; }
   </div></section>
 
   <section id="s-traffic" class="slide" role="region" aria-labelledby="traffic-heading"><div class="slide-inner"><div class="stage-header"><div><span class="stage-num">01 &middot; Stage 1 of 5</span><h2 id="traffic-heading" class="fd stage-title">Traffic Sources</h2></div><div style="display:flex;gap:8px;"><span class="chip chip-c fm">0 / 100</span><span class="chip chip-c">Critical</span></div></div><div class="empty-state"><div class="empty-icons"><div class="empty-icon empty-icon-traffic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="empty-icon empty-icon-traffic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></div></div><h3 class="empty-title">No Traffic Sources Detected</h3><p class="empty-desc">No Instagram, Facebook, TikTok, LinkedIn, or Google Business Profile found.</p><div class="empty-impact"><span class="empty-impact-stat">~40%</span><span class="empty-impact-text">of leads come from social media<br>for businesses in your category</span></div><p class="empty-context">Companies with social profiles see 3x more traffic than those without.</p></div></div></section>
-  <div class="narrative"><p>"Without traffic sources, every other <span class="gold">optimization</span> is meaningless."</p></div>
+  <div class="narrative"><p>"Zero traffic sources. Every optimization after this is <span class="gold">pointless</span>."</p></div>
 
   <section id="s-landing" class="slide" role="region" aria-labelledby="landing-heading"><div class="slide-inner"><div class="stage-header"><div><span class="stage-num">02 &middot; Stage 2 of 5</span><h2 id="landing-heading" class="fd stage-title">Landing Experience <span class="stage-finding-count">&middot; 5 findings</span></h2></div><div style="display:flex;gap:8px;"><span class="chip chip-w fm">35 / 100</span><span class="chip chip-w">Weak</span></div></div><div class="stage-grid"><div><div class="devices-wrapper"><div class="device-laptop"><div class="browser-chrome"><div class="browser-dots"><span></span><span></span><span></span></div><div class="browser-url-bar"><svg class="browser-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="browser-url-text">blotato.com</span></div></div><div class="device-screen"><div class="mock-site"><div class="mock-badge">10,387+ Business Owners</div><div class="mock-headline">Make <em>1 week</em> of content<br>in <em>1 minute</em></div><div class="mock-cta">Start FREE Week</div></div><div class="ann-dot ann-c" style="top:18%;left:52%;">1</div><div class="ann-dot ann-w" style="top:44%;left:46%;">2</div><div class="ann-dot ann-w" style="top:28%;left:70%;">3</div><div class="ann-dot ann-p" style="top:70%;left:44%;">4</div><div class="ann-dot ann-p" style="top:14%;left:35%;">5</div></div></div><div class="device-phone"><div class="phone-notch"></div><div class="phone-screen"><div class="mock-site-phone"><div class="mock-badge">10,387+</div><div class="mock-headline">Make <em>1 week</em> of content in <em>1 minute</em></div><div class="mock-cta">Start FREE Week</div></div></div><div class="phone-home-bar"></div></div></div></div><div><div class="findings-label">5 Key Findings</div><div class="finding finding-critical"><div class="finding-dot ann-c">1</div><div><div class="finding-header"><div class="finding-title">Generic Headline Lacks Specificity</div><span class="finding-sev-chip" style="background:var(--critical-bg);color:var(--critical);">Critical</span></div><p class="finding-desc">Visitors can't tell what Blotato does in 5 seconds.</p></div></div><div class="finding finding-warning"><div class="finding-dot ann-w">2</div><div><div class="finding-header"><div class="finding-title">Two CTAs Create Decision Paralysis</div><span class="finding-sev-chip" style="background:var(--warning-bg);color:var(--warning);">Warning</span></div><p class="finding-desc">Both "Login" and "Start FREE Week" compete.</p></div></div><div class="finding finding-warning"><div class="finding-dot ann-w">3</div><div><div class="finding-header"><div class="finding-title">No Visible Trust Signals</div><span class="finding-sev-chip" style="background:var(--warning-bg);color:var(--warning);">Warning</span></div><p class="finding-desc">No logos, testimonials, or badges above fold.</p></div></div><div class="finding finding-positive"><div class="finding-dot ann-p">4</div><div><div class="finding-header"><div class="finding-title">Strong Free Trial CTA</div><span class="finding-sev-chip" style="background:var(--positive-bg);color:var(--positive);">Good</span></div><p class="finding-desc">"Start FREE Week" creates urgency.</p></div></div><div class="finding finding-positive"><div class="finding-dot ann-p">5</div><div><div class="finding-header"><div class="finding-title">Well-Positioned Social Proof</div><span class="finding-sev-chip" style="background:var(--positive-bg);color:var(--positive);">Good</span></div><p class="finding-desc">"10,387+ Business Owners" is prominent.</p></div></div><div class="stage-summary"><p>Your homepage fails to communicate what Blotato does in 5 seconds.</p><div class="stage-summary-meta"><span class="chip chip-w fm">35/100</span><span style="font-size:0.75rem;color:var(--muted);">5 findings</span></div></div></div></div></div></section>
-  <div class="narrative"><p>"The few visitors who <span class="gold">stay</span> have no easy way to give you their information."</p></div>
+  <div class="narrative"><p>"The few who stay can't give you their info. That's <span class="gold">money walking out</span>."</p></div>
 
   <section id="s-capture" class="slide" role="region" aria-labelledby="capture-heading"><div class="slide-inner"><div class="stage-header"><div><span class="stage-num">03 &middot; Stage 3 of 5</span><h2 id="capture-heading" class="fd stage-title">Lead Capture <span class="stage-finding-count">&middot; 3 findings</span></h2></div><div style="display:flex;gap:8px;"><span class="chip chip-w fm">45 / 100</span><span class="chip chip-w">Weak</span></div></div><div class="stage-grid" style="grid-template-columns:1fr 1fr;"><div><div class="findings-label">3 Key Findings</div><div class="finding finding-critical"><div class="finding-dot ann-c">1</div><div><div class="finding-header"><div class="finding-title">No Email Capture Above Fold</div><span class="finding-sev-chip" style="background:var(--critical-bg);color:var(--critical);">Critical</span></div><p class="finding-desc">Full signup required — no quick capture.</p></div></div><div class="finding finding-warning"><div class="finding-dot ann-w">2</div><div><div class="finding-header"><div class="finding-title">No Lead Magnet</div><span class="finding-sev-chip" style="background:var(--warning-bg);color:var(--warning);">Warning</span></div><p class="finding-desc">No resource to exchange for contact info.</p></div></div><div class="finding finding-positive"><div class="finding-dot ann-p">3</div><div><div class="finding-header"><div class="finding-title">Free Trial Reduces Friction</div><span class="finding-sev-chip" style="background:var(--positive-bg);color:var(--positive);">Good</span></div><p class="finding-desc">Free week lowers the barrier.</p></div></div></div><div><div class="stage-summary"><p>Lead capture relies entirely on the free trial.</p><div class="stage-summary-meta"><span class="chip chip-w fm">45/100</span><span style="font-size:0.75rem;color:var(--muted);">3 findings</span></div></div></div></div></div></section>
-  <div class="narrative"><p>"Even captured leads can't understand what they're <span class="gold">buying</span>."</p></div>
+  <div class="narrative"><p>"Captured leads can't figure out what they're <span class="gold">paying for</span>. That kills conversions."</p></div>
 
   <section id="s-offer" class="slide" role="region" aria-labelledby="offer-heading"><div class="slide-inner"><div class="stage-header"><div><span class="stage-num">04 &middot; Stage 4 of 5</span><h2 id="offer-heading" class="fd stage-title">Offer & Conversion</h2></div><div style="display:flex;gap:8px;"><span class="chip chip-c fm">15 / 100</span><span class="chip chip-c">Critical</span></div></div><div class="empty-state"><div class="empty-icons"><div class="empty-icon empty-icon-offer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div class="empty-icon empty-icon-offer"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div></div><h3 class="empty-title">Offer Is Unclear</h3><p class="empty-desc">No visible pricing, no feature comparison, no FAQ.</p><div class="empty-impact"><span class="empty-impact-stat">85%</span><span class="empty-impact-text">of visitors leave without buying<br>when pricing is hidden or unclear</span></div><p class="empty-context">Transparent pricing increases conversions by up to 2x on average.</p></div></div></section>
-  <div class="narrative"><p>"And when they leave, <span class="gold">nothing</span> brings them back."</p></div>
+  <div class="narrative"><p>"And when they leave? <span class="gold">Nothing</span> brings them back. No pixel, no email, no retargeting."</p></div>
 
   <section id="s-followup" class="slide" role="region" aria-labelledby="followup-heading"><div class="slide-inner"><div class="stage-header"><div><span class="stage-num">05 &middot; Stage 5 of 5</span><h2 id="followup-heading" class="fd stage-title">Follow-Up Systems</h2></div><div style="display:flex;gap:8px;"><span class="chip chip-c fm">0 / 100</span><span class="chip chip-c">Critical</span></div></div><div class="empty-state"><div class="empty-icons"><div class="empty-icon empty-icon-followup"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div><div class="empty-icon empty-icon-followup"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div></div><h3 class="empty-title">No Follow-Up Detected</h3><p class="empty-desc">No Facebook Pixel, no Google tags, no email sequences.</p><div class="empty-impact"><span class="empty-impact-stat">96%</span><span class="empty-impact-text">of visitors aren't ready to buy on<br>their first visit — follow-up is essential</span></div><p class="empty-context">Businesses with email sequences recover 15-20% of lost leads.</p></div></div></section>
 
@@ -1026,8 +1049,8 @@ body { line-height: 1.65; }
   <!-- s13: Upgraded CTA with social proof and trust indicators -->
   <section id="cta" class="slide" role="region" aria-labelledby="cta-heading"><div class="slide-inner cta-section">
     <span class="fm" style="font-size:0.6875rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.1em;">Next Step</span>
-    <h2 id="cta-heading" class="fd cta-title" style="margin-top:12px;">Let's Fix Your Funnel</h2>
-    <p class="cta-sub">Book a free 30-minute strategy call. We'll walk through your results and build a prioritized implementation plan together.</p>
+    <h2 id="cta-heading" class="fd cta-title" style="margin-top:12px;">Let Adrian Fix This</h2>
+    <p class="cta-sub">Book a free 30-minute call. I'll walk through your results and build the plan &mdash; forgewith.ai does the work.</p>
     <button class="cta-btn" aria-label="Book your free strategy call">Book Your Strategy Call &rarr;</button>
     <p class="cta-social-proof">Join <strong>500+ businesses</strong> who've already optimized their funnels</p>
     <div class="cta-trust">
@@ -1043,6 +1066,10 @@ body { line-height: 1.65; }
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         30 minutes
       </span>
+    </div>
+    <div style="margin-top:64px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.06);text-align:center;">
+      <div class="logo" style="font-size:1rem;color:#F0EFE9;">FORGE<span class="logo-ai">WITH.AI</span></div>
+      <p class="fm" style="font-size:0.6875rem;color:#6B6860;margin-top:8px;letter-spacing:0.04em;">Built by Adrian Trevino</p>
     </div>
   </div></section>
 </main>
