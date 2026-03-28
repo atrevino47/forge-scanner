@@ -3,10 +3,12 @@
 // Central entry point for the scan analysis pipeline
 
 import type {
+  AdDetectionResult,
   Annotation,
   FunnelStage,
   FunnelStageResult,
   ScreenshotData,
+  SocialEnrichmentResult,
   StageSummary,
   VideoAnalysis,
 } from '@/../../contracts/types';
@@ -70,6 +72,12 @@ export interface ScanAnalysisInput {
 
   /** Video data for social profiles (traffic stage) */
   videoData?: ProfileVideoData[];
+
+  /** Meta Ad Library detection results (traffic stage) */
+  adDetection?: AdDetectionResult;
+
+  /** Apify social profile metrics (traffic stage) */
+  socialEnrichment?: SocialEnrichmentResult;
 }
 
 // ============================================================
@@ -86,6 +94,8 @@ export async function runScanAnalysis(
     businessContext,
     homepageHtml,
     videoData,
+    adDetection,
+    socialEnrichment,
   } = input;
 
   // Group screenshots by stage
@@ -116,6 +126,8 @@ export async function runScanAnalysis(
             screenshotFetcher,
             businessContext,
             videoData,
+            adDetection,
+            socialEnrichment,
           },
           makeStageCallback('traffic'),
           callbacks.onAnnotationReady,

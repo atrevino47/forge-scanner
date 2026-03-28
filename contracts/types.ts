@@ -170,6 +170,55 @@ export interface BlueprintData {
 }
 
 // ============================================================
+// AD DETECTION (Traffic stage enrichment)
+// ============================================================
+
+export interface MetaAdData {
+  id: string;
+  creativeBody: string | null;
+  creativeLinkTitle: string | null;
+  platforms: string[]; // e.g. ['facebook', 'instagram']
+  startDate: string;
+  status: 'active' | 'inactive';
+}
+
+export interface AdDetectionResult {
+  isAdvertising: boolean;
+  platform: 'meta';
+  activeAdCount: number;
+  totalAdsFound: number;
+  publisherPlatforms: string[]; // unique platforms across all ads
+  sampleAds: MetaAdData[]; // up to 5 sample ads for AI context
+  detectedAt: string;
+}
+
+// ============================================================
+// SOCIAL ENRICHMENT (Apify data for Traffic stage)
+// ============================================================
+
+export interface SocialProfileMetrics {
+  platform: 'instagram' | 'tiktok' | 'facebook' | 'google_maps';
+  handle: string;
+  followerCount: number | null;
+  followingCount: number | null;
+  postCount: number | null;
+  engagementRate: number | null; // 0-100 percentage
+  avgLikes: number | null;
+  avgComments: number | null;
+  isVerified: boolean;
+  bio: string | null;
+  // Google Maps specific
+  reviewCount: number | null;
+  averageRating: number | null;
+  totalPhotos: number | null;
+}
+
+export interface SocialEnrichmentResult {
+  profiles: SocialProfileMetrics[];
+  enrichedAt: string;
+}
+
+// ============================================================
 // AI SALES AGENT
 // ============================================================
 

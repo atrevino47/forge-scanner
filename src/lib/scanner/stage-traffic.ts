@@ -3,10 +3,12 @@
 // Analyzes social media profiles, ad presence, and traffic-generating pages
 
 import type {
+  AdDetectionResult,
   Annotation,
   FunnelStage,
   FunnelStageResult,
   ScreenshotData,
+  SocialEnrichmentResult,
   StageSummary,
   VideoAnalysis,
 } from '@/../../contracts/types';
@@ -44,6 +46,8 @@ export interface TrafficStageInput {
   screenshotFetcher: (storageUrl: string) => Promise<string>; // returns base64
   businessContext?: string;
   videoData?: ProfileVideoData[];
+  adDetection?: AdDetectionResult;
+  socialEnrichment?: SocialEnrichmentResult;
 }
 
 export async function analyzeTrafficStage(
@@ -52,9 +56,14 @@ export async function analyzeTrafficStage(
   onAnnotationReady?: AnnotationReadyCallback,
   onVideoAnalysis?: VideoAnalysisCallback,
 ): Promise<FunnelStageResult> {
-  const { screenshots, screenshotFetcher, businessContext, videoData } = input;
+  const { screenshots, screenshotFetcher, businessContext, videoData, adDetection, socialEnrichment } = input;
 
-  if (screenshots.length === 0 && (!videoData || videoData.length === 0)) {
+  const hasAnyData = screenshots.length > 0
+    || (videoData && videoData.length > 0)
+    || adDetection?.isAdvertising
+    || (socialEnrichment && socialEnrichment.profiles.length > 0);
+
+  if (!hasAnyData) {
     // No traffic sources to analyze
     const summary: StageSummary = {
       exists: false,
@@ -111,6 +120,16 @@ export async function analyzeTrafficStage(
   if (videoResults.status === 'fulfilled') {
     const videoAnnotations = videoResults.value;
     allAnnotations.push(...videoAnnotations);
+  }
+
+  // Add ad detection annotations
+  if (adDetection) {
+    allAnnotations.push(...adDetectionToAnnotations(adDetection));
+  }
+
+  // Add social enrichment annotations
+  if (socialEnrichment) {
+    allAnnotations.push(...socialEnrichmentToAnnotations(socialEnrichment));
   }
 
   // Generate stage summary
@@ -260,4 +279,144 @@ function videoPatternToAnnotations(
   }
 
   return annotations;
+}
+
+// ============================================================
+// Ad detection → annotations
+// ============================================================
+
+function adDetectionToAnnotations(adDetection: AdDetectionResult): Annotation[] {
+  const annotations: Annotation[] = [];
+
+  if (adDetection.isAdvertising) {
+    const platformList = adDetection.publisherPlatforms.join(', ') || 'Meta';
+    annotations.push({
+      id: 'traffic-ads-active',
+      position: { x: 50, y: 10 },
+      type: adDetection.activeAdCount >= 5 ? 'positive' : 'opportunity',
+      title: `${adDetection.activeAdCount} active Meta ad${adDetection.activeAdCount === 1 ? '' : 's'} detected`,
+      detail: `Found ${adDetection.activeAdCount} active ads running on ${platformList}. ${
+        adDetection.activeAdCount < 5
+          ? 'Running fewer than 5 variants limits testing velocity — top performers test 10-20 creatives simultaneously.'
+          : 'Good ad testing volume. The key question is whether landing pages are optimized for the traffic these ads drive.'
+      }`,
+      category: 'paid_traffic',
+    });
+
+    if (adDetection.publisherPlatforms.length === 1) {
+      annotations.push({
+        id: 'traffic-ads-single-platform',
+        position: { x: 50, y: 15 },
+        type: 'opportunity',
+        title: 'Ads running on single platform only',
+        detail: `Currently advertising only on ${adDetection.publisherPlatforms[0]}. Cross-platform distribution (Facebook + Instagram + Audience Network) typically reduces CPM by 15-25% while increasing reach.`,
+        category: 'paid_traffic',
+      });
+    }
+  } else {
+    annotations.push({
+      id: 'traffic-ads-none',
+      position: { x: 50, y: 10 },
+      type: 'opportunity',
+      title: 'No paid advertising detected',
+      detail: 'No active Meta ads found. If the business relies on organic traffic alone, paid ads could unlock a significant growth channel — especially for retargeting visitors who browsed but didn\'t convert.',
+      category: 'paid_traffic',
+    });
+  }
+
+  return annotations;
+}
+
+// ============================================================
+// Social enrichment → annotations
+// ============================================================
+
+function socialEnrichmentToAnnotations(enrichment: SocialEnrichmentResult): Annotation[] {
+  const annotations: Annotation[] = [];
+
+  for (const profile of enrichment.profiles) {
+    const platform = profile.platform;
+    const yBase = platform === 'instagram' ? 30 : platform === 'tiktok' ? 50 : platform === 'facebook' ? 70 : 85;
+
+    if (profile.followerCount !== null) {
+      const isLow = profile.followerCount < 1000;
+      const isMedium = profile.followerCount >= 1000 && profile.followerCount < 10000;
+
+      if (isLow) {
+        annotations.push({
+          id: `traffic-enrichment-${platform}-followers`,
+          position: { x: 30, y: yBase },
+          type: 'warning',
+          title: `${platform}: ${formatEnrichmentNumber(profile.followerCount)} followers`,
+          detail: `With ${formatEnrichmentNumber(profile.followerCount)} followers, organic reach will be limited. Focus on content quality and engagement rate over follower count — or consider targeted paid promotion to accelerate growth.`,
+          category: 'audience_size',
+        });
+      } else if (isMedium) {
+        annotations.push({
+          id: `traffic-enrichment-${platform}-followers`,
+          position: { x: 30, y: yBase },
+          type: 'opportunity',
+          title: `${platform}: ${formatEnrichmentNumber(profile.followerCount)} followers — growth zone`,
+          detail: `${formatEnrichmentNumber(profile.followerCount)} followers puts the account in a growth phase. Consistent posting and engagement optimization can accelerate to 10K+, unlocking features and algorithmic favor.`,
+          category: 'audience_size',
+        });
+      }
+    }
+
+    if (profile.engagementRate !== null) {
+      const isLow = profile.engagementRate < 1.5;
+      const isHigh = profile.engagementRate > 4;
+
+      if (isLow) {
+        annotations.push({
+          id: `traffic-enrichment-${platform}-engagement`,
+          position: { x: 70, y: yBase },
+          type: 'critical',
+          title: `${platform}: ${profile.engagementRate}% engagement rate`,
+          detail: `Engagement rate of ${profile.engagementRate}% is below industry average (1.5-3%). This signals content isn't resonating — the algorithm deprioritizes low-engagement accounts, creating a downward spiral of decreasing reach.`,
+          category: 'engagement',
+        });
+      } else if (isHigh) {
+        annotations.push({
+          id: `traffic-enrichment-${platform}-engagement`,
+          position: { x: 70, y: yBase },
+          type: 'positive',
+          title: `${platform}: Strong ${profile.engagementRate}% engagement`,
+          detail: `${profile.engagementRate}% engagement is above average. The audience is actively engaged — this is a strong foundation for conversion-focused content and paid amplification of top posts.`,
+          category: 'engagement',
+        });
+      }
+    }
+
+    if (profile.platform === 'google_maps' && profile.reviewCount !== null) {
+      const rating = profile.averageRating ?? 0;
+      if (profile.reviewCount < 20) {
+        annotations.push({
+          id: 'traffic-enrichment-gmaps-reviews',
+          position: { x: 50, y: yBase },
+          type: 'warning',
+          title: `Only ${profile.reviewCount} Google reviews`,
+          detail: `${profile.reviewCount} reviews with a ${rating}/5 rating. Businesses with 40+ reviews get 54% more clicks on Google Maps. A review generation strategy should be a priority.`,
+          category: 'reviews',
+        });
+      } else if (rating < 4.0) {
+        annotations.push({
+          id: 'traffic-enrichment-gmaps-rating',
+          position: { x: 50, y: yBase },
+          type: 'critical',
+          title: `Google rating: ${rating}/5 (${profile.reviewCount} reviews)`,
+          detail: `A ${rating}/5 rating across ${profile.reviewCount} reviews is a conversion headwind. 87% of consumers won't consider a business rated below 4.0. Responding to negative reviews and generating new positive ones is urgent.`,
+          category: 'reviews',
+        });
+      }
+    }
+  }
+
+  return annotations;
+}
+
+function formatEnrichmentNumber(n: number): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return n.toString();
 }
