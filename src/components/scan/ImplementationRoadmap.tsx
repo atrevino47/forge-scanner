@@ -113,7 +113,7 @@ export function ImplementationRoadmap({ stages, onForgeSolution }: Implementatio
               <div
                 key={finding.id}
                 data-ir="card"
-                className="bg-white p-5 border-l-4 border-forge-accent relative overflow-hidden shadow-sm ring-1 ring-forge-accent/10"
+                className="bg-[#FEFEFE] p-5 border-l-4 border-forge-accent relative overflow-hidden shadow-sm ring-1 ring-forge-accent/10"
               >
                 <div className="flex justify-between items-start mb-3">
                   <span className="font-mono text-[10px] text-forge-text-secondary tracking-tighter uppercase font-bold">

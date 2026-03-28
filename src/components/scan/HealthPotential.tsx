@@ -81,7 +81,7 @@ export function HealthPotential({ summary, onInitiateOptimization }: HealthPoten
               </span>
               <span className="font-display text-2xl text-white/40">/100</span>
             </div>
-            <div className="bg-white text-forge-accent px-4 py-1.5 rounded-sm font-mono text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 border-l-4 border-forge-accent">
+            <div className="bg-[#FEFEFE] text-forge-accent px-4 py-1.5 rounded-sm font-mono text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 border-l-4 border-forge-accent">
               <span
                 className="material-symbols-outlined text-xs"
                 style={{ fontVariationSettings: "'FILL' 1" }}
@@ -217,7 +217,7 @@ export function HealthPotential({ summary, onInitiateOptimization }: HealthPoten
           </p>
           <button
             onClick={onInitiateOptimization}
-            className="w-full bg-white text-forge-accent font-mono py-5 rounded-lg font-black uppercase tracking-widest text-xs active:scale-95 transition-all duration-200 shadow-xl shadow-black/10"
+            className="w-full bg-[#FEFEFE] text-forge-accent font-mono py-5 rounded-lg font-black uppercase tracking-widest text-xs active:scale-95 transition-all duration-200 shadow-xl shadow-black/10"
           >
             INITIATE OPTIMIZATION
           </button>

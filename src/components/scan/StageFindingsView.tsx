@@ -101,7 +101,7 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
             </div>
           </div>
           <div className="pb-2">
-            <span className="bg-white text-forge-accent px-3 py-1 rounded-sm font-mono text-xs font-bold uppercase tracking-tighter border-l-4 border-forge-accent">
+            <span className="bg-[#FEFEFE] text-forge-accent px-3 py-1 rounded-sm font-mono text-xs font-bold uppercase tracking-tighter border-l-4 border-forge-accent">
               {severityLabel}
             </span>
           </div>
@@ -134,7 +134,7 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
                 <div className="w-2.5 h-2.5 rounded-full bg-forge-accent/20" />
                 <div className="w-2.5 h-2.5 rounded-full bg-forge-accent/10" />
               </div>
-              <div className="flex-1 bg-white h-6 rounded px-3 flex items-center justify-between border border-forge-accent/5">
+              <div className="flex-1 bg-[#FEFEFE] h-6 rounded px-3 flex items-center justify-between border border-forge-accent/5">
                 <span className="text-[10px] font-mono text-forge-text-secondary truncate">
                   {primaryScreenshot.source}
                 </span>
@@ -202,7 +202,7 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
                 <div
                   key={finding.id}
                   data-sf="finding"
-                  className={`bg-white p-5 flex gap-4 relative overflow-hidden ${
+                  className={`bg-[#FEFEFE] p-5 flex gap-4 relative overflow-hidden ${
                     isCritical ? 'border border-forge-accent/10' : ''
                   }`}
                 >
@@ -247,7 +247,7 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
           </p>
           <button
             onClick={onInitiateFix}
-            className="w-full bg-white text-forge-accent py-4 font-black tracking-[0.2em] text-xs uppercase rounded-lg active:scale-95 transition-all mt-6 shadow-xl shadow-black/10"
+            className="w-full bg-[#FEFEFE] text-forge-accent py-4 font-black tracking-[0.2em] text-xs uppercase rounded-lg active:scale-95 transition-all mt-6 shadow-xl shadow-black/10"
           >
             INITIATE REFACTOR
           </button>
