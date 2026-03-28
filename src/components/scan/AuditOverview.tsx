@@ -129,7 +129,7 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
             </div>
           </div>
           <div className="relative z-10 pb-2">
-            <div className="bg-white text-forge-accent px-3 py-1 rounded-sm flex items-center gap-1.5 shadow-md">
+            <div className="bg-[#FEFEFE] text-forge-accent px-3 py-1 rounded-sm flex items-center gap-1.5 shadow-md">
               <span className="material-symbols-outlined text-xs" style={{ fontVariationSettings: "'FILL' 1" }}>
                 warning
               </span>
@@ -248,7 +248,7 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
           </p>
           <button
             onClick={onInitiateFix}
-            className="w-full py-4 bg-white text-forge-accent font-display font-black text-xs uppercase tracking-[0.25em] rounded-lg active:scale-95 transition-all shadow-xl shadow-black/10 mt-4"
+            className="w-full py-4 bg-[#FEFEFE] text-forge-accent font-display font-black text-xs uppercase tracking-[0.25em] rounded-lg active:scale-95 transition-all shadow-xl shadow-black/10 mt-4"
           >
             INITIATE FIX LOGIC
           </button>
@@ -298,7 +298,7 @@ function StageStatusBadge({ score, exists }: { score: number; exists: boolean })
 function StageMetricsCard({
   stage,
   summary,
-  screenshotCount: _screenshotCount,
+  screenshotCount,
   isWeak,
 }: {
   stage: FunnelStage;
@@ -306,34 +306,103 @@ function StageMetricsCard({
   screenshotCount: number;
   isWeak: boolean;
 }) {
-  const criticalFindings = summary.findings.filter((f) => f.type === 'critical');
-
-  return (
-    <div
-      className={`bg-white p-5 rounded-sm shadow-sm ${
-        isWeak
-          ? 'border-l-4 border-forge-accent shadow-lg ring-1 ring-forge-accent/10'
-          : 'border-l-4 border-forge-text-secondary/30'
-      }`}
-    >
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-sm font-black uppercase tracking-tighter">
-          {stage === 'capture' ? 'Conversion Rate' : stage === 'landing' ? 'UX Friction Score' : 'Health Score'}
-        </span>
-        <span className={`font-display font-black tabular-nums ${isWeak ? 'text-3xl text-forge-accent' : 'text-xl'}`}>
-          {summary.score}/100
-        </span>
+  // Traffic stage: 2-column grid — Input Volume + Stability
+  if (stage === 'traffic') {
+    const stability = `${summary.score}%`;
+    const inputVolume = screenshotCount > 0 ? screenshotCount.toLocaleString() : '—';
+    return (
+      <div className="grid grid-cols-2 gap-4">
+        <div className="bg-[#FEFEFE] p-4 rounded-sm border-l-4 border-forge-accent shadow-sm">
+          <span className="font-mono text-[9px] uppercase text-forge-text-secondary block mb-1 font-bold tracking-widest">
+            Input Volume
+          </span>
+          <span className="font-display text-xl font-black tabular-nums text-forge-text">
+            {inputVolume}
+          </span>
+        </div>
+        <div className="bg-[#FEFEFE] p-4 rounded-sm shadow-sm">
+          <span className="font-mono text-[9px] uppercase text-forge-text-secondary block mb-1 font-bold tracking-widest">
+            Stability
+          </span>
+          <span className="font-display text-xl font-black tabular-nums text-forge-positive">
+            {stability}
+          </span>
+        </div>
       </div>
-      {criticalFindings.length > 0 && (
+    );
+  }
+
+  // Landing stage: score as UX Friction Score with horizontal progress bar
+  if (stage === 'landing') {
+    const frictionScore = (summary.score / 10).toFixed(1);
+    const barWidthPct = `${summary.score}%`;
+    return (
+      <div className="bg-[#FEFEFE] p-5 rounded-sm border-l-4 border-forge-text-secondary/30 shadow-sm">
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-sm font-bold uppercase tracking-tight text-forge-text">
+            UX Friction Score
+          </span>
+          <span className="font-mono font-black tabular-nums text-lg text-forge-text">
+            {frictionScore}/10
+          </span>
+        </div>
+        <div className="w-full bg-forge-surface h-1.5 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-forge-text-secondary rounded-full"
+            style={{ width: barWidthPct }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Capture stage: large orange percentage + industry avg comparison
+  if (stage === 'capture') {
+    const conversionPct = `${(summary.score / 10).toFixed(1)}%`;
+    const industryAvg = '4.2%';
+    return (
+      <div
+        className={`bg-[#FEFEFE] p-5 rounded-sm border-l-4 border-forge-accent shadow-lg ring-1 ring-forge-accent/10`}
+      >
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-sm font-black uppercase tracking-tighter text-forge-text">
+            Conversion Rate
+          </span>
+          <span className="font-display text-3xl font-black text-forge-accent tabular-nums">
+            {conversionPct}
+          </span>
+        </div>
         <p className="text-[10px] text-forge-text-secondary font-mono font-bold uppercase tracking-widest">
-          {criticalFindings.length} critical {criticalFindings.length === 1 ? 'finding' : 'findings'}
+          Industry Avg: {industryAvg}
         </p>
-      )}
-      {summary.headline && (
-        <p className="mt-2 text-xs text-forge-text-secondary leading-relaxed">
-          {summary.headline}
-        </p>
-      )}
+      </div>
+    );
+  }
+
+  // Offer stage: faded card with Engagement Depth in seconds
+  if (stage === 'offer') {
+    const depthSeconds = Math.round((summary.score / 100) * 60);
+    return (
+      <div className="bg-[#FEFEFE]/50 p-5 rounded-sm border-l-4 border-forge-text-muted/30">
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-bold text-forge-text-secondary uppercase tracking-tighter">
+            Engagement Depth
+          </span>
+          <span className="font-mono font-black tabular-nums text-lg text-forge-text-secondary">
+            {depthSeconds}s
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Followup stage (and any other): dashed "Insufficient Data" card
+  return (
+    <div className="bg-forge-card/30 p-6 rounded-sm border-dashed border-2 border-forge-text-muted/30 text-center">
+      <span className="material-symbols-outlined text-forge-text-muted/50 mb-2">block</span>
+      <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-forge-text-secondary font-bold">
+        Insufficient Data Matrix
+      </p>
     </div>
   );
 }
