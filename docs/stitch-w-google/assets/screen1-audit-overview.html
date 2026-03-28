@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&amp;family=Space+Grotesk:wght@300..700&amp;family=JetBrains+Mono:wght@100..800&amp;family=Epilogue:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "forge-orange": "#E8530E",
+              "surface-dim": "#dadad7",
+              "on-secondary-fixed": "#380d00",
+              "on-background": "#1a1c1b",
+              "tertiary-container": "#0075d4",
+              "surface-container-lowest": "#ffffff",
+              "surface-bright": "#f9f9f6",
+              "secondary-container": "#fe956f",
+              "on-tertiary-fixed": "#001c3a",
+              "outline": "#8e7066",
+              "inverse-primary": "#ffb59b",
+              "surface-container": "#eeeeeb",
+              "surface-container-high": "#e8e8e5",
+              "on-tertiary-fixed-variant": "#004785",
+              "surface-container-highest": "#e2e3e0",
+              "on-primary-fixed-variant": "#812800",
+              "surface": "#f9f9f6",
+              "error-container": "#ffdad6",
+              "error": "#ba1a1a",
+              "on-secondary-fixed-variant": "#7a2f11",
+              "primary": "#E8530E",
+              "tertiary-fixed": "#d4e3ff",
+              "inverse-on-surface": "#f1f1ee",
+              "primary-container": "#E8530E",
+              "outline-variant": "#e3bfb3",
+              "on-primary-fixed": "#380d00",
+              "on-primary": "#ffffff",
+              "tertiary-fixed-dim": "#a5c8ff",
+              "surface-tint": "#E8530E",
+              "on-tertiary": "#ffffff",
+              "on-primary-container": "#fffbff",
+              "background": "#f9f9f6",
+              "secondary": "#994626",
+              "on-surface": "#1a1c1b",
+              "on-secondary": "#ffffff",
+              "on-surface-variant": "#5a4138",
+              "surface-container-low": "#f4f4f1",
+              "secondary-fixed-dim": "#ffb59b",
+              "secondary-fixed": "#ffdbcf",
+              "on-error-container": "#93000a",
+              "on-secondary-container": "#762c0e",
+              "primary-fixed-dim": "#ffb59b",
+              "on-error": "#ffffff",
+              "tertiary": "#005daa",
+              "surface-variant": "#e2e3e0",
+              "primary-fixed": "#ffdbcf",
+              "inverse-surface": "#2f312f",
+              "on-tertiary-container": "#fefcff"
+            },
+            fontFamily: {
+              "headline": ["Epilogue", "sans-serif"],
+              "body": ["Space Grotesk", "sans-serif"],
+              "label": ["Space Grotesk", "sans-serif"],
+              "mono": ["JetBrains Mono", "monospace"],
+              "brand": ["Outfit", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        .forge-gradient { background: linear-gradient(135deg, #E8530E 0%, #ff6b1c 100%); }
+        .forge-glow { box-shadow: 0 0 25px -5px rgba(232, 83, 14, 0.3); }
+        .forge-gradient-primary { background: linear-gradient(135deg, #E8530E 0%, #ff7a3d 100%); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-forge-orange selection:text-on-primary pb-24">
+<!-- Top Navigation Anchor -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#f9f9f6]/80 backdrop-blur-md dark:bg-[#1a1c1b]/80 border-b border-forge-orange/5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-forge-orange" style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+<h1 class="font-brand font-black uppercase tracking-tighter text-2xl text-forge-orange">FORGE AUDIT</h1>
+</div>
+<button class="px-4 py-1.5 forge-gradient-primary text-white font-mono text-[10px] font-bold tracking-widest uppercase rounded-lg shadow-lg shadow-forge-orange/20 hover:opacity-90 transition-all active:scale-[0.98]">
+            BOOK CALL
+        </button>
+</header>
+<main class="pt-24 px-6 max-w-lg mx-auto space-y-12">
+<!-- Hero Section -->
+<section>
+<div class="flex items-center gap-2 mb-2">
+<span class="w-12 h-1 bg-forge-orange"></span>
+<span class="font-mono text-forge-orange text-[10px] font-bold uppercase tracking-[0.2em]">System Scan: Active</span>
+</div>
+<h2 class="font-brand text-5xl font-black text-on-surface leading-[0.9] tracking-tighter uppercase mb-8">
+                Where Your <br/>Customers <br/><span class="text-forge-orange">Drop Off</span>
+</h2>
+<!-- Funnel Health Score Card -->
+<div class="bg-forge-orange p-6 rounded-xl text-white shadow-xl shadow-forge-orange/20 flex items-end justify-between relative overflow-hidden">
+<div class="relative z-10 flex flex-col">
+<span class="font-mono text-[10px] uppercase tracking-widest text-white/70 mb-1">Health Score Index</span>
+<div class="flex items-baseline gap-1">
+<span class="font-brand text-7xl font-black tabular-nums tracking-tighter leading-none">19</span>
+<span class="font-brand text-2xl font-bold text-white/50">/100</span>
+</div>
+</div>
+<div class="relative z-10 pb-2">
+<div class="bg-white text-forge-orange px-3 py-1 rounded-sm flex items-center gap-1.5 shadow-md">
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="font-mono text-[10px] font-bold uppercase tracking-widest">Critical</span>
+</div>
+</div>
+<!-- Background Decoration -->
+<span class="material-symbols-outlined absolute -bottom-6 -right-6 text-white opacity-10 text-9xl pointer-events-none" style="font-variation-settings: 'FILL' 1;">settings_suggest</span>
+</div>
+<div class="mt-4 bg-surface-container-low p-5 border-l-4 border-forge-orange">
+<p class="text-sm text-on-surface-variant leading-relaxed font-medium">
+                    Severe leaks detected in the <span class="font-bold text-forge-orange uppercase tracking-tighter">Capture</span> and <span class="font-bold text-forge-orange uppercase tracking-tighter">Offer</span> stages. Immediate intervention required to prevent capital erosion.
+                </p>
+</div>
+</section>
+<!-- Vertical Timeline Journey -->
+<section class="flex flex-col gap-0">
+<h3 class="font-mono text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold mb-8 px-2">Pipeline Anatomy</h3>
+<!-- Stage 1: Traffic -->
+<div class="relative pl-10 pb-12 border-l-2 border-forge-orange">
+<div class="absolute -left-2.5 top-0 w-5 h-5 rounded-full bg-forge-orange border-4 border-surface shadow-[0_0_15px_rgba(232,83,14,0.4)]"></div>
+<div class="flex justify-between items-start mb-4">
+<h4 class="font-brand text-2xl font-black uppercase tracking-tighter text-on-surface">Traffic</h4>
+<span class="font-mono text-[10px] font-bold text-on-surface-variant bg-surface-container-highest px-2 py-0.5 uppercase tracking-widest">ESTABLISHED</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-4 rounded-sm border-l-4 border-forge-orange shadow-sm">
+<span class="font-mono text-[9px] uppercase text-on-surface-variant block mb-1 font-bold tracking-widest">Input Volume</span>
+<span class="font-brand text-xl font-black tabular-nums">12,402</span>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-sm shadow-sm">
+<span class="font-mono text-[9px] uppercase text-on-surface-variant block mb-1 font-bold tracking-widest">Stability</span>
+<span class="font-brand text-xl font-black tabular-nums text-tertiary">94%</span>
+</div>
+</div>
+</div>
+<!-- Stage 2: Landing -->
+<div class="relative pl-10 pb-12 border-l-2 border-forge-orange">
+<div class="absolute -left-2.5 top-0 w-5 h-5 rounded-full bg-forge-orange border-4 border-surface shadow-[0_0_15px_rgba(232,83,14,0.4)]"></div>
+<div class="flex justify-between items-start mb-4">
+<h4 class="font-brand text-2xl font-black uppercase tracking-tighter text-on-surface">Landing</h4>
+<span class="font-mono text-[10px] text-error font-black uppercase tracking-tighter">-42% DROP</span>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-sm border-l-4 border-on-surface-variant shadow-sm">
+<div class="flex justify-between items-center mb-3">
+<span class="text-sm font-bold uppercase tracking-tight">UX Friction Score</span>
+<span class="font-mono font-black tabular-nums text-lg">6.8/10</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="h-full bg-on-surface-variant w-[68%]"></div>
+</div>
+</div>
+</div>
+<!-- Stage 3: Capture -->
+<div class="relative pl-10 pb-12 border-l-2 border-forge-orange">
+<div class="absolute -left-2.5 top-0 w-5 h-5 rounded-full bg-forge-orange border-4 border-surface shadow-[0_0_20px_rgba(232,83,14,0.6)]"></div>
+<div class="flex justify-between items-start mb-4">
+<h4 class="font-brand text-2xl font-black uppercase tracking-tighter text-forge-orange">Capture</h4>
+<span class="font-mono text-[10px] text-error font-black uppercase tracking-[0.1em]">CRITICAL LEAK</span>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-sm border-l-4 border-forge-orange shadow-lg ring-1 ring-forge-orange/10">
+<div class="flex justify-between items-center mb-1">
+<span class="text-sm font-black uppercase tracking-tighter">Conversion Rate</span>
+<span class="font-brand text-3xl font-black text-forge-orange tabular-nums">0.8%</span>
+</div>
+<p class="text-[10px] text-on-surface-variant font-mono font-bold uppercase tracking-widest">Industry Avg: 4.2%</p>
+</div>
+</div>
+<!-- Stage 4: Offer -->
+<div class="relative pl-10 pb-12 border-l-2 border-forge-orange/30">
+<div class="absolute -left-2 top-0 w-4 h-4 rounded-full bg-forge-orange/30 border-4 border-surface"></div>
+<div class="flex justify-between items-start mb-4">
+<h4 class="font-brand text-2xl font-black uppercase tracking-tighter opacity-30">Offer</h4>
+<span class="font-mono text-[10px] text-on-surface-variant font-bold uppercase italic tracking-widest">Stagnant</span>
+</div>
+<div class="bg-surface-container-lowest/50 p-5 rounded-sm border-l-4 border-outline-variant/30">
+<div class="flex justify-between items-center">
+<span class="text-sm font-bold text-on-surface-variant uppercase tracking-tighter">Engagement Depth</span>
+<span class="font-mono font-black tabular-nums text-lg text-on-surface-variant">12s</span>
+</div>
+</div>
+</div>
+<!-- Stage 5: Follow-up -->
+<div class="relative pl-10">
+<div class="absolute -left-2 top-0 w-4 h-4 rounded-full bg-outline-variant/30 border-4 border-surface"></div>
+<div class="flex justify-between items-start mb-4">
+<h4 class="font-brand text-2xl font-black uppercase tracking-tighter opacity-20">Follow-up</h4>
+</div>
+<div class="bg-surface-container-high/30 p-6 rounded-sm border-dashed border-2 border-outline-variant/50 text-center">
+<span class="material-symbols-outlined text-outline-variant/50 mb-2">block</span>
+<p class="font-mono text-[9px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Insufficient Data Matrix</p>
+</div>
+</div>
+</section>
+<!-- Insights Callout -->
+<section class="p-8 text-white rounded-xl shadow-2xl forge-gradient-primary relative overflow-hidden forge-glow">
+<div class="relative z-10 space-y-4">
+<div class="flex items-center gap-2">
+<span class="font-mono text-[10px] font-bold uppercase tracking-[0.3em] opacity-80">Foundry Insight #04</span>
+</div>
+<h5 class="font-brand text-3xl font-black uppercase tracking-tight leading-none">Ready to Forge?</h5>
+<p class="text-sm font-body opacity-90 leading-relaxed font-medium">
+                    Your high-intent traffic is dying at the "Capture" gate. Replacing the multi-step form with a single-field validator will yield a projected 140% lift.
+                </p>
+<button class="w-full py-4 bg-white text-forge-orange font-brand font-black text-xs uppercase tracking-[0.25em] rounded-lg active:scale-95 transition-all shadow-xl shadow-black/10 mt-4">
+                    INITIATE FIX LOGIC
+                </button>
+</div>
+<!-- Decorative icon -->
+<span class="material-symbols-outlined absolute -bottom-10 -right-10 text-white opacity-10 text-[180px] pointer-events-none" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</section>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-stretch h-20 bg-surface dark:bg-[#1a1c1b] border-t border-forge-orange/10">
+<!-- Overview Tab (Active) -->
+<a class="flex flex-col items-center justify-center text-forge-orange border-t-4 border-forge-orange bg-forge-orange/5 px-4 py-2 flex-1 active:scale-[0.98] transition-all duration-150" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-mono text-[10px] uppercase font-bold tracking-widest">Overview</span>
+</a>
+<!-- Stages Tab -->
+<a class="flex flex-col items-center justify-center text-on-surface opacity-40 px-4 py-2 flex-1 hover:opacity-100 transition-all duration-150 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mb-1">architecture</span>
+<span class="font-mono text-[10px] uppercase font-bold tracking-widest">Stages</span>
+</a>
+<!-- Roadmap Tab -->
+<a class="flex flex-col items-center justify-center text-on-surface opacity-40 px-4 py-2 flex-1 hover:opacity-100 transition-all duration-150 active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined mb-1">analytics</span>
+<span class="font-mono text-[10px] uppercase font-bold tracking-widest">Roadmap</span>
+</a>
+</nav>
+<!-- Separation Logic Line -->
+<div class="fixed bottom-[80px] left-0 w-full h-[1px] bg-forge-orange/5 z-40"></div>
+</body></html>
