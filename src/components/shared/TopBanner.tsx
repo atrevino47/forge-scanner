@@ -3,7 +3,6 @@
 import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Menu } from 'lucide-react';
 import { useCalcom } from '@/components/providers/CalcomContext';
 
 export function TopBanner() {
@@ -11,21 +10,17 @@ export function TopBanner() {
   const { openCalcom } = useCalcom();
 
   /* ANIMATION SEQUENCE:
-   * Ambient: CTA glow — repeating boxShadow pulse (sine wave, 2s cycle)
+   * Ambient: CTA pill underline grows on hover (CSS handles this)
    */
   useGSAP(
     () => {
-      gsap.fromTo(
-        '[data-banner="cta"]',
-        { boxShadow: '0 0 0px rgba(212, 165, 55, 0)' },
-        {
-          boxShadow: '0 0 20px rgba(212, 165, 55, 0.15)',
-          duration: 2,
-          repeat: -1,
-          yoyo: true,
-          ease: 'sine.inOut',
-        },
-      );
+      // Subtle entrance — banner slides down from -10px
+      gsap.from(containerRef.current, {
+        y: -10,
+        opacity: 0,
+        duration: 0.5,
+        ease: 'power2.out',
+      });
     },
     { scope: containerRef },
   );
@@ -33,28 +28,48 @@ export function TopBanner() {
   return (
     <nav
       ref={containerRef}
-      className="fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between border-b border-forge-border bg-forge-surface/80 px-4 backdrop-blur-xl sm:h-16 sm:px-6"
+      className="fixed inset-x-0 top-0 z-50 flex h-[52px] items-center justify-between border-b px-8"
+      style={{
+        background: 'rgba(250, 250, 247, 0.92)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        borderBottomColor: 'rgba(255, 107, 43, 0.08)',
+      }}
     >
-      {/* Left: CTA — opens Cal.com modal */}
+      {/* Left: CTA pill */}
       <button
         data-banner="cta"
         onClick={() => openCalcom({ source: 'banner_cta' })}
-        className="rounded-lg px-3 py-1.5 font-body text-xs font-semibold tracking-wide text-forge-accent uppercase sm:px-4 sm:text-sm"
+        className="group relative overflow-hidden rounded-full border px-4 py-1.5 font-body text-[0.6875rem] font-semibold uppercase tracking-[0.06em] transition-all duration-300"
+        style={{
+          color: 'var(--forge-accent)',
+          borderColor: 'rgba(232, 83, 14, 0.15)',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(232, 83, 14, 0.08)';
+          e.currentTarget.style.borderColor = 'rgba(232, 83, 14, 0.35)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.borderColor = 'rgba(232, 83, 14, 0.15)';
+        }}
       >
-        [COPY: banner CTA text]
+        Book a Free Strategy Call
       </button>
 
       {/* Center: Logo */}
       <div className="absolute left-1/2 -translate-x-1/2">
-        <span className="font-display text-xl tracking-display text-forge-text">
-          FORGE<span className="text-forge-accent">.</span>
+        <span className="font-display text-[19px] font-black tracking-[-0.5px]">
+          FORGEWITH<span style={{ color: 'var(--forge-accent)' }}>.AI</span>
         </span>
       </div>
 
-      {/* Right: Menu */}
-      <button className="rounded-lg p-2 text-forge-text-muted transition-colors duration-200 hover:text-forge-text">
-        <Menu className="h-5 w-5" />
-      </button>
+      {/* Right: Scan status (shows during active scan) or empty */}
+      <div className="flex items-center gap-5">
+        <span className="font-mono text-[0.6875rem] text-forge-text-muted">
+          {/* Populated dynamically during scan */}
+        </span>
+      </div>
     </nav>
   );
 }
