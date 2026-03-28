@@ -4,6 +4,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import type { CreatePaymentIntentResponse, ApiError } from '@/../contracts/api';
+import { getStripe } from '@/lib/stripe/client';
+import { createServiceClient } from '@/lib/db/client';
 
 const createPaymentIntentSchema = z.object({
   leadId: z.string().min(1, 'leadId is required'),
@@ -16,6 +18,8 @@ const createPaymentIntentSchema = z.object({
 
 export async function POST(request: NextRequest): Promise<NextResponse<CreatePaymentIntentResponse | ApiError>> {
   try {
+    // TODO: Wire admin auth once ADMIN_EMAILS is configured
+
     const body: unknown = await request.json();
     const parsed = createPaymentIntentSchema.safeParse(body);
 
@@ -32,17 +36,52 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreatePay
       );
     }
 
-    // TODO: Verify admin authentication
-    // TODO: Create actual Stripe PaymentIntent via Stripe SDK
-    // TODO: Store payment record in database
+    const { leadId, scanId, amountCents, currency, productType, description } = parsed.data;
 
-    const mockResponse: CreatePaymentIntentResponse = {
-      clientSecret: `pi_mock_${crypto.randomUUID()}_secret_mock`,
-      paymentIntentId: `pi_mock_${crypto.randomUUID()}`,
-    };
+    // Look up lead email for Stripe metadata
+    const db = createServiceClient();
+    const { data: lead } = await db
+      .from('leads')
+      .select('email, business_name')
+      .eq('id', leadId)
+      .single();
 
-    return NextResponse.json(mockResponse, { status: 200 });
+    // Create Stripe PaymentIntent
+    const stripe = getStripe();
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amountCents,
+      currency,
+      metadata: {
+        leadId,
+        scanId: scanId ?? '',
+        productType,
+        source: 'admin_panel',
+      },
+      description: description ?? `Forge ${productType.replace(/_/g, ' ')} — ${lead?.business_name ?? 'Unknown'}`,
+      receipt_email: lead?.email ?? undefined,
+    });
+
+    // Store payment record in database
+    await db.from('payments').insert({
+      lead_id: leadId,
+      scan_id: scanId ?? null,
+      stripe_payment_intent_id: paymentIntent.id,
+      amount_cents: amountCents,
+      currency,
+      product_type: productType,
+      description: description ?? null,
+      status: 'pending',
+    });
+
+    return NextResponse.json(
+      {
+        clientSecret: paymentIntent.client_secret!,
+        paymentIntentId: paymentIntent.id,
+      },
+      { status: 200 },
+    );
   } catch (error) {
+    console.error('[payments/create-intent] Error:', error);
     return NextResponse.json(
       {
         error: {
