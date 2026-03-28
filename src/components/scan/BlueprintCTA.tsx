@@ -82,7 +82,7 @@ export function BlueprintCTA({
         <button
           onClick={handleGenerate}
           disabled={isGenerating || generated}
-          className="inline-flex items-center gap-2 rounded-lg bg-forge-accent px-8 py-3 font-body font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg bg-forge-accent px-8 py-3 font-body font-semibold text-white transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50"
         >
           {isGenerating
             ? 'Generating your blueprint...'

@@ -120,7 +120,7 @@ export function SocialConfirmation({
           <button
             onClick={handleConfirm}
             disabled={!selected}
-            className="flex-1 rounded-lg bg-forge-accent py-2.5 font-body text-sm font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50"
+            className="flex-1 rounded-lg bg-forge-accent py-2.5 font-body text-sm font-semibold text-white transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50"
           >
             Confirm
           </button>

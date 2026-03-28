@@ -43,7 +43,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         <button
           onClick={handleSubmit}
           disabled={disabled || !value.trim()}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-forge-accent text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-30"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-forge-accent text-white transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-30"
         >
           <ArrowUp className="h-4 w-4" />
         </button>

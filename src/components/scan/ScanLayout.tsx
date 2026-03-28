@@ -554,7 +554,7 @@ export function ScanLayout({ scanId }: { scanId: string }) {
             <div className="py-8 text-center">
               <button
                 onClick={() => handleOpenCalcom('results_cta')}
-                className="inline-flex items-center gap-2 rounded-lg bg-forge-accent px-8 py-3 font-body font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover"
+                className="inline-flex items-center gap-2 rounded-lg bg-forge-accent px-8 py-3 font-body font-semibold text-white transition-colors duration-200 hover:bg-forge-accent-hover"
               >
                 [COPY: book strategy call after blueprint]
               </button>
@@ -578,7 +578,7 @@ export function ScanLayout({ scanId }: { scanId: string }) {
               </p>
               <button
                 onClick={() => dispatch({ type: 'SHOW_CAPTURE' })}
-                className="rounded-lg bg-forge-accent px-6 py-3 font-body font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover"
+                className="rounded-lg bg-forge-accent px-6 py-3 font-body font-semibold text-white transition-colors duration-200 hover:bg-forge-accent-hover"
               >
                 [COPY: unlock results button]
               </button>

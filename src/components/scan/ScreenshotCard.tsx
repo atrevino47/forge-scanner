@@ -93,7 +93,7 @@ export function ScreenshotCard({ screenshot }: ScreenshotCardProps) {
               className="flex w-full items-start gap-3 rounded-lg px-2 py-1.5 text-left transition-colors duration-200 hover:bg-forge-surface"
             >
               <span className={cn(
-                'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-forge-base',
+                'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white',
                 TYPE_BG[annotation.type]
               )}>
                 {index + 1}
