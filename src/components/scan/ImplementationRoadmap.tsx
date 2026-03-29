@@ -81,7 +81,7 @@ export function ImplementationRoadmap({ stages, onForgeSolution }: Implementatio
         </div>
         <h2
           data-ir="headline"
-          className="font-display text-5xl font-black uppercase tracking-tighter leading-[0.9] text-forge-accent"
+          className="font-display text-4xl sm:text-5xl font-black uppercase tracking-tighter leading-[0.9] text-forge-accent"
         >
           What to Fix First
         </h2>
@@ -213,7 +213,7 @@ export function ImplementationRoadmap({ stages, onForgeSolution }: Implementatio
       {/* Bottom CTA — orange gradient card (spec: same style as stage CTA) */}
       <div
         data-ir="summary"
-        className="mt-12 p-8 text-white rounded-xl shadow-2xl shadow-forge-accent/30 relative overflow-hidden bg-gradient-to-br from-forge-accent to-[#ff7a3d]"
+        className="mt-12 p-6 sm:p-8 text-white rounded-xl shadow-2xl shadow-forge-accent/30 relative overflow-hidden bg-gradient-to-br from-forge-accent to-[#ff7a3d]"
       >
         <div className="absolute top-0 right-0 p-4 opacity-10">
           <span className="material-symbols-outlined text-9xl">construction</span>
@@ -222,7 +222,7 @@ export function ImplementationRoadmap({ stages, onForgeSolution }: Implementatio
           <span className="font-mono text-[10px] uppercase tracking-widest text-white/70 block mb-2 font-bold">
             Implementation Plan Ready
           </span>
-          <h5 className="font-display font-extrabold text-3xl tracking-tight mb-2">
+          <h5 className="font-display font-extrabold text-2xl sm:text-3xl tracking-tight mb-2">
             Forge Your Solution
           </h5>
           <p className="text-sm text-white/90 leading-relaxed mb-6">

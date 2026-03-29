@@ -72,7 +72,7 @@ export function FAQSection() {
   return (
     <section
       ref={containerRef}
-      className="relative px-6 py-24 sm:py-32"
+      className="relative px-4 py-14 sm:px-6 sm:py-24 lg:py-32"
       style={{ background: '#FAFAF7' }}
     >
       <div className="mx-auto max-w-[720px]">

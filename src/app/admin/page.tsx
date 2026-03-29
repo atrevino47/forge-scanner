@@ -120,7 +120,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight">Dashboard</h1>
           <p className="font-body text-sm text-[#9A9890]">Forge Scanner overview</p>
@@ -323,7 +323,7 @@ export default function AdminDashboard() {
                 >
                   {scan.status}
                 </span>
-                <span className="shrink-0 font-mono text-[10px] text-[#9A9890]">
+                <span className="hidden shrink-0 font-mono text-[10px] text-[#9A9890] sm:inline">
                   {timeAgo(scan.createdAt)}
                 </span>
               </Link>

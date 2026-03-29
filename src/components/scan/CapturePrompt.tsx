@@ -127,7 +127,7 @@ export function CapturePrompt({
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 (555) 000-0000 — get a text when your blueprint is ready"
+              placeholder="+1 (555) 000-0000"
               className="h-11 flex-1 bg-transparent font-body text-sm text-forge-text placeholder:text-forge-text-muted/50 focus:outline-none"
             />
           </div>

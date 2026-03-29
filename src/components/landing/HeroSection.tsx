@@ -66,7 +66,7 @@ export function HeroSection() {
   return (
     <section
       ref={containerRef}
-      className="relative flex min-h-screen items-center justify-center px-6 pt-20"
+      className="relative flex min-h-screen items-center justify-center px-4 pt-20 sm:px-6"
       id="hero"
     >
       {/* Orange radial gradient glow */}

@@ -96,7 +96,7 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
           <div className="flex flex-col">
             <span className="font-mono text-[10px] uppercase tracking-widest text-white/70 mb-1">Audit Score</span>
             <div className="flex items-baseline gap-1">
-              <span className="font-display text-7xl leading-none text-white">{score}</span>
+              <span className="font-display text-5xl sm:text-7xl leading-none text-white">{score}</span>
               <span className="font-display text-2xl text-white/50">/100</span>
             </div>
           </div>
@@ -240,14 +240,14 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
       {/* Bottom CTA */}
       <section
         data-sf="cta"
-        className="text-white p-8 rounded-xl space-y-6 shadow-2xl shadow-forge-accent/30 relative overflow-hidden bg-gradient-to-br from-forge-accent to-[#ff7a3d]"
+        className="text-white p-6 sm:p-8 rounded-xl space-y-6 shadow-2xl shadow-forge-accent/30 relative overflow-hidden bg-gradient-to-br from-forge-accent to-[#ff7a3d]"
       >
         <div className="absolute top-0 right-0 p-4 opacity-10">
           <span className="material-symbols-outlined text-9xl">construction</span>
         </div>
         <div className="relative z-10">
-          <h4 className="font-display font-bold text-3xl tracking-tight">Ready to Forge?</h4>
-          <p className="text-sm text-white/90 leading-relaxed mt-2 max-w-[80%]">
+          <h4 className="font-display font-bold text-2xl sm:text-3xl tracking-tight">Ready to Forge?</h4>
+          <p className="text-sm text-white/90 leading-relaxed mt-2">
             Our builders are ready to refactor these findings into a high-converting {STAGE_LABELS[stage].toLowerCase()}. Stop leaking pipeline today.
           </p>
           <button

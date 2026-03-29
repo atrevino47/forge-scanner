@@ -27,7 +27,7 @@ export function TopBanner() {
   return (
     <nav
       ref={containerRef}
-      className="fixed inset-x-0 top-0 z-50 flex h-[56px] items-center justify-between border-b px-8"
+      className="fixed inset-x-0 top-0 z-50 flex h-[56px] items-center justify-between border-b px-4 sm:px-8"
       style={{
         background: 'rgba(250, 250, 247, 0.92)',
         backdropFilter: 'blur(16px)',

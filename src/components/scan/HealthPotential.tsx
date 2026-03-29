@@ -66,7 +66,7 @@ export function HealthPotential({ summary, onInitiateOptimization }: HealthPoten
       <section>
         <div
           data-hp="score"
-          className="bg-forge-accent p-8 rounded-xl text-white shadow-xl shadow-forge-accent/15 relative overflow-hidden"
+          className="bg-forge-accent p-6 sm:p-8 rounded-xl text-white shadow-xl shadow-forge-accent/15 relative overflow-hidden"
         >
           <div className="absolute -right-4 -top-4 opacity-10">
             <span className="material-symbols-outlined text-9xl">analytics</span>
@@ -76,7 +76,7 @@ export function HealthPotential({ summary, onInitiateOptimization }: HealthPoten
               Current Health Index
             </span>
             <div className="flex items-baseline gap-1 mb-6">
-              <span ref={scoreRef} className="font-display text-8xl leading-none text-white drop-shadow-sm">
+              <span ref={scoreRef} className="font-display text-6xl sm:text-8xl leading-none text-white drop-shadow-sm">
                 0
               </span>
               <span className="font-display text-2xl text-white/40">/100</span>
@@ -208,7 +208,7 @@ export function HealthPotential({ summary, onInitiateOptimization }: HealthPoten
           <span className="font-mono text-[10px] uppercase tracking-widest opacity-80 block mb-2 font-bold">
             Audit Verdict
           </span>
-          <h2 className="font-display text-4xl font-black uppercase tracking-tighter leading-none mb-4">
+          <h2 className="font-display text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none mb-4">
             Projected Score Improvement
           </h2>
           <p className="font-body text-sm text-white/90 mb-8 leading-relaxed max-w-[90%]">

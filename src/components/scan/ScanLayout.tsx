@@ -502,7 +502,7 @@ export function ScanLayout({ scanId }: { scanId: string }) {
         showUrl={isComplete}
       />
 
-      <main className="pt-24 pb-28 px-6 max-w-lg mx-auto">
+      <main className="pt-20 pb-28 px-4 sm:px-6 w-full max-w-lg mx-auto">
         {/* Progress indicator — visible while scanning */}
         {isScanning && <ProgressIndicator messages={state.progressMessages} />}
 

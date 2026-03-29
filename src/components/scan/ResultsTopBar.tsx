@@ -17,9 +17,10 @@ export function ResultsTopBar({ onBookCall, scannedUrl, showUrl }: ResultsTopBar
       {/* Left: Book a Call */}
       <button
         onClick={onBookCall}
-        className="shrink-0 px-3 py-1.5 forge-gradient-primary text-white font-mono text-[10px] font-bold tracking-widest uppercase rounded-lg shadow-lg shadow-forge-accent/20 hover:opacity-90 transition-all active:scale-[0.98]"
+        className="shrink-0 px-2.5 py-1.5 forge-gradient-primary text-white font-mono text-[9px] sm:text-[10px] font-bold tracking-widest uppercase rounded-lg shadow-lg shadow-forge-accent/20 hover:opacity-90 transition-all active:scale-[0.98]"
       >
-        Book a Free Strategy Call
+        <span className="hidden sm:inline">Book a Free Strategy Call</span>
+        <span className="sm:hidden">Book a Call</span>
       </button>
 
       {/* Center: scanned URL (when results visible) or FORGE logo */}
@@ -44,7 +45,7 @@ export function ResultsTopBar({ onBookCall, scannedUrl, showUrl }: ResultsTopBar
       </div>
 
       {/* Right: placeholder for symmetry */}
-      <div className="shrink-0 w-[140px]" />
+      <div className="shrink-0 w-[80px] sm:w-[140px]" />
     </header>
   );
 }

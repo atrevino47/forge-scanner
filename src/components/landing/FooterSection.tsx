@@ -9,7 +9,7 @@ export function FooterSection() {
     <>
       {/* Dark CTA close section */}
       <section
-        className="relative overflow-hidden px-6 py-24 text-center sm:py-32"
+        className="relative overflow-hidden px-4 py-14 text-center sm:px-6 sm:py-24 lg:py-32"
         style={{
           background: '#141413',
           color: '#F0EFE9',

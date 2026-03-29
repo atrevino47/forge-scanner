@@ -106,7 +106,7 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
         </div>
         <h2
           data-ao="headline"
-          className="font-display text-5xl font-black text-forge-text leading-[0.9] tracking-tighter uppercase mb-8"
+          className="font-display text-4xl sm:text-5xl font-black text-forge-text leading-[0.9] tracking-tighter uppercase mb-8"
         >
           Where Your <br />Customers <br />
           <span className="text-forge-accent">Drop Off</span>
@@ -122,7 +122,7 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
               Health Score Index
             </span>
             <div className="flex items-baseline gap-1">
-              <span ref={scoreRef} className="font-display text-7xl font-black tabular-nums tracking-tighter leading-none">
+              <span ref={scoreRef} className="font-display text-6xl sm:text-7xl font-black tabular-nums tracking-tighter leading-none">
                 0
               </span>
               <span className="font-display text-2xl font-bold text-white/50">/100</span>
@@ -249,7 +249,7 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
           <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] opacity-80">
             Foundry Insight
           </span>
-          <h5 className="font-display text-3xl font-black uppercase tracking-tight leading-none">
+          <h5 className="font-display text-2xl sm:text-3xl font-black uppercase tracking-tight leading-none">
             Ready to Forge?
           </h5>
           <p className="text-sm font-body opacity-90 leading-relaxed font-medium">
