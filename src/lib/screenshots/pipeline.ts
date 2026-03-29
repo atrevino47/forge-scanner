@@ -5,6 +5,8 @@
 import { createServiceClient } from '@/lib/db/client';
 import { runScanAnalysis } from '@/lib/scanner/orchestrator';
 import { buildBusinessContext } from '@/lib/scanner/utils';
+import { detectMetaAds } from '@/lib/scanner/ad-detection';
+import { enrichSocialProfiles, enrichmentToContext } from '@/lib/scanner/apify-enrichment';
 import { connectBrowser, capturePageWithMetadata, disconnectBrowser as closeBrowser } from './client';
 import { detectInnerPages, detectSocialLinks, detectGbpFromHtml } from './social-detector';
 import type { Browser } from 'playwright-core';
@@ -15,6 +17,8 @@ import type {
   SourceType,
   Viewport,
   DetectedSocials,
+  AdDetectionResult,
+  SocialEnrichmentResult,
   Annotation,
   StageSummary,
   StageStatus,
@@ -182,11 +186,18 @@ export async function runScreenshotPipeline(params: {
     // --------------------------------------------------------
     try {
       if (homepageHtml) {
-        detectedSocials = detectSocialLinks(homepageHtml, websiteUrl);
+        const detection = detectSocialLinks(homepageHtml, websiteUrl);
+        detectedSocials = detection.resolved;
+
+        // Store both resolved and ambiguous socials in the scan record
+        const socialsForDb: Record<string, unknown> = { ...detection.resolved };
+        if (Object.keys(detection.ambiguous).length > 0) {
+          socialsForDb._ambiguous = detection.ambiguous;
+        }
 
         await supabase
           .from('scans')
-          .update({ detected_socials: detectedSocials })
+          .update({ detected_socials: socialsForDb })
           .eq('id', scanId);
       }
     } catch (socialDetectError) {
@@ -194,7 +205,47 @@ export async function runScreenshotPipeline(params: {
     }
 
     // --------------------------------------------------------
-    // Step 7: Capture social profile screenshots
+    // Step 7: Enrich data — Meta ads + Apify social metrics (parallel, non-blocking)
+    // --------------------------------------------------------
+    let adDetection: AdDetectionResult | null = null;
+    let socialEnrichment: SocialEnrichmentResult | null = null;
+
+    try {
+      // Extract business name from page title or URL for ad search
+      const businessNameForSearch = businessName || extractBusinessNameFromUrl(websiteUrl);
+
+      // Run ad detection and social enrichment in parallel
+      // These are optional enrichments — pipeline continues if either fails
+      const [adResult, enrichResult] = await Promise.allSettled([
+        businessNameForSearch
+          ? detectMetaAds(businessNameForSearch, websiteUrl)
+          : Promise.resolve(null),
+        enrichSocialProfiles(detectedSocials),
+      ]);
+
+      if (adResult.status === 'fulfilled') {
+        adDetection = adResult.value;
+        if (adDetection?.isAdvertising) {
+          console.log(`[pipeline] Meta ads detected: ${adDetection.activeAdCount} active ads`);
+        }
+      } else {
+        console.error('[pipeline] Ad detection failed:', adResult.reason);
+      }
+
+      if (enrichResult.status === 'fulfilled') {
+        socialEnrichment = enrichResult.value;
+        if (socialEnrichment) {
+          console.log(`[pipeline] Social enrichment: ${socialEnrichment.profiles.length} profiles enriched`);
+        }
+      } else {
+        console.error('[pipeline] Social enrichment failed:', enrichResult.reason);
+      }
+    } catch (enrichError) {
+      console.error('[pipeline] Data enrichment step failed:', enrichError);
+    }
+
+    // --------------------------------------------------------
+    // Step 8: Capture social profile screenshots
     // --------------------------------------------------------
     try {
       await updateStageStatusIfPending(supabase, scanId, 'traffic', 'capturing');
@@ -229,7 +280,7 @@ export async function runScreenshotPipeline(params: {
     }
 
     // --------------------------------------------------------
-    // Step 8: Detect and capture GBP
+    // Step 9: Detect and capture GBP
     // --------------------------------------------------------
     try {
       await updateStageStatusIfPending(supabase, scanId, 'followup', 'capturing');
@@ -257,7 +308,7 @@ export async function runScreenshotPipeline(params: {
     }
 
     // --------------------------------------------------------
-    // Step 9: Upload all screenshots to Supabase Storage
+    // Step 10: Upload all screenshots to Supabase Storage
     // --------------------------------------------------------
     const uploadedScreenshots: ScreenshotData[] = [];
 
@@ -296,7 +347,7 @@ export async function runScreenshotPipeline(params: {
     }
 
     // --------------------------------------------------------
-    // Step 10: Create screenshot DB records
+    // Step 11: Create screenshot DB records
     // --------------------------------------------------------
     if (uploadedScreenshots.length > 0) {
       const screenshotRows = uploadedScreenshots.map((s) => ({
@@ -321,7 +372,7 @@ export async function runScreenshotPipeline(params: {
     }
 
     // --------------------------------------------------------
-    // Step 11: Update funnel stages — mark as 'analyzing'
+    // Step 12: Update funnel stages — mark as 'analyzing'
     // --------------------------------------------------------
     const stagesWithScreenshots = new Set(uploadedScreenshots.map((s) => s.stage));
 
@@ -330,21 +381,30 @@ export async function runScreenshotPipeline(params: {
     }
 
     // --------------------------------------------------------
-    // Step 12: Disconnect browser
+    // Step 13: Disconnect browser
     // --------------------------------------------------------
     await closeBrowser(browser);
     browser = null;
 
     // --------------------------------------------------------
-    // Step 13: Run AI analysis
+    // Step 14: Run AI analysis
     // --------------------------------------------------------
     await updateScanStatus(supabase, scanId, 'analyzing');
 
-    const businessContext = buildBusinessContext({
+    // Build business context, enriched with ad detection + social metrics
+    let businessContext = buildBusinessContext({
       websiteUrl,
       businessName,
       detectedSocials: buildDetectedSocialsForContext(detectedSocials),
     });
+
+    // Append enrichment data to business context for AI analysis
+    if (socialEnrichment) {
+      businessContext += '\n\n' + enrichmentToContext(socialEnrichment);
+    }
+    if (adDetection) {
+      businessContext += '\n\n' + adDetectionToContext(adDetection);
+    }
 
     const analysisInput: ScanAnalysisInput = {
       scanId,
@@ -354,6 +414,8 @@ export async function runScreenshotPipeline(params: {
       businessName,
       screenshotFetcher: fetchScreenshotBase64,
       homepageHtml: homepageHtml || undefined,
+      adDetection: adDetection || undefined,
+      socialEnrichment: socialEnrichment || undefined,
     };
 
     const analysisCallbacks: ScanEventCallbacks = {
@@ -580,10 +642,7 @@ async function updateStageStatusIfPending(
 // ============================================================
 
 function generateScreenshotId(): string {
-  // Produce a collision-resistant ID without external dependencies
-  const timestamp = Date.now().toString(36);
-  const randomPart = Math.random().toString(36).substring(2, 10);
-  return `ss_${timestamp}_${randomPart}`;
+  return crypto.randomUUID();
 }
 
 function platformToSourceType(platform: keyof DetectedSocials): SourceType {
@@ -594,6 +653,40 @@ function platformToSourceType(platform: keyof DetectedSocials): SourceType {
     linkedin: 'linkedin',
   };
   return mapping[platform];
+}
+
+function extractBusinessNameFromUrl(url: string): string | null {
+  try {
+    let hostname = url;
+    if (hostname.includes('://')) {
+      hostname = new URL(hostname).hostname;
+    }
+    hostname = hostname.replace(/^www\./, '');
+    const parts = hostname.split('.');
+    if (parts.length < 2) return null;
+    const name = parts.slice(0, -1).join(' ');
+    return name.replace(/[-_]/g, ' ').trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+function adDetectionToContext(adDetection: AdDetectionResult): string {
+  const lines = ['META AD LIBRARY DATA:'];
+  lines.push(`  Active ads: ${adDetection.activeAdCount}`);
+  lines.push(`  Total ads found: ${adDetection.totalAdsFound}`);
+  lines.push(`  Platforms: ${adDetection.publisherPlatforms.join(', ') || 'none'}`);
+  if (adDetection.sampleAds.length > 0) {
+    lines.push('  Sample ad creatives:');
+    for (const ad of adDetection.sampleAds.slice(0, 3)) {
+      if (ad.creativeLinkTitle) {
+        lines.push(`    - "${ad.creativeLinkTitle}" (since ${ad.startDate})`);
+      } else if (ad.creativeBody) {
+        lines.push(`    - "${ad.creativeBody.slice(0, 100)}..." (since ${ad.startDate})`);
+      }
+    }
+  }
+  return lines.join('\n');
 }
 
 function buildDetectedSocialsForContext(

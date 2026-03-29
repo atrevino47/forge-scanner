@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r11 Before/After Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r11: Before/After Comparison
+   "Your Funnel" vs "Optimized Funnel" side by side.
+   Each stage has a before/after row.
+   Revenue delta between columns. Creates desire by showing what's possible. */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+  --r: 12px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 17, 32, 0.94);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+}
+
+.logo { font-family: 'Instrument Serif', serif; font-size: 1.125rem; }
+.logo b { color: var(--accent); font-weight: 400; }
+
+.topbar-r { display: flex; align-items: center; gap: 16px; }
+.topbar-url { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: var(--muted); }
+
+.cta-link {
+  font-size: 0.6875rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--accent); text-decoration: none;
+  padding: 5px 14px; border-radius: 999px;
+  border: 1px solid rgba(212, 165, 55, 0.15); transition: all 0.2s;
+}
+.cta-link:hover { background: rgba(212, 165, 55, 0.08); }
+
+/* ── PAGE ── */
+.page { max-width: 960px; margin: 0 auto; padding: 0 32px; }
+
+/* ── HERO ── */
+.hero {
+  text-align: center;
+  padding: 80px 0 48px;
+}
+
+.hero-kicker {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+.hero h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2.25rem, 4.5vw + 0.5rem, 3.5rem);
+  letter-spacing: -0.025em;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.hero p {
+  font-size: 1rem;
+  color: var(--secondary);
+  margin-top: 12px;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Overall score comparison */
+.score-compare {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 40px;
+  padding: 32px 0;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.sc-side {
+  text-align: center;
+}
+
+.sc-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.sc-score {
+  font-family: 'Instrument Serif', serif;
+  font-size: 4rem;
+  line-height: 0.9;
+}
+
+.sc-suf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.sc-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sc-arrow-icon {
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+
+.sc-arrow-delta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--positive);
+  font-weight: 500;
+}
+
+/* ── COMPARISON TABLE ── */
+.compare-table {
+  margin-top: 48px;
+}
+
+/* Table header row */
+.ct-header {
+  display: grid;
+  grid-template-columns: 180px 1fr 60px 1fr;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 2px solid var(--glass-border);
+  align-items: center;
+}
+
+.ct-h {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.ct-h-current { color: var(--critical); }
+.ct-h-optimized { color: var(--positive); }
+
+/* Stage rows */
+.ct-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 60px 1fr;
+  gap: 16px;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--glass-border);
+  align-items: start;
+}
+
+.ct-row:hover {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+/* Stage info */
+.ct-stage {
+  padding-top: 4px;
+}
+
+.ct-stage-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.5625rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ct-stage-name {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+/* Current state (left column) */
+.ct-current {
+  background: rgba(239, 68, 68, 0.03);
+  border: 1px solid rgba(239, 68, 68, 0.06);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.ct-current-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ct-score-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.ct-score-bar {
+  flex: 1;
+  height: 4px;
+  background: var(--card);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ct-score-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.ct-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ct-issue {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--secondary);
+}
+
+.ct-issue-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+
+/* Arrow / delta column */
+.ct-delta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+}
+
+.ct-delta-arrow {
+  color: var(--positive);
+  font-size: 1.25rem;
+  margin-bottom: 4px;
+}
+
+.ct-delta-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--positive);
+  font-weight: 500;
+}
+
+/* Optimized state (right column) */
+.ct-optimized {
+  background: rgba(34, 197, 94, 0.03);
+  border: 1px solid rgba(34, 197, 94, 0.06);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.ct-optimized-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ct-fixes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ct-fix {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--secondary);
+}
+
+.ct-fix-check {
+  color: var(--positive);
+  font-size: 0.75rem;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+/* ── REVENUE IMPACT ── */
+.revenue-impact {
+  background: rgba(212, 165, 55, 0.04);
+  border: 1px solid rgba(212, 165, 55, 0.1);
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  margin-top: 48px;
+}
+
+.revenue-impact h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.revenue-compare {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+}
+
+.rev-side {}
+
+.rev-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.rev-pct {
+  font-family: 'Instrument Serif', serif;
+  font-size: 3rem;
+  line-height: 1;
+  margin-top: 4px;
+}
+
+.rev-arrow {
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+
+/* ── CTA ── */
+.final-cta {
+  text-align: center;
+  padding: 64px 0 120px;
+}
+
+.final-cta h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 3.5vw + 0.5rem, 2.75rem);
+  letter-spacing: -0.02em;
+}
+
+.final-cta p {
+  font-size: 0.9375rem;
+  color: var(--secondary);
+  margin-top: 12px;
+}
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 18px 52px;
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 28px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(212, 165, 55, 0.3);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 960px) {
+  .ct-header, .ct-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .ct-header .ct-h:first-child { display: none; }
+  .ct-delta { flex-direction: row; gap: 8px; padding: 8px 0; }
+}
+
+@media (max-width: 768px) {
+  .score-compare { flex-direction: column; gap: 24px; }
+  .sc-score { font-size: 3rem; }
+  .revenue-compare { flex-direction: column; gap: 16px; }
+  .hero { padding: 48px 0 32px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">FORGE<b>.</b></div>
+  <div class="topbar-r">
+    <span class="topbar-url fm">blotato.com</span>
+    <a href="#cta" class="cta-link">Book Strategy Call</a>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-kicker">Gap Analysis</div>
+    <h1 class="fd">Your Funnel vs. What's Possible</h1>
+    <p>Side-by-side comparison of where you are today and where you could be after fixing the critical gaps.</p>
+  </section>
+
+  <!-- OVERALL SCORE COMPARISON -->
+  <div class="score-compare">
+    <div class="sc-side">
+      <div class="sc-label">Current Score</div>
+      <div class="sc-score fd" style="color:var(--critical)">19<span class="sc-suf">/100</span></div>
+    </div>
+    <div class="sc-arrow">
+      <div class="sc-arrow-icon">&rarr;</div>
+      <div class="sc-arrow-delta">+53</div>
+    </div>
+    <div class="sc-side">
+      <div class="sc-label">Projected Score</div>
+      <div class="sc-score fd" style="color:var(--positive)">72<span class="sc-suf">/100</span></div>
+    </div>
+  </div>
+
+  <!-- COMPARISON TABLE -->
+  <div class="compare-table">
+    <div class="ct-header">
+      <div class="ct-h">Stage</div>
+      <div class="ct-h ct-h-current">Current State</div>
+      <div></div>
+      <div class="ct-h ct-h-optimized">Optimized State</div>
+    </div>
+
+    <!-- ROW 1: Traffic -->
+    <div class="ct-row">
+      <div class="ct-stage">
+        <div class="ct-stage-num fm">Stage 01</div>
+        <div class="ct-stage-name">Traffic Sources</div>
+      </div>
+      <div class="ct-current">
+        <div class="ct-current-score">
+          <span class="ct-score-num" style="color:var(--critical)">0</span>
+          <div class="ct-score-bar"><div class="ct-score-fill" style="width:2%;background:var(--critical);min-width:2px"></div></div>
+        </div>
+        <div class="ct-issues">
+          <div class="ct-issue"><div class="ct-issue-dot" style="background:var(--critical)"></div>No social profiles</div>
+          <div class="ct-issue"><div class="ct-issue-dot" style="background:var(--critical)"></div>No tracked sources</div>
+        </div>
+      </div>
+      <div class="ct-delta">
+        <div class="ct-delta-arrow">&rarr;</div>
+        <div class="ct-delta-num">+55</div>
+      </div>
+      <div class="ct-optimized">
+        <div class="ct-optimized-score">
+          <span class="ct-score-num" style="color:var(--positive)">55</span>
+          <div class="ct-score-bar"><div class="ct-score-fill" style="width:55%;background:var(--positive)"></div></div>
+        </div>
+        <div class="ct-fixes">
+          <div class="ct-fix"><span class="ct-fix-check">&#10003;</span>Social profiles active</div>
+          <div class="ct-fix"><span class="ct-fix-check">&#10003;</span>UTM tracking enabled</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Landing -->
+    <div class="ct-row">
+      <div class="ct-stage">
+        <div class="ct-stage-num fm">Stage 02</div>
+        <div class="ct-stage-name">Landing Experience</div>
+      </div>
+      <div class="ct-current">
+        <div class="ct-current-score">
+          <span class="ct-score-num" style="color:var(--warning)">35</span>
+          <div class="ct-score-bar"><div class="ct-score-fill" style="width:35%;background:var(--warning)"></div></div>
+        </div>
+        <div class="ct-issues">
+          <div class="ct-issue"><div class="ct-issue-dot" style="background:var(--critical)"></div>Generic headline</div>
+          <div class="ct-issue"><div class="ct-issue-dot" style="background:var(--warning)"></div>Dual CTAs compete</div>
+          <div class="ct-issue"><div class="ct-issue-dot" style="background:var(--warning)"></div>No trust signals</div>
+        </div>
+      </div>
+      <div class="ct-delta">
+        <div class="ct-delta-arrow">&rarr;</div>
+        <div class="ct-delta-num">+40</div>
+      </div>
+      <div class="ct-optimized">
+        <div class="ct-optimized-score">
+          <span class="ct-score-num" style="color:var(--positive)">75</span>
+          <div class="ct-score-bar"><div class="ct-score-fill" style="width:75%;background:var(--positive)"></div></div>
+        </div>
+        <div class="ct-fixes">
+          <div class="ct-fix"><span class="ct-fix-check">&#10003;</span>Specific value proposition</div>
+          <div class="ct-fix"><span class="ct-fix-check">&#10003;</span>Single primary CTA</div>
+          <div class="ct-fix"><span class="ct-fix-check">&#10003;</span>Trust logos + testimonials</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3: Capture -->
+    <div class="ct-row">
+      <div class="ct-stage">
+        <div class="ct-stage-num fm">Stage 03</div>
+        <div class="ct-stage-name">Lead Capture</div>
+      </div>
+      <div class="ct-current">
+        <div class="ct-current-score">
+          <span class="ct-score-num" style="color:var(--warning)">45</span>
+          <div class="ct-score-bar"><div class="ct-score-fill" style="width:45%;background:var(--warning)"></div></div>
+        </div>
+        <div class="ct-issues">
+          <div class="ct-issue"><div class="ct-issue-dot" style="background:var(--critical)"></div>No email above fold</div>
+          <div class="ct-issue"><div class="ct-issue-dot" style="background:var(--warning)"></div>No lead magnet</div>
+        </div>
+      </div>
+      <div class="ct-delta">
+        <div class="ct-delta-arrow">&rarr;</div>
+        <div class="ct-delta-num">+35</div>
+      </div>
+      <div class="ct-optimized">
+        <div class="ct-optimized-score">
+          <span class="ct-score-num" style="color:var(--positive)">80</span>
+          <div class="ct-score-bar"><div class="ct-score-fill" style="width:80%;background:var(--positive)"></div></div>
+        </div>
+        <div class="ct-fixes">
+          <div class="ct-fix"><span class="ct-fix-check">&#10003;</span>Email capture above fold</div>
+          <div class="ct-fix"><span class="ct-fix-check">&#10003;</span>Lead magnet funnel</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 4: Offer -->
+    <div class="ct-row">
+      <div class="ct-stage">
+        <div class="ct-stage-num fm">Stage 04</div>
+        <div class="ct-stage-name">Offer Clarity</div>
+      </div>
+      <div class="ct-current">
+        <div class="ct-current-score">
+          <span class="ct-score-num" style="color:var(--critical)">15</span>
+          <div class="ct-score-bar"><div class="ct-score-fill" style="width:15%;background:var(--critical)"></div></div>
+        </div>
+        <div class="ct-issues">
+          <div class="ct-issue"><div class="ct-issue-dot" style="background:var(--critical)"></div>No pricing page</div>
+          <div class="ct-issue"><div class="ct-issue-dot" style="background:var(--critical)"></div>No feature comparison</div>
+        </div>
+      </div>
+      <div class="ct-delta">
+        <div class="ct-delta-arrow">&rarr;</div>
+        <div class="ct-delta-num">+55</div>
+      </div>
+      <div class="ct-optimized">
+        <div class="ct-optimized-score">
+          <span class="ct-score-num" style="color:var(--positive)">70</span>
+          <div class="ct-score-bar"><div class="ct-score-fill" style="width:70%;background:var(--positive)"></div></div>
+        </div>
+        <div class="ct-fixes">
+          <div class="ct-fix"><span class="ct-fix-check">&#10003;</span>Clear pricing page</div>
+          <div class="ct-fix"><span class="ct-fix-check">&#10003;</span>Feature comparison + FAQ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 5: Follow-up -->
+    <div class="ct-row">
+      <div class="ct-stage">
+        <div class="ct-stage-num fm">Stage 05</div>
+        <div class="ct-stage-name">Follow-Up Systems</div>
+      </div>
+      <div class="ct-current">
+        <div class="ct-current-score">
+          <span class="ct-score-num" style="color:var(--critical)">0</span>
+          <div class="ct-score-bar"><div class="ct-score-fill" style="width:2%;background:var(--critical);min-width:2px"></div></div>
+        </div>
+        <div class="ct-issues">
+          <div class="ct-issue"><div class="ct-issue-dot" style="background:var(--critical)"></div>No pixel/tags</div>
+          <div class="ct-issue"><div class="ct-issue-dot" style="background:var(--critical)"></div>No email sequences</div>
+        </div>
+      </div>
+      <div class="ct-delta">
+        <div class="ct-delta-arrow">&rarr;</div>
+        <div class="ct-delta-num">+80</div>
+      </div>
+      <div class="ct-optimized">
+        <div class="ct-optimized-score">
+          <span class="ct-score-num" style="color:var(--positive)">80</span>
+          <div class="ct-score-bar"><div class="ct-score-fill" style="width:80%;background:var(--positive)"></div></div>
+        </div>
+        <div class="ct-fixes">
+          <div class="ct-fix"><span class="ct-fix-check">&#10003;</span>FB Pixel + Google Tag</div>
+          <div class="ct-fix"><span class="ct-fix-check">&#10003;</span>Email nurture sequences</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVENUE IMPACT -->
+  <div class="revenue-impact">
+    <h2 class="fd">Revenue Impact</h2>
+    <div class="revenue-compare">
+      <div class="rev-side">
+        <div class="rev-label">Current Leak</div>
+        <div class="rev-pct fd" style="color:var(--critical)">60-80%</div>
+      </div>
+      <div class="rev-arrow">&rarr;</div>
+      <div class="rev-side">
+        <div class="rev-label">Projected Leak</div>
+        <div class="rev-pct fd" style="color:var(--positive)">15-25%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <section class="final-cta" id="cta">
+    <h2 class="fd">Bridge the Gap</h2>
+    <p>We'll build the step-by-step plan to get from 19 to 72.</p>
+    <button class="cta-btn">Get Your Fix Plan &rarr;</button>
+  </section>
+
+</div>
+
+</body>
+</html>

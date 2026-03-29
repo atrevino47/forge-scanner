@@ -5,20 +5,13 @@ import { apiError } from '@/lib/api-utils';
 import { generateBlueprint } from '@/lib/blueprint/mockup-generator';
 import type { GenerateBlueprintResponse, ApiError } from '@/../contracts/api';
 import type {
-  ScanResult,
-  FunnelStageResult,
-  FunnelStage,
-  ScreenshotData,
-  DetectedSocials,
-  ProvidedSocials,
-} from '@/../contracts/types';
-import type {
   DbScan,
   DbLead,
   DbFunnelStage,
   DbScreenshot,
   DbBlueprint,
 } from '@/lib/db/types';
+import { buildScanResult } from '@/lib/db/mappers';
 
 // ============================================================
 // POST /api/blueprint/generate/[scanId]
@@ -30,77 +23,6 @@ import type {
 const ParamsSchema = z.object({
   scanId: z.string().min(1, 'Scan ID is required'),
 });
-
-const STAGE_ORDER: FunnelStage[] = [
-  'traffic',
-  'landing',
-  'capture',
-  'offer',
-  'followup',
-];
-
-// --------------- DB → Contract Mappers ---------------
-
-function dbScreenshotToData(row: DbScreenshot): ScreenshotData {
-  return {
-    id: row.id,
-    scanId: row.scan_id,
-    stage: row.stage,
-    sourceType: row.source_type,
-    sourceUrl: row.source_url,
-    storageUrl: row.storage_url,
-    viewport: row.viewport,
-    annotations: row.annotations ?? [],
-    analyzedAt: row.analyzed_at,
-    createdAt: row.created_at,
-  };
-}
-
-function buildStageResult(
-  stage: DbFunnelStage,
-  screenshots: DbScreenshot[]
-): FunnelStageResult {
-  return {
-    stage: stage.stage,
-    status: stage.status,
-    summary: stage.summary,
-    screenshots: screenshots
-      .filter((s) => s.stage === stage.stage)
-      .map(dbScreenshotToData),
-    startedAt: stage.started_at,
-    completedAt: stage.completed_at,
-  };
-}
-
-function dbToScanResult(
-  scan: DbScan,
-  stages: DbFunnelStage[],
-  screenshots: DbScreenshot[]
-): ScanResult {
-  return {
-    id: scan.id,
-    websiteUrl: scan.website_url,
-    status: scan.status,
-    detectedSocials: (scan.detected_socials ?? {}) as DetectedSocials,
-    providedSocials: (scan.provided_socials as ProvidedSocials) ?? null,
-    stages: STAGE_ORDER.map((stageName) => {
-      const stageRow = stages.find((s) => s.stage === stageName);
-      if (stageRow) {
-        return buildStageResult(stageRow, screenshots);
-      }
-      return {
-        stage: stageName,
-        status: 'pending' as const,
-        summary: null,
-        screenshots: [],
-        startedAt: null,
-        completedAt: null,
-      };
-    }),
-    completedAt: scan.completed_at,
-    createdAt: scan.created_at,
-  };
-}
 
 function dbBlueprintToData(row: DbBlueprint): GenerateBlueprintResponse {
   return {
@@ -223,7 +145,7 @@ export async function POST(
     const screenshotsData = screenshotsResult.data ?? [];
 
     // 6. Build the ScanResult from DB data
-    const scanResult = dbToScanResult(scan, stagesData, screenshotsData);
+    const scanResult = buildScanResult(scan, stagesData, screenshotsData);
 
     // 7. Fetch homepage desktop screenshot base64
     const homepageScreenshot = screenshotsData.find(

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import type { LinkScanResponse, ApiError } from '@/../contracts/api';
+import { getUser } from '@/lib/auth/config';
+import { createServiceClient } from '@/lib/db/client';
 
 // ============================================================
 // POST /api/auth/link-scan
@@ -32,17 +34,57 @@ export async function POST(request: NextRequest): Promise<NextResponse<LinkScanR
 
     const { scanId } = parsed.data;
 
-    // --- MOCK: Replace with real user lookup from Supabase auth + scan linkage ---
-    const mockUserId = `user_${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
+    // Get authenticated user from session
+    const { user } = await getUser(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: { code: 'UNAUTHORIZED', message: 'Authentication required' } },
+        { status: 401 },
+      );
+    }
 
-    console.log(`[auth/link-scan] Linked scanId=${scanId} to userId=${mockUserId}`);
+    const db = createServiceClient();
 
-    const response: LinkScanResponse = {
-      success: true,
-      userId: mockUserId,
-    };
+    // Ensure user exists in users table (upsert from auth.users)
+    await db.from('users').upsert(
+      {
+        id: user.id,
+        email: user.email ?? '',
+        full_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
+        avatar_url: user.user_metadata?.avatar_url ?? null,
+        role: 'user',
+      },
+      { onConflict: 'id' },
+    );
 
-    return NextResponse.json(response, { status: 200 });
+    // Link the scan to this user
+    const { error: scanError } = await db
+      .from('scans')
+      .update({ user_id: user.id })
+      .eq('id', scanId);
+
+    if (scanError) {
+      console.error(`[auth/link-scan] Failed to link scan ${scanId}:`, scanError);
+      return NextResponse.json(
+        { error: { code: 'INTERNAL', message: 'Failed to link scan' } },
+        { status: 500 },
+      );
+    }
+
+    // Also link user to the lead via the scan's lead_id
+    const { data: scan } = await db
+      .from('scans')
+      .select('lead_id')
+      .eq('id', scanId)
+      .single();
+
+    if (scan?.lead_id) {
+      await db.from('users').update({ lead_id: scan.lead_id }).eq('id', user.id);
+    }
+
+    console.log(`[auth/link-scan] Linked scanId=${scanId} to userId=${user.id}`);
+
+    return NextResponse.json({ success: true, userId: user.id }, { status: 200 });
   } catch (err) {
     console.error('[auth/link-scan] Unexpected error:', err);
     return NextResponse.json(

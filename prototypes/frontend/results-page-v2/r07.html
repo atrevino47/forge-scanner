@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r07 Dark Brutalist Minimal</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r07: Dark Brutalist Minimal
+   Pure typography, almost no decoration. No glass, no gradients, no cards.
+   Huge numbers. Maximum negative space.
+   Severity colors only as thin left borders.
+   Terminal readout meets luxury brand. */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── SITE MARK ── */
+.site-mark {
+  padding: 32px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.site-mark-logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+.site-mark-logo b { color: var(--accent); font-weight: 400; }
+
+.site-mark-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+/* ── HERO: GIANT SCORE ── */
+.hero-score {
+  padding: 120px 48px 80px;
+  position: relative;
+}
+
+.hero-score-num {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(10rem, 25vw, 20rem);
+  line-height: 0.8;
+  color: var(--critical);
+  opacity: 0.9;
+}
+
+.hero-score-suffix {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  color: var(--muted);
+  vertical-align: top;
+  margin-left: 8px;
+  opacity: 0.4;
+}
+
+.hero-meta {
+  margin-top: 48px;
+  max-width: 480px;
+}
+
+.hero-meta h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.5rem, 3vw + 0.5rem, 2.25rem);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--secondary);
+}
+
+.hero-revenue {
+  margin-top: 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--critical);
+  letter-spacing: 0.02em;
+}
+
+/* ── DIVIDER ── */
+.divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 0 48px;
+}
+
+/* ── STAGE BLOCKS ── */
+.stage-block {
+  padding: 80px 48px;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.stage-left {
+  position: sticky;
+  top: 80px;
+}
+
+.stage-number {
+  font-family: 'Instrument Serif', serif;
+  font-size: 6rem;
+  line-height: 0.8;
+  color: rgba(255, 255, 255, 0.03);
+}
+
+.stage-name {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-top: 16px;
+}
+
+.stage-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2.5rem;
+  font-weight: 500;
+  line-height: 1;
+  margin-top: 8px;
+}
+
+.stage-severity {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 8px;
+}
+
+/* Findings as stark list */
+.findings-list {
+  list-style: none;
+}
+
+.finding-row {
+  padding: 20px 0 20px 20px;
+  border-left: 2px solid transparent;
+  transition: border-color 0.2s, padding-left 0.2s;
+}
+
+.finding-row:hover {
+  padding-left: 28px;
+}
+
+.finding-row + .finding-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.finding-row.sev-critical { border-left-color: var(--critical); }
+.finding-row.sev-warning { border-left-color: var(--warning); }
+.finding-row.sev-positive { border-left-color: var(--positive); }
+
+.finding-row-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.finding-row-desc {
+  font-size: 0.875rem;
+  color: var(--secondary);
+  margin-top: 4px;
+  max-width: 480px;
+}
+
+/* Empty state — no cards, just text */
+.stage-empty {
+  padding: 40px 0 40px 20px;
+  border-left: 2px solid var(--critical);
+}
+
+.stage-empty h3 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.stage-empty p {
+  font-size: 0.875rem;
+  color: var(--secondary);
+  margin-top: 6px;
+  max-width: 480px;
+}
+
+/* Stats — brutalist style (just big numbers) */
+.stat-row {
+  display: flex;
+  gap: 64px;
+  padding: 32px 0 0 20px;
+  border-left: 2px solid var(--critical);
+}
+
+.stat-item {}
+
+.stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 2rem;
+  font-weight: 500;
+}
+
+.stat-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Stage summary text */
+.stage-summary {
+  padding: 24px 0 0 20px;
+  border-left: 2px solid var(--accent);
+  margin-top: 16px;
+}
+
+.stage-summary p {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.125rem;
+  color: var(--muted);
+  font-style: italic;
+  max-width: 480px;
+  line-height: 1.5;
+}
+
+/* ── CTA ── */
+.final-cta {
+  padding: 120px 48px;
+}
+
+.final-cta h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 4vw + 0.5rem, 3rem);
+  letter-spacing: -0.025em;
+  max-width: 500px;
+}
+
+.final-cta p {
+  font-size: 0.9375rem;
+  color: var(--secondary);
+  margin-top: 12px;
+  max-width: 400px;
+}
+
+.final-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: var(--base);
+  border: none;
+  padding: 16px 44px;
+  border-radius: 0; /* brutalist — no border radius */
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  margin-top: 40px;
+  transition: background 0.2s;
+}
+.final-cta-btn:hover {
+  background: var(--accent-bright);
+}
+
+.final-cta-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 12px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .stage-block {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 48px 24px;
+  }
+  .hero-score { padding: 64px 24px 48px; }
+  .hero-score-num { font-size: 8rem; }
+  .divider { margin: 0 24px; }
+  .final-cta { padding: 64px 24px; }
+  .site-mark { padding: 24px; }
+  .stage-left { position: static; }
+  .stat-row { gap: 32px; flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- MARK -->
+<div class="site-mark">
+  <div class="site-mark-logo">FORGE<b>.</b></div>
+  <div class="site-mark-url">blotato.com</div>
+</div>
+
+<!-- HERO -->
+<section class="hero-score">
+  <div class="hero-score-num fd">19<span class="hero-score-suffix">/100</span></div>
+  <div class="hero-meta">
+    <h1 class="fd">Your funnel is leaking at every stage.</h1>
+    <div class="hero-revenue">REVENUE LEAK: 60-80% ESTIMATED</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STAGE 1: TRAFFIC -->
+<section class="stage-block">
+  <div class="stage-left">
+    <div class="stage-number fd">01</div>
+    <div class="stage-name">Traffic</div>
+    <div class="stage-score" style="color:var(--critical)">0</div>
+    <div class="stage-severity" style="color:var(--critical)">Critical</div>
+  </div>
+  <div>
+    <div class="stage-empty">
+      <h3>No Traffic Sources Detected</h3>
+      <p>No social media profiles found. 100% of your traffic relies on direct search or word-of-mouth. Without diversified sources, every downstream optimization is meaningless.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STAGE 2: LANDING -->
+<section class="stage-block">
+  <div class="stage-left">
+    <div class="stage-number fd">02</div>
+    <div class="stage-name">Landing</div>
+    <div class="stage-score" style="color:var(--warning)">35</div>
+    <div class="stage-severity" style="color:var(--warning)">Weak</div>
+  </div>
+  <div>
+    <ul class="findings-list">
+      <li class="finding-row sev-critical">
+        <div class="finding-row-title">Generic Headline</div>
+        <p class="finding-row-desc">Visitors can't tell what Blotato does in 5 seconds. No product category mentioned.</p>
+      </li>
+      <li class="finding-row sev-warning">
+        <div class="finding-row-title">Dual CTAs</div>
+        <p class="finding-row-desc">"Login" and "Start FREE Week" compete for attention.</p>
+      </li>
+      <li class="finding-row sev-warning">
+        <div class="finding-row-title">No Trust Signals</div>
+        <p class="finding-row-desc">No logos or testimonials alongside social proof.</p>
+      </li>
+      <li class="finding-row sev-positive">
+        <div class="finding-row-title">Strong Trial CTA</div>
+        <p class="finding-row-desc">"Start FREE Week" creates urgency and lowers friction.</p>
+      </li>
+    </ul>
+    <div class="stage-summary">
+      <p>"Your landing page has potential, but critical first-impression issues are driving visitors away."</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STAGE 3: CAPTURE -->
+<section class="stage-block">
+  <div class="stage-left">
+    <div class="stage-number fd">03</div>
+    <div class="stage-name">Capture</div>
+    <div class="stage-score" style="color:var(--warning)">45</div>
+    <div class="stage-severity" style="color:var(--warning)">Weak</div>
+  </div>
+  <div>
+    <ul class="findings-list">
+      <li class="finding-row sev-critical">
+        <div class="finding-row-title">No Email Above Fold</div>
+        <p class="finding-row-desc">Email field would capture leads faster than requiring a full signup flow.</p>
+      </li>
+      <li class="finding-row sev-warning">
+        <div class="finding-row-title">No Lead Magnet</div>
+        <p class="finding-row-desc">No resource to exchange for contact info.</p>
+      </li>
+      <li class="finding-row sev-positive">
+        <div class="finding-row-title">Free Trial Entry</div>
+        <p class="finding-row-desc">Free week reduces friction.</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STAGE 4: OFFER -->
+<section class="stage-block">
+  <div class="stage-left">
+    <div class="stage-number fd">04</div>
+    <div class="stage-name">Offer</div>
+    <div class="stage-score" style="color:var(--critical)">15</div>
+    <div class="stage-severity" style="color:var(--critical)">Critical</div>
+  </div>
+  <div>
+    <div class="stage-empty">
+      <h3>Offer Is Unclear</h3>
+      <p>No pricing page, no feature comparison, no FAQ. Visitors have to guess what they're signing up for.</p>
+    </div>
+    <div class="stat-row">
+      <div class="stat-item">
+        <div class="stat-val" style="color:var(--critical)">0</div>
+        <div class="stat-label">Pricing visible</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" style="color:var(--critical)">0</div>
+        <div class="stat-label">Feature comparison</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-val" style="color:var(--warning)">1</div>
+        <div class="stat-label">Free trial mention</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STAGE 5: FOLLOW-UP -->
+<section class="stage-block">
+  <div class="stage-left">
+    <div class="stage-number fd">05</div>
+    <div class="stage-name">Follow-up</div>
+    <div class="stage-score" style="color:var(--critical)">0</div>
+    <div class="stage-severity" style="color:var(--critical)">Critical</div>
+  </div>
+  <div>
+    <div class="stage-empty">
+      <h3>No Follow-Up Detected</h3>
+      <p>No Facebook Pixel, no Google tag, no email sequences. Every leaving visitor is lost permanently.</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- CTA -->
+<section class="final-cta">
+  <h2 class="fd">Your Prioritized Fix Plan</h2>
+  <p>We mapped every failure. Let us build the recovery plan in order of revenue impact.</p>
+  <button class="final-cta-btn">GET YOUR FIX PLAN &rarr;</button>
+  <p class="final-cta-sub">Free. No signup. AI-generated in 30 seconds.</p>
+</section>
+
+</body>
+</html>

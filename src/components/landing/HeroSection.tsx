@@ -59,7 +59,6 @@ export function HeroSection() {
       const data = (await res.json()) as { scanId: string };
       router.push(`/scan/${data.scanId}`);
     } catch {
-      // TODO: Error toast (Phase 2)
       setIsSubmitting(false);
     }
   };
@@ -68,62 +67,112 @@ export function HeroSection() {
     <section
       ref={containerRef}
       className="relative flex min-h-screen items-center justify-center px-6 pt-20"
+      id="hero"
     >
-      {/* Subtle radial gradient accent glow */}
+      {/* Orange radial gradient glow */}
       <div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute -right-[200px] -top-[200px] h-[700px] w-[700px]"
         style={{
-          background:
-            'radial-gradient(ellipse at 50% 40%, rgba(212, 165, 55, 0.04) 0%, transparent 60%)',
+          background: 'radial-gradient(circle, rgba(232,83,14,0.07) 0%, transparent 70%)',
         }}
       />
+
+      {/* Decorative "F" watermark */}
+      <div
+        className="pointer-events-none absolute -right-[30px] -top-[50px] select-none font-display text-[380px] font-black leading-none"
+        style={{ color: 'rgba(26,25,23,0.03)' }}
+      >
+        F
+      </div>
 
       <div className="relative z-10 mx-auto max-w-[960px] text-center">
         {/* Badge */}
         <div
           data-hero="badge"
-          className="mb-6 inline-flex items-center gap-2 rounded-full border border-forge-border bg-forge-surface px-4 py-1.5"
+          className="mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5"
+          style={{
+            borderColor: 'var(--forge-border)',
+            background: 'var(--forge-surface)',
+          }}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-forge-accent" />
-          <span className="font-body text-sm font-medium text-forge-text-muted">
-            [COPY: eyebrow badge text]
+          <span
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ background: 'var(--forge-accent)' }}
+          />
+          <span className="font-body text-sm font-medium" style={{ color: 'var(--forge-text-secondary)' }}>
+            AI-Powered Funnel Audit
           </span>
         </div>
 
         {/* Headline */}
         <h1
           data-hero="headline"
-          className="font-display mx-auto mb-6 tracking-display leading-display"
-          style={{ fontSize: 'clamp(2.5rem, 5vw + 1rem, 4.5rem)' }}
+          className="mx-auto mb-6 max-w-[600px] font-display font-black"
+          style={{
+            fontSize: 'clamp(2.5rem, 5vw + 1rem, 4rem)',
+            letterSpacing: '-0.02em',
+            lineHeight: 1.08,
+            color: 'var(--forge-text)',
+          }}
         >
-          [COPY: benefit-driven headline about scanning their funnel]
+          Find what&apos;s broken in your funnel — in 60 seconds
         </h1>
 
         {/* Subheadline */}
         <p
           data-hero="subheadline"
-          className="font-body mx-auto mb-10 max-w-lg text-lg leading-body text-forge-text-muted"
+          className="mx-auto mb-10 max-w-lg font-body text-lg"
+          style={{
+            lineHeight: 1.65,
+            color: 'var(--forge-text-secondary)',
+          }}
         >
-          [COPY: what happens when they enter their URL]
+          Enter your URL. We capture real screenshots, AI annotates every issue, and generate an optimized blueprint — free.
         </p>
 
         {/* URL Input */}
         <form data-hero="input" onSubmit={handleSubmit} className="mx-auto mb-8 max-w-xl">
-          <div className="group relative flex items-center rounded-xl border border-forge-border bg-forge-surface/80 backdrop-blur-sm transition-colors duration-200 hover:border-forge-accent/30 focus-within:border-forge-accent/40 focus-within:shadow-[0_0_30px_rgba(212,165,55,0.08)]">
+          <div
+            className="group relative flex items-center overflow-hidden rounded-xl border transition-all duration-300"
+            style={{
+              borderColor: 'var(--forge-border)',
+              background: 'var(--forge-surface)',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(232, 83, 14, 0.3)';
+              e.currentTarget.style.boxShadow = '0 0 30px rgba(232, 83, 14, 0.06)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = 'var(--forge-border)';
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
             <input
-              type="url"
+              type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://yourwebsite.com"
+              placeholder="yourwebsite.com"
               required
-              className="h-14 flex-1 bg-transparent px-5 font-body text-base text-forge-text placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
+              className="h-14 flex-1 bg-transparent px-5 font-body text-base placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
+              style={{ color: 'var(--forge-text)' }}
             />
             <button
               type="submit"
               disabled={isSubmitting}
-              className="mr-2 flex h-10 shrink-0 items-center gap-2 rounded-lg bg-forge-accent px-5 font-body text-sm font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50 sm:h-12 sm:px-6 sm:text-base"
+              className="mr-2 flex h-10 shrink-0 items-center gap-2 rounded-lg px-5 font-body text-sm font-semibold transition-all duration-200 disabled:opacity-50 sm:h-12 sm:px-6 sm:text-base"
+              style={{
+                background: 'var(--forge-accent)',
+                color: '#FAFAF7',
+                borderRadius: '9px',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--forge-accent-bright)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--forge-accent)';
+              }}
             >
-              {isSubmitting ? 'Scanning...' : '[COPY: scan CTA]'}
+              {isSubmitting ? 'Scanning...' : 'Scan My Funnel'}
               {!isSubmitting && <ArrowRight className="h-4 w-4" />}
             </button>
           </div>
@@ -132,13 +181,14 @@ export function HeroSection() {
         {/* Trust indicators */}
         <div
           data-hero="trust"
-          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-forge-text-muted"
+          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm"
+          style={{ color: 'var(--forge-text-muted)' }}
         >
-          <span>[COPY: trust indicator 1]</span>
-          <span className="hidden h-1 w-1 rounded-full bg-forge-text-muted/30 sm:block" />
-          <span>[COPY: trust indicator 2]</span>
-          <span className="hidden h-1 w-1 rounded-full bg-forge-text-muted/30 sm:block" />
-          <span>[COPY: trust indicator 3]</span>
+          <span>Free, no card required</span>
+          <span className="hidden h-1 w-1 rounded-full sm:block" style={{ background: 'var(--forge-text-muted)', opacity: 0.3 }} />
+          <span>Results in 60 seconds</span>
+          <span className="hidden h-1 w-1 rounded-full sm:block" style={{ background: 'var(--forge-text-muted)', opacity: 0.3 }} />
+          <span>AI-powered analysis</span>
         </div>
       </div>
     </section>

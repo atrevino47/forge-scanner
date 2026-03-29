@@ -139,7 +139,7 @@ export function CapturePrompt({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-forge-accent py-3 font-body text-sm font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50"
+            className="w-full rounded-lg bg-forge-accent py-3 font-body text-sm font-semibold text-white transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50"
           >
             {isSubmitting
               ? 'Saving...'

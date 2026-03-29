@@ -99,6 +99,25 @@ After an agent reports a fix is applied, the Orchestrator checks:
 
 This is NOT a full audit. Full audits happen at milestones.
 
+### Commit after verification
+
+After fixes are verified, the Orchestrator commits to the local repository:
+
+1. Stage only the verified fix files + `docs/fixes/FIX-LOG.md`
+2. Commit message format: `fix: FIX-NNNN, FIX-NNNN — {agent} fixes verified`
+3. Body: one line per fix summarizing the change and referencing the audit
+4. Do NOT push to remote — local commits only. Adrián decides when to push.
+5. Commit per verification batch (e.g., all Backend fixes verified together = one commit)
+
+### Branch discipline
+
+- All work happens on a `claude/<description>` branch (e.g., `claude/audit-003-fixes`)
+- Before the first commit of any session, check the current branch:
+  - If on `main` or `dev`: create and switch to a `claude/*` branch first
+  - If already on a `claude/*` branch from a previous session: continue on it
+- NEVER merge into `main` or `dev` — Adrián handles all merges after review
+- NEVER push to any remote — Adrián handles all pushes
+
 ### Fix failure protocol
 
 When a fix verification fails:
@@ -110,6 +129,28 @@ When a fix verification fails:
    - Do NOT create a third ticket
    - Escalate to Adrián with both attempts documented
    - Adrián decides: manual fix, different approach, or deprioritize
+
+### Re-plan trigger
+
+When any of these conditions occur, STOP the current fix-by-fix approach and re-evaluate:
+
+1. **Two or more fixes fail for the same subsystem** — the problem is likely architectural, not isolated bugs
+2. **An audit reveals 5+ issues tracing back to the same root cause** — fix the root, not the branches
+3. **A fix in one agent keeps breaking something in another** — the contract boundary is wrong
+
+When triggered:
+- Document what you've observed and why the current approach isn't working
+- Present a re-assessment to Adrián with the systemic issue identified
+- Propose an alternative approach (contract change, refactor scope, different architecture)
+- Do NOT continue creating individual fix tickets until the re-plan is approved
+
+### Plan registry
+- **Location:** `docs/plans/`
+- **Index:** `docs/plans/PLAN-LOG.md` — lists all plans with status
+- Plans track multi-session initiatives (redesigns, new features, migrations)
+- Every session reads PLAN-LOG.md to find active plans
+- Read the active plan file for full context before starting work
+- Update the plan's "Current State" section at the end of each session
 
 ## Your role
 You are NOT a feature builder. You are the impartial quality gatekeeper. You audit, diagnose, and verify. You ensure every piece built by the Backend, Frontend, and AI Engine agents actually works together end-to-end. You find the broken seams, the mismatched imports, the dead code paths, and the silent failures.

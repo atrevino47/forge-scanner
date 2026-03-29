@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — Design Prototype v1</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   DESIGN SYSTEM: "Digital Archivist"
+   Mapped to Forge brand tokens
+   ═══════════════════════════════════════ */
+
+:root {
+  /* Surface hierarchy — layered depth, no lines */
+  --base: #0B1120;
+  --surface-dim: #0d1322;
+  --surface: #0F172A;
+  --surface-container-low: #131B2E;
+  --surface-container: #1A2340;
+  --surface-container-high: #1E293B;
+  --surface-container-highest: #243049;
+
+  /* Gold — surgical accent */
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --accent-gradient: linear-gradient(135deg, #F2C050, #D4A537);
+  --accent-glow: rgba(212, 165, 55, 0.15);
+
+  /* Text */
+  --text-primary: #E8E6E3;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+
+  /* Semantic */
+  --critical: #EF4444;
+  --critical-bg: rgba(239, 68, 68, 0.08);
+  --warning: #EAB308;
+  --warning-bg: rgba(234, 179, 8, 0.08);
+  --positive: #22C55E;
+  --positive-bg: rgba(34, 197, 94, 0.08);
+
+  /* Glass */
+  --glass: rgba(26, 35, 64, 0.4);
+  --glass-border: rgba(78, 70, 54, 0.15);
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--base);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Grain overlay */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ═══ TYPOGRAPHY ═══ */
+
+.font-display {
+  font-family: 'Instrument Serif', serif;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+}
+
+.font-body { font-family: 'Plus Jakarta Sans', sans-serif; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+
+.display-lg { font-size: clamp(2.5rem, 5vw + 1rem, 4.5rem); }
+.display-md { font-size: clamp(2rem, 3.5vw + 0.5rem, 3rem); }
+.display-sm { font-size: clamp(1.5rem, 2.5vw + 0.3rem, 2rem); }
+.title-lg { font-size: 1.375rem; font-weight: 600; }
+.title-md { font-size: 1.125rem; font-weight: 600; }
+.label-lg { font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.label-md { font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-secondary); }
+.body-lg { font-size: 1.0625rem; line-height: 1.7; }
+.body-md { font-size: 0.9375rem; line-height: 1.65; }
+.body-sm { font-size: 0.8125rem; line-height: 1.5; color: var(--text-secondary); }
+
+/* ═══ LAYOUT ═══ */
+
+.page { max-width: 1200px; margin: 0 auto; padding: 0 var(--space-6); }
+
+/* Full viewport section */
+.viewport-section {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--space-20) 0;
+  position: relative;
+}
+
+/* Intentional asymmetry container */
+.asymmetric-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--space-12);
+  align-items: start;
+}
+
+.asymmetric-grid.reverse {
+  grid-template-columns: 1fr 1.2fr;
+}
+
+/* ═══ GLASS CARD — no solid borders ═══ */
+
+.glass-card {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: var(--space-8);
+}
+
+/* Audit result card — gold accent stripe */
+.audit-card {
+  background: var(--surface-container);
+  border: 1px solid var(--glass-border);
+  border-left: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: var(--space-6);
+  transition: background 0.2s ease;
+}
+
+.audit-card:hover {
+  background: var(--surface-container-high);
+}
+
+/* ═══ SURFACE SECTIONS — no lines, color shifts ═══ */
+
+.surface-low {
+  background: var(--surface-container-low);
+  border-radius: 16px;
+  padding: var(--space-10);
+}
+
+/* ═══ SCORE GAUGE ═══ */
+
+.gauge-container {
+  position: relative;
+  width: 220px;
+  height: 220px;
+}
+
+.gauge-container svg { width: 100%; height: 100%; }
+
+.gauge-score {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.gauge-number {
+  font-size: 4rem;
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* ═══ DEVICE FRAMES ═══ */
+
+.device-laptop {
+  background: var(--surface-container);
+  border-radius: 12px;
+  padding: 12px 12px 0;
+  position: relative;
+}
+
+.device-laptop::before {
+  content: '';
+  display: block;
+  height: 28px;
+  background: var(--surface-container-high);
+  border-radius: 8px 8px 0 0;
+  margin: -12px -12px 12px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+}
+
+.device-laptop .screen {
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  aspect-ratio: 16/10;
+  background: var(--surface-dim);
+  position: relative;
+}
+
+.device-laptop .screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.device-phone {
+  background: var(--surface-container);
+  border-radius: 24px;
+  padding: 8px;
+  width: 180px;
+  position: relative;
+}
+
+.device-phone .screen {
+  border-radius: 18px;
+  overflow: hidden;
+  aspect-ratio: 9/19;
+  background: var(--surface-dim);
+}
+
+/* ═══ ANNOTATION DOTS ═══ */
+
+.dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dot-critical { background: var(--critical); color: white; }
+.dot-warning { background: var(--warning); color: var(--base); }
+.dot-positive { background: var(--positive); color: white; }
+
+/* ═══ FINDING LIST — no dividers, spacing only ═══ */
+
+.finding-item {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.finding-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.finding-item + .finding-item {
+  margin-top: var(--space-2);
+}
+
+/* ═══ STAT CARDS ═══ */
+
+.stat-card {
+  background: var(--surface-container-low);
+  border-radius: 12px;
+  padding: var(--space-6);
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 24px rgba(212, 165, 55, 0.08);
+}
+
+/* ═══ CHIPS ═══ */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.chip-critical { background: var(--critical-bg); color: var(--critical); }
+.chip-warning { background: var(--warning-bg); color: var(--warning); }
+.chip-positive { background: var(--positive-bg); color: var(--positive); }
+.chip-score {
+  background: var(--surface-container);
+  padding: var(--space-1) var(--space-4);
+}
+
+/* ═══ BUTTONS ═══ */
+
+.btn-primary {
+  background: var(--accent-gradient);
+  color: var(--base);
+  border: none;
+  padding: var(--space-3) var(--space-8);
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px rgba(212, 165, 55, 0.2);
+}
+
+.btn-glass {
+  background: rgba(26, 35, 64, 0.2);
+  color: var(--accent);
+  border: 1px solid var(--glass-border);
+  padding: var(--space-2) var(--space-6);
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-glass:hover {
+  background: rgba(26, 35, 64, 0.4);
+}
+
+/* ═══ PROGRESS INDICATOR ═══ */
+
+.stage-progress {
+  position: fixed;
+  right: var(--space-8);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  z-index: 100;
+}
+
+.stage-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--surface-container-high);
+  transition: all 0.3s ease;
+}
+
+.stage-dot.active {
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent-glow);
+  transform: scale(1.3);
+}
+
+.stage-dot.complete {
+  background: var(--positive);
+}
+
+/* ═══ TOP BANNER ═══ */
+
+.top-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: var(--space-3) var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-dim);
+  border-bottom: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+}
+
+.logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.logo span { color: var(--accent); }
+
+/* ═══ CHAT PANEL (preview) ═══ */
+
+.chat-panel {
+  width: 380px;
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.chat-header {
+  padding: var(--space-4) var(--space-6);
+  background: var(--surface-container-low);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.chat-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--accent-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: 16px;
+  color: var(--base);
+  font-weight: 700;
+}
+
+.chat-messages {
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-height: 400px;
+}
+
+.msg {
+  max-width: 85%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.msg-assistant {
+  background: var(--surface-container-low);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.msg-user {
+  background: var(--surface-container-high);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-data-card {
+  background: var(--surface-container);
+  border: 1px solid var(--glass-border);
+  border-left: 2px solid var(--accent);
+  border-radius: 10px;
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  margin-top: var(--space-2);
+  font-size: 0.8125rem;
+}
+
+.chat-input-bar {
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-container-low);
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: var(--space-2) var(--space-4);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.chat-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.chat-send {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent-gradient);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ═══ UTILITY ═══ */
+
+.text-accent { color: var(--accent); }
+.text-muted { color: var(--text-secondary); }
+.text-critical { color: var(--critical); }
+.text-warning { color: var(--warning); }
+.text-positive { color: var(--positive); }
+.mt-2 { margin-top: var(--space-2); }
+.mt-4 { margin-top: var(--space-4); }
+.mt-6 { margin-top: var(--space-6); }
+.mt-8 { margin-top: var(--space-8); }
+.mt-10 { margin-top: var(--space-10); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-6 { margin-bottom: var(--space-6); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.items-start { align-items: start; }
+.justify-between { justify-content: space-between; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); }
+</style>
+</head>
+<body>
+
+<!-- TOP BANNER -->
+<div class="top-banner">
+  <span class="text-accent label-lg" style="cursor:pointer;">Book your free strategy call</span>
+  <div class="logo">FORGE<span>.</span></div>
+  <span style="width:200px;"></span>
+</div>
+
+<!-- STAGE PROGRESS (fixed right) -->
+<nav class="stage-progress">
+  <div class="stage-dot complete"></div>
+  <div class="stage-dot active"></div>
+  <div class="stage-dot"></div>
+  <div class="stage-dot"></div>
+  <div class="stage-dot"></div>
+  <div class="stage-dot" style="width:12px;height:12px;border:2px solid var(--accent);background:transparent;"></div>
+</nav>
+
+<div class="page" style="padding-top: 60px;">
+
+  <!-- ═══════════════════════════════════
+       SECTION 1: TRAFFIC SOURCES (0/100)
+       Minimal — no data found
+       ═══════════════════════════════════ -->
+  <section class="viewport-section">
+    <div>
+      <span class="label-md">Stage 1 of 5</span>
+      <h1 class="font-display display-lg mt-4" style="max-width: 700px;">
+        Traffic Sources
+      </h1>
+      <div class="flex items-center gap-3 mt-6">
+        <span class="chip chip-critical font-mono">0 / 100</span>
+        <span class="chip chip-critical">Critical</span>
+      </div>
+
+      <div class="surface-low mt-10" style="max-width: 800px;">
+        <p class="body-lg" style="color: var(--text-secondary);">
+          No social media profiles or traffic sources were detected for this business. No Instagram, Facebook, TikTok, LinkedIn, or Google Business Profile found linked to the website.
+        </p>
+        <p class="body-md mt-6 text-muted">
+          This means all potential customers must find you through direct search or word-of-mouth. You're leaving significant revenue on the table.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SECTION 2: LANDING EXPERIENCE (35/100)
+       Asymmetric — screenshot left, findings right
+       ═══════════════════════════════════ -->
+  <section class="viewport-section">
+    <div>
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <span class="label-md">Stage 2 of 5</span>
+          <h2 class="font-display display-md mt-4">Landing Experience</h2>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="chip chip-warning font-mono">35 / 100</span>
+          <span class="chip chip-warning">Weak</span>
+        </div>
+      </div>
+
+      <div class="asymmetric-grid">
+        <!-- LEFT: Screenshot in device frame -->
+        <div>
+          <div class="device-laptop">
+            <div style="height:28px;background:var(--surface-container-high);border-radius:8px 8px 0 0;margin:-12px -12px 12px;display:flex;align-items:center;padding:0 12px;gap:6px;">
+              <div style="width:8px;height:8px;border-radius:50%;background:#EF4444;"></div>
+              <div style="width:8px;height:8px;border-radius:50%;background:#EAB308;"></div>
+              <div style="width:8px;height:8px;border-radius:50%;background:#22C55E;"></div>
+              <span class="body-sm" style="margin-left:8px;font-size:11px;">blotato.com</span>
+            </div>
+            <div class="screen" style="background:linear-gradient(135deg, #1a1030 0%, #2d1050 50%, #1a1030 100%); display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;">
+              <div style="font-size:12px;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.1);padding:4px 12px;border-radius:999px;margin-bottom:16px;">10,387+ Business Owners</div>
+              <div style="font-size:28px;color:white;font-weight:700;text-align:center;line-height:1.2;">Make <span style="color:#FF6B9D;">1 week</span> of content<br>in <span style="color:#FF6B9D;">1 minute</span></div>
+              <div style="background:#FF6B9D;color:white;padding:8px 24px;border-radius:8px;margin-top:16px;font-size:13px;font-weight:600;">Start FREE Week</div>
+              <!-- Annotation dots overlaid -->
+              <div class="dot dot-critical" style="position:absolute;top:20%;left:55%;font-size:10px;">1</div>
+              <div class="dot dot-warning" style="position:absolute;top:45%;left:48%;font-size:10px;">2</div>
+              <div class="dot dot-positive" style="position:absolute;top:72%;left:45%;font-size:10px;">3</div>
+            </div>
+          </div>
+
+          <!-- Phone mockup beside laptop -->
+          <div style="display:flex;gap:16px;margin-top:16px;align-items:flex-end;">
+            <div class="device-phone">
+              <div class="screen" style="background:linear-gradient(135deg, #1a1030, #2d1050);display:flex;align-items:center;justify-content:center;">
+                <span style="color:rgba(255,255,255,0.3);font-size:11px;">Mobile view</span>
+              </div>
+            </div>
+            <span class="label-md">6 annotations found</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: Findings list -->
+        <div>
+          <span class="label-md mb-4" style="display:block;">Key Findings</span>
+
+          <div class="finding-item">
+            <div class="dot dot-critical" style="margin-top:2px;">1</div>
+            <div>
+              <div class="title-md">Generic Headline Lacks Specificity</div>
+              <p class="body-sm mt-2">The headline "Make 1 week of content in 1 minute" doesn't clearly explain what the tool does or who it's for.</p>
+            </div>
+          </div>
+
+          <div class="finding-item">
+            <div class="dot dot-warning" style="margin-top:2px;">2</div>
+            <div>
+              <div class="title-md">Two CTAs Create Decision Paralysis</div>
+              <p class="body-sm mt-2">Having both "Login" and "Start FREE Week" buttons creates friction. One clear CTA converts better.</p>
+            </div>
+          </div>
+
+          <div class="finding-item">
+            <div class="dot dot-warning" style="margin-top:2px;">3</div>
+            <div>
+              <div class="title-md">No Visible Trust Signals Above Fold</div>
+              <p class="body-sm mt-2">While there's a social proof number, there are no logos, testimonials, or security badges visible.</p>
+            </div>
+          </div>
+
+          <div class="finding-item">
+            <div class="dot dot-positive" style="margin-top:2px;">4</div>
+            <div>
+              <div class="title-md">Strong Free Trial CTA</div>
+              <p class="body-sm mt-2">"Start FREE Week" is specific and creates urgency with the time-bound offer.</p>
+            </div>
+          </div>
+
+          <div class="finding-item">
+            <div class="dot dot-positive" style="margin-top:2px;">5</div>
+            <div>
+              <div class="title-md">Well-Positioned Social Proof</div>
+              <p class="body-sm mt-2">The "10,387+ Business Owners" badge is prominently placed above the headline.</p>
+            </div>
+          </div>
+
+          <!-- Stage summary card with gold stripe -->
+          <div class="audit-card mt-8">
+            <p class="body-md">Your homepage fails to communicate what Blotato does in 5 seconds — visitors can't tell if it's AI writing, templates, or curation, causing immediate bounce.</p>
+            <div class="flex items-center gap-3 mt-4">
+              <span class="chip chip-warning font-mono">Score: 35/100</span>
+              <span class="text-muted body-sm">5 findings</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SECTION 3: HEALTH SCORE REVEAL
+       ═══════════════════════════════════ -->
+  <section class="viewport-section">
+    <div style="text-align:center;">
+      <span class="label-md">Funnel Health Score</span>
+
+      <div style="display:flex;justify-content:center;margin-top:var(--space-10);">
+        <div class="gauge-container">
+          <svg viewBox="0 0 220 220">
+            <!-- Background arc -->
+            <circle cx="110" cy="110" r="95" fill="none" stroke="var(--surface-container)" stroke-width="8" stroke-dasharray="440 597" stroke-dashoffset="0" transform="rotate(-90 110 110)" stroke-linecap="round"/>
+            <!-- Score arc (19%) -->
+            <circle cx="110" cy="110" r="95" fill="none" stroke="var(--critical)" stroke-width="8" stroke-dasharray="84 597" stroke-dashoffset="0" transform="rotate(-90 110 110)" stroke-linecap="round" style="filter: drop-shadow(0 0 8px rgba(239,68,68,0.3));"/>
+          </svg>
+          <div class="gauge-score">
+            <span class="font-display gauge-number text-critical">19</span>
+            <span class="font-mono label-md">/100</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3 mt-10" style="max-width:600px;margin-left:auto;margin-right:auto;">
+        <div class="stat-card">
+          <div style="color:var(--positive);font-size:20px;margin-bottom:4px;">&#10003;</div>
+          <div class="font-mono title-lg">2</div>
+          <div class="label-md mt-2">Stages Found</div>
+        </div>
+        <div class="stat-card">
+          <div style="color:var(--warning);font-size:20px;margin-bottom:4px;">&#9888;</div>
+          <div class="font-mono title-lg">3</div>
+          <div class="label-md mt-2">Stages Missing</div>
+        </div>
+        <div class="stat-card">
+          <div style="color:var(--critical);font-size:20px;margin-bottom:4px;">&#9888;</div>
+          <div class="font-mono title-lg">6</div>
+          <div class="label-md mt-2">Critical Issues</div>
+        </div>
+      </div>
+
+      <!-- Top Finding -->
+      <div class="audit-card mt-10" style="max-width:700px;margin-left:auto;margin-right:auto;text-align:left;">
+        <span class="label-md text-accent">Top Finding</span>
+        <p class="body-lg mt-2">No social media profiles or traffic sources were detected for this business.</p>
+      </div>
+
+      <!-- CTA -->
+      <div class="mt-10">
+        <button class="btn-primary" style="font-size:1.0625rem;padding:16px 48px;">
+          Generate Your Blueprint &rarr;
+        </button>
+        <p class="body-sm mt-4">See exactly how to fix your funnel — free, no signup required.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════
+       SECTION 4: CHAT WIDGET PREVIEW
+       ═══════════════════════════════════ -->
+  <section class="viewport-section">
+    <div>
+      <span class="label-md">AI Sales Agent</span>
+      <h2 class="font-display display-md mt-4 mb-6">The Closer</h2>
+
+      <div style="display:flex;gap:var(--space-10);align-items:flex-start;">
+        <div style="flex:1;">
+          <p class="body-lg text-muted" style="max-width:500px;">
+            After your scan completes, our AI consultant reviews your results and opens a conversation. It knows your specific findings, your scores, and exactly what to recommend.
+          </p>
+          <p class="body-md text-muted mt-4" style="max-width:500px;">
+            No generic chatbot. No scripts. A Hormozi-trained closer that references YOUR data.
+          </p>
+        </div>
+
+        <!-- Chat panel mockup -->
+        <div class="chat-panel">
+          <div class="chat-header">
+            <div class="chat-avatar">F</div>
+            <div>
+              <div class="title-md" style="font-size:0.9375rem;">Forge Consultant</div>
+              <div class="flex items-center gap-3" style="gap:6px;">
+                <div style="width:6px;height:6px;border-radius:50%;background:var(--positive);"></div>
+                <span class="body-sm" style="font-size:0.6875rem;">Online</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-messages">
+            <div class="msg msg-assistant">
+              Hey there — I just finished reviewing blotato's funnel scan.
+            </div>
+            <div class="msg msg-assistant">
+              Your overall score is 19/100. The biggest issue? No detectable traffic sources at all.
+            </div>
+
+            <!-- Data card inline -->
+            <div class="chat-data-card">
+              <div style="width:40px;height:40px;border-radius:6px;background:var(--surface-container-high);flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:11px;color:var(--text-muted);">IMG</span>
+              </div>
+              <div>
+                <div style="font-weight:600;font-size:0.8125rem;">Landing Experience</div>
+                <div class="body-sm">6 annotations &middot; Score 35/100</div>
+              </div>
+            </div>
+
+            <div class="msg msg-assistant">
+              Want me to walk you through what I'd fix first?
+            </div>
+
+            <div class="msg msg-user">
+              Yes, what's the most impactful change?
+            </div>
+          </div>
+
+          <div class="chat-input-bar">
+            <input class="chat-input" placeholder="Ask about your results..." />
+            <button class="chat-send">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--base)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>

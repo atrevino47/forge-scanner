@@ -8,13 +8,22 @@ export function TypingIndicator() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   /* ANIMATION SEQUENCE:
-   * Ambient: Three dots — staggered scale+opacity pulse (sine wave)
+   * Beat 1 (0.00s): Container — fadeSlideUp entrance (y:8→0, 0.2s)
+   * Ambient: Three dots — staggered scale+opacity pulse (1→1.2, 1→0.5)
    */
   useGSAP(
     () => {
+      // Entrance animation
+      gsap.fromTo(
+        containerRef.current,
+        { opacity: 0, y: 8 },
+        { opacity: 1, y: 0, duration: 0.2, ease: 'power2.out' },
+      );
+
+      // Dot pulse — softer scale and opacity ranges
       gsap.to('[data-dot]', {
-        scale: 1.5,
-        opacity: 0.3,
+        scale: 1.2,
+        opacity: 0.5,
         duration: 0.5,
         stagger: { each: 0.15, repeat: -1, yoyo: true },
         ease: 'sine.inOut',

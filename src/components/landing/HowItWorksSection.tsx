@@ -3,27 +3,27 @@
 import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Globe, Zap, FileText } from 'lucide-react';
+import { Globe, Scan, FileText } from 'lucide-react';
 import { clipReveal, fadeSlideUp } from '@/lib/gsap-presets';
 
 const steps = [
   {
     number: '01',
     icon: Globe,
-    title: '[COPY: Step 1 title]',
-    description: '[COPY: Step 1 description — entering their URL]',
+    title: 'Enter your URL',
+    description: 'Drop your website URL and we start scanning immediately. We find your social profiles, GBP, and ads automatically.',
   },
   {
     number: '02',
-    icon: Zap,
-    title: '[COPY: Step 2 title]',
-    description: '[COPY: Step 2 description — AI scanning their funnel]',
+    icon: Scan,
+    title: 'AI scans your funnel',
+    description: 'We capture real screenshots of every touchpoint. AI annotates what\'s broken, what\'s missing, and what\'s costing you leads.',
   },
   {
     number: '03',
     icon: FileText,
-    title: '[COPY: Step 3 title]',
-    description: '[COPY: Step 3 description — receiving their blueprint]',
+    title: 'Get your blueprint',
+    description: 'See your current funnel vs. the optimized version. Get a visual mockup of the fix — and book a free strategy call.',
   },
 ];
 
@@ -58,27 +58,62 @@ export function HowItWorksSection() {
       <div className="mx-auto max-w-[1120px]">
         <h2
           data-how="headline"
-          className="font-display mb-16 text-center tracking-display leading-display"
-          style={{ fontSize: 'clamp(2rem, 3vw + 0.5rem, 3rem)' }}
+          className="mb-16 text-center font-display font-bold"
+          style={{
+            fontSize: 'clamp(2rem, 3vw + 0.5rem, 3rem)',
+            letterSpacing: '-0.02em',
+            color: 'var(--forge-text)',
+          }}
         >
-          [COPY: How it works section title]
+          How it works
         </h2>
 
         <div className="grid gap-6 sm:grid-cols-3">
           {steps.map((step) => (
-            <div key={step.number} data-how="card" className="glass-card rounded-xl p-8">
-              <span className="font-mono text-sm font-medium text-forge-accent">
+            <div
+              key={step.number}
+              data-how="card"
+              className="rounded-xl border p-8 transition-all duration-300"
+              style={{
+                borderColor: 'var(--forge-border)',
+                background: 'var(--forge-surface)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#FFF7F2';
+                e.currentTarget.style.borderColor = '#FFD4B3';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--forge-surface)';
+                e.currentTarget.style.borderColor = 'var(--forge-border)';
+              }}
+            >
+              <span
+                className="font-mono text-sm font-medium"
+                style={{ color: 'var(--forge-accent)' }}
+              >
                 {step.number}
               </span>
 
-              <div className="mt-4 mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-forge-border bg-forge-surface">
-                <step.icon className="h-5 w-5 text-forge-text-muted" />
+              <div
+                className="mt-4 mb-4 flex h-12 w-12 items-center justify-center rounded-lg border"
+                style={{
+                  borderColor: 'var(--forge-border)',
+                  background: 'var(--forge-base)',
+                }}
+              >
+                <step.icon className="h-5 w-5" style={{ color: 'var(--forge-text-secondary)' }} />
               </div>
 
-              <h3 className="font-body mb-2 text-lg font-semibold text-forge-text">
+              <h3
+                className="mb-2 font-display text-lg font-bold"
+                style={{ color: 'var(--forge-text)' }}
+              >
                 {step.title}
               </h3>
-              <p className="font-body text-sm leading-body text-forge-text-muted">
+              <p
+                className="font-body text-sm"
+                style={{ lineHeight: 1.65, color: 'var(--forge-text-secondary)' }}
+              >
                 {step.description}
               </p>
             </div>

@@ -17,6 +17,7 @@ export function ChatToggle({
   hasNewMessage,
 }: ChatToggleProps) {
   const containerRef = useRef<HTMLButtonElement>(null);
+  const badgeRef = useRef<HTMLSpanElement>(null);
 
   /* ANIMATION SEQUENCE:
    * Beat 1 (0.00s): Button — scaleIn on mount
@@ -37,6 +38,27 @@ export function ChatToggle({
     { scope: containerRef },
   );
 
+  /* ANIMATION: Badge pulse when new message arrives
+   * Scale 1→1.3→1, repeats 3 times over 0.6s each
+   */
+  useGSAP(
+    () => {
+      if (!hasNewMessage || !badgeRef.current) return;
+      gsap.fromTo(
+        badgeRef.current,
+        { scale: 1 },
+        {
+          scale: 1.3,
+          duration: 0.3,
+          ease: 'sine.inOut',
+          yoyo: true,
+          repeat: 5,
+        },
+      );
+    },
+    { dependencies: [hasNewMessage] },
+  );
+
   return (
     <button
       ref={containerRef}
@@ -49,7 +71,10 @@ export function ChatToggle({
         <>
           <MessageCircle className="h-5 w-5 text-forge-accent" />
           {hasNewMessage && (
-            <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-forge-accent" />
+            <span
+              ref={badgeRef}
+              className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-forge-accent"
+            />
           )}
         </>
       )}

@@ -34,7 +34,7 @@ export interface StartScanResponse {
 export interface CaptureInfoRequest {
   scanId: string;
   leadId: string;
-  email: string;
+  email?: string; // Optional when socialConfirmation is provided
   phone?: string;
   fullName?: string;
   businessName?: string;
@@ -113,7 +113,7 @@ export interface TriggerFollowupRequest {
 export interface TriggerFollowupResponse {
   scheduled: boolean;
   sequenceId: string;
-  firstMessageAt: string; // ISO timestamp
+  firstMessageAt: string | null; // ISO timestamp, null when no email to schedule for
 }
 
 // POST /api/followup/scrape-contact

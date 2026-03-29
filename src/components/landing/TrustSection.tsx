@@ -6,10 +6,10 @@ import { useGSAP } from '@gsap/react';
 import { clipReveal, scaleIn } from '@/lib/gsap-presets';
 
 const stats = [
-  { value: '[COPY: stat 1 value]', label: '[COPY: stat 1 label]' },
-  { value: '[COPY: stat 2 value]', label: '[COPY: stat 2 label]' },
-  { value: '[COPY: stat 3 value]', label: '[COPY: stat 3 label]' },
-  { value: '[COPY: stat 4 value]', label: '[COPY: stat 4 label]' },
+  { value: '60s', label: 'Average scan time' },
+  { value: '5', label: 'Funnel stages analyzed' },
+  { value: '12+', label: 'AI annotations per scan' },
+  { value: 'Free', label: 'No card required' },
 ];
 
 export function TrustSection() {
@@ -39,14 +39,22 @@ export function TrustSection() {
   );
 
   return (
-    <section ref={containerRef} className="dot-grid relative px-6 py-24 sm:py-32">
+    <section
+      ref={containerRef}
+      className="relative px-6 py-24 sm:py-32"
+      style={{ background: 'var(--forge-surface)' }}
+    >
       <div className="mx-auto max-w-[1120px]">
         <h2
           data-trust="headline"
-          className="font-display mb-16 text-center tracking-display leading-display"
-          style={{ fontSize: 'clamp(2rem, 3vw + 0.5rem, 3rem)' }}
+          className="mb-16 text-center font-display font-bold"
+          style={{
+            fontSize: 'clamp(2rem, 3vw + 0.5rem, 3rem)',
+            letterSpacing: '-0.02em',
+            color: 'var(--forge-text)',
+          }}
         >
-          [COPY: trust section headline]
+          Built for speed and precision
         </h2>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
@@ -54,12 +62,27 @@ export function TrustSection() {
             <div
               key={i}
               data-trust="stat"
-              className="glass-card rounded-xl p-6 text-center sm:p-8"
+              className="rounded-xl border p-6 text-center sm:p-8"
+              style={{
+                borderColor: 'var(--forge-border)',
+                background: '#FFFFFF',
+              }}
             >
-              <p className="font-display text-3xl tracking-display text-forge-text sm:text-4xl">
+              <p
+                className="font-display text-3xl font-bold sm:text-4xl"
+                style={{
+                  letterSpacing: '-0.02em',
+                  color: 'var(--forge-text)',
+                }}
+              >
                 {stat.value}
               </p>
-              <p className="font-body mt-2 text-sm text-forge-text-muted">{stat.label}</p>
+              <p
+                className="mt-2 font-body text-sm"
+                style={{ color: 'var(--forge-text-secondary)' }}
+              >
+                {stat.label}
+              </p>
             </div>
           ))}
         </div>

@@ -6,7 +6,7 @@ import { useGSAP } from '@gsap/react';
 import type { ChatSSEEvent } from '../../../contracts/events';
 import type { StartChatResponse, SendMessageResponse } from '../../../contracts/api';
 import { ChatMessage } from './ChatMessage';
-import { ChatInput } from './ChatInput';
+import { ChatInput, type ChatInputHandle } from './ChatInput';
 import { TypingIndicator } from './TypingIndicator';
 
 interface DisplayMessage {
@@ -25,6 +25,7 @@ interface ChatContainerProps {
   leadId: string;
   isOpen: boolean;
   onClose: () => void;
+  onNewMessage?: () => void;
 }
 
 export function ChatContainer({
@@ -32,9 +33,11 @@ export function ChatContainer({
   leadId,
   isOpen,
   onClose,
+  onNewMessage,
 }: ChatContainerProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<ChatInputHandle>(null);
 
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
@@ -44,10 +47,14 @@ export function ChatContainer({
 
   const sseRef = useRef<EventSource | null>(null);
 
-  // ── Auto-scroll to bottom ──
+  // ── Smooth auto-scroll to bottom ──
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      gsap.to(scrollRef.current, {
+        scrollTop: scrollRef.current.scrollHeight,
+        duration: 0.3,
+        ease: 'power2.out',
+      });
     }
   }, [messages, streamingContent]);
 
@@ -73,6 +80,15 @@ export function ChatContainer({
     },
     { dependencies: [isOpen] },
   );
+
+  // ── Auto-focus input when panel opens ──
+  useEffect(() => {
+    if (isOpen && inputRef.current) {
+      // Delay to let panel slide-in animation complete
+      const timer = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   // ── Initialize conversation on first open ──
   useEffect(() => {
@@ -105,7 +121,7 @@ export function ChatContainer({
             id: 'error',
             role: 'assistant',
             content:
-              '[COPY: chat initialization error message]',
+              'Something went wrong starting the chat. Please refresh the page and try again.',
           },
         ]);
       })
@@ -139,6 +155,8 @@ export function ChatContainer({
         ]);
         setStreamingContent('');
         setIsStreaming(false);
+        // Notify parent for new-message badge when panel is closed
+        if (!isOpen && onNewMessage) onNewMessage();
         break;
 
       case 'data_card':
@@ -184,7 +202,7 @@ export function ChatContainer({
         ]);
         break;
     }
-  }, []);
+  }, [isOpen, onNewMessage]);
 
   // ── Send message ──
   const handleSend = useCallback(
@@ -249,7 +267,7 @@ export function ChatContainer({
           {
             id: `err-${Date.now()}`,
             role: 'assistant',
-            content: '[COPY: message send error]',
+            content: 'Failed to send your message. Please try again.',
           },
         ]);
       }
@@ -277,7 +295,7 @@ export function ChatContainer({
       <div className="flex items-center justify-between border-b border-forge-border px-4 py-3">
         <div>
           <p className="font-display text-sm tracking-display text-forge-text">
-            [COPY: chat agent name]
+            Forge Advisor
           </p>
           <p className="text-[10px] text-forge-text-muted">
             {isStreaming ? 'Typing...' : 'Online'}
@@ -325,8 +343,10 @@ export function ChatContainer({
 
       {/* Input */}
       <ChatInput
+        ref={inputRef}
         onSend={handleSend}
         disabled={isStreaming || !conversationId}
+        isStreaming={isStreaming}
       />
     </div>
   );

@@ -148,9 +148,60 @@ export async function capturePageWithMetadata(
       }
     }
 
-    // Capture screenshot
+    // Scroll down incrementally to trigger scroll-based animations (GSAP, Framer Motion, etc.)
+    try {
+      await page.evaluate(async () => {
+        const scrollStep = Math.max(window.innerHeight * 0.8, 400);
+        const maxScroll = document.body.scrollHeight;
+        let currentScroll = 0;
+
+        while (currentScroll < maxScroll) {
+          window.scrollBy(0, scrollStep);
+          currentScroll += scrollStep;
+          await new Promise((r) => setTimeout(r, 200));
+        }
+
+        // Scroll back to top
+        window.scrollTo(0, 0);
+      });
+
+      // Wait for animations to settle after scrolling
+      await page.waitForTimeout(1500);
+    } catch (scrollError: unknown) {
+      const scrollMessage =
+        scrollError instanceof Error ? scrollError.message : String(scrollError);
+      console.warn(
+        `[screenshots/client] Scroll routine failed for ${url}: ${scrollMessage}. Capturing without scroll.`,
+      );
+    }
+
+    // Wait for JS-driven content (carousels, lazy-loaded sections) to initialize
+    await page.waitForTimeout(2000);
+
+    // Force hidden animated elements visible — minimal override
+    // ONLY opacity and visibility. Do NOT override transform, animation,
+    // transition, or clip-path — those break carousels and positioned elements.
+    try {
+      await page.addStyleTag({
+        content: `
+          *, *::before, *::after {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+        `,
+      });
+      await page.waitForTimeout(300);
+    } catch (styleError: unknown) {
+      const styleMessage =
+        styleError instanceof Error ? styleError.message : String(styleError);
+      console.warn(
+        `[screenshots/client] Style injection failed for ${url}: ${styleMessage}. Capturing as-is.`,
+      );
+    }
+
+    // Capture screenshot (full page for desktop, viewport-only for mobile)
     const screenshotBuffer = await captureScreenshot(page, {
-      fullPage: true,
+      fullPage: viewport === 'desktop',
       viewport: viewportSize,
     });
 

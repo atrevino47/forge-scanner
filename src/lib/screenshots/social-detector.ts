@@ -23,6 +23,11 @@ export interface InnerPageLink {
   label: string;
 }
 
+export interface SocialDetectionResult {
+  resolved: DetectedSocials;
+  ambiguous: Record<string, Array<{ handle: string; url: string }>>;
+}
+
 export interface GbpDetectionResult {
   found: boolean;
   placeId?: string;
@@ -120,11 +125,12 @@ function isInNavArea(html: string, anchorIndex: number): boolean {
  * - Finds all <a> tags with href containing social platform domains
  * - Extracts handles from URLs
  * - Confidence: 'high' if link is in header/footer/nav OR only one link per platform
- * - If multiple different handles found for same platform, returns ALL of them
- *   (the pipeline will emit a social_ambiguous event)
+ * - If multiple different handles found for same platform with no clear winner,
+ *   returns them as ambiguous (the pipeline will emit a social_ambiguous event)
  */
-export function detectSocialLinks(html: string, _websiteUrl: string): DetectedSocials {
-  const result: DetectedSocials = {};
+export function detectSocialLinks(html: string, _websiteUrl: string): SocialDetectionResult {
+  const resolved: DetectedSocials = {};
+  const ambiguous: Record<string, Array<{ handle: string; url: string }>> = {};
 
   // Extract all <a> tags with href attributes
   const anchorRegex = /<a\s[^>]*href\s*=\s*["']([^"']+)["'][^>]*>/gi;
@@ -177,7 +183,7 @@ export function detectSocialLinks(html: string, _websiteUrl: string): DetectedSo
     if (uniqueMatches.length === 1) {
       // Single handle — high confidence if in nav area, otherwise still high (only one option)
       const match = uniqueMatches[0];
-      result[platform] = {
+      resolved[platform] = {
         handle: match.handle,
         url: match.url,
         confidence: 'high',
@@ -188,24 +194,22 @@ export function detectSocialLinks(html: string, _websiteUrl: string): DetectedSo
 
       if (navMatch) {
         // Found one in nav area — high confidence
-        result[platform] = {
+        resolved[platform] = {
           handle: navMatch.handle,
           url: navMatch.url,
           confidence: 'high',
         };
       } else {
-        // Multiple handles, none in nav — low confidence, return the first one
-        const first = uniqueMatches[0];
-        result[platform] = {
-          handle: first.handle,
-          url: first.url,
-          confidence: 'low',
-        };
+        // Multiple handles, none in nav — ambiguous, let the user decide
+        ambiguous[platform] = uniqueMatches.map((m) => ({
+          handle: m.handle,
+          url: m.url,
+        }));
       }
     }
   }
 
-  return result;
+  return { resolved, ambiguous };
 }
 
 // ============================================================

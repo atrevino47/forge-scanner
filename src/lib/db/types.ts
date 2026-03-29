@@ -118,6 +118,9 @@ export interface DbConversation {
   scan_id: string;
   lead_id: string;
   status: ConversationStatus;
+  engagement_score: number;
+  objection_count: number;
+  last_objection_type: string | null;
   created_at: string;
   updated_at: string;
 }

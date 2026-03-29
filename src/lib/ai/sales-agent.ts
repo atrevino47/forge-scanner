@@ -15,22 +15,26 @@ import { getWhatsAppFollowupPrompt, type WhatsAppSequencePosition } from '../pro
 // Signature matches what Backend already calls
 // ============================================================
 
-export function buildSalesAgentSystemPrompt(params: {
+export async function buildSalesAgentSystemPrompt(params: {
   scanResult: ScanResult;
   businessName?: string | null;
   leadName?: string | null;
   blueprint?: BlueprintData | null;
   channel?: Channel;
-}): string {
+  activeObjectionContext?: string | null;
+  messageCount?: number;
+}): Promise<string> {
   const biz = params.businessName || extractDomain(params.scanResult.websiteUrl);
 
-  return buildFullSalesAgentPrompt({
+  return await buildFullSalesAgentPrompt({
     scanResult: params.scanResult,
     blueprint: params.blueprint,
     channel: params.channel ?? 'web',
     businessName: biz,
     leadName: params.leadName,
     calcomUrl: process.env.NEXT_PUBLIC_CALCOM_EMBED_URL,
+    activeObjectionContext: params.activeObjectionContext,
+    messageCount: params.messageCount,
   });
 }
 
