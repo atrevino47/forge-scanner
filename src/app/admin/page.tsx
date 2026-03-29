@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import type { AdminDashboardResponse } from '../../../contracts/api';
 
@@ -47,21 +47,27 @@ export default function AdminDashboard() {
     setIsLocalhost(window.location.hostname === 'localhost');
   }, []);
 
-  useEffect(() => {
-    fetch('/api/admin/dashboard')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch');
-        return res.json();
-      })
-      .then((d: AdminDashboardResponse) => setData(d))
-      .catch((e: Error) => setError(e.message));
+  const fetchDashboard = useCallback(async () => {
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/dashboard');
+      if (!res.ok) throw new Error('Failed to load dashboard. Please try again.');
+      setData((await res.json()) as AdminDashboardResponse);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load dashboard. Please try again.');
+    }
   }, []);
+
+  useEffect(() => { void fetchDashboard(); }, [fetchDashboard]);
 
   if (error) {
     return (
-      <div className="rounded-xl bg-[#1E1E1C] p-8 text-center">
-        <span className="material-symbols-outlined mb-2 text-4xl text-forge-critical">error</span>
-        <p className="font-body text-sm text-[#9A9890]">{error}</p>
+      <div className="rounded-xl border border-forge-critical/20 bg-forge-critical/5 p-8 text-center">
+        <span className="material-symbols-outlined text-[32px] text-forge-critical">error</span>
+        <p className="mt-2 font-body text-forge-critical">{error}</p>
+        <button onClick={() => void fetchDashboard()} className="mt-4 rounded-lg bg-forge-accent px-4 py-2 font-body text-sm text-white">
+          Try Again
+        </button>
       </div>
     );
   }

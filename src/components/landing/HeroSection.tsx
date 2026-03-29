@@ -47,9 +47,8 @@ export function HeroSection() {
     e.preventDefault();
     const trimmed = url.trim();
 
-    // Client-side validation: must be a non-empty string that looks like a domain or URL
-    if (!trimmed || !/\S+\.\S+/.test(trimmed)) {
-      setFormError('Please enter a valid website URL (e.g. example.com)');
+    if (!trimmed) {
+      setFormError('Please enter your website URL.');
       return;
     }
 
