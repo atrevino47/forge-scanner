@@ -47,6 +47,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<SetupRespo
       check('TWILIO_PHONE_NUMBER', 'Twilio Phone Number', 'Set TWILIO_PHONE_NUMBER for SMS sending (optional for demo)'),
       check('WHATSAPP_API_TOKEN', 'WhatsApp API Token', 'Set WHATSAPP_API_TOKEN for WhatsApp follow-ups (optional for demo)'),
       check('WHATSAPP_PHONE_NUMBER_ID', 'WhatsApp Phone Number ID', 'Set WHATSAPP_PHONE_NUMBER_ID for WhatsApp sending (optional for demo)'),
+      check('ADMIN_EMAILS', 'Admin Emails', 'Set ADMIN_EMAILS (comma-separated) for admin panel access'),
+      check('CRON_SECRET', 'Cron Secret', 'Set CRON_SECRET to protect /api/cron/* endpoints from unauthorized access'),
+      check('FACEBOOK_APP_ACCESS_TOKEN', 'Facebook App Access Token', 'Set FACEBOOK_APP_ACCESS_TOKEN for Meta Ad Library detection (optional)'),
+      check('APIFY_API_TOKEN', 'Apify API Token', 'Set APIFY_API_TOKEN for social profile enrichment (optional)'),
     ];
 
     const allOk = checks.every(c => c.status === 'ok' || c.status === 'warning');

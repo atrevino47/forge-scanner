@@ -32,6 +32,14 @@ const GROUPS: Array<{ title: string; keys: string[] }> = [
     title: 'Analytics & Follow-up',
     keys: ['NEXT_PUBLIC_POSTHOG_KEY', 'RESEND_API_KEY', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER', 'WHATSAPP_API_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID'],
   },
+  {
+    title: 'Admin & Security',
+    keys: ['ADMIN_EMAILS', 'CRON_SECRET'],
+  },
+  {
+    title: 'Enrichment (Optional)',
+    keys: ['FACEBOOK_APP_ACCESS_TOKEN', 'APIFY_API_TOKEN'],
+  },
 ];
 
 function StatusIcon({ status }: { status: 'ok' | 'missing' | 'warning' }) {

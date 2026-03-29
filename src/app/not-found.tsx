@@ -81,10 +81,9 @@ export default function NotFound() {
           </Link>
           <Link
             href="/"
-            onClick={() => history.back()}
             className="inline-flex items-center gap-2 rounded-lg border border-[#ECEAE4] bg-[#F5F4F0] px-6 py-3 font-mono text-xs font-bold uppercase tracking-widest text-[#6B6860] transition-colors hover:bg-[#ECEAE4] hover:text-[#1A1917]"
           >
-            Go back
+            Go home
           </Link>
         </div>
       </div>
