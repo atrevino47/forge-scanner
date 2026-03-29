@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { AdminScansResponse } from '../../../../contracts/api';
 
 type ScanStatusFilter = 'all' | 'scanning' | 'complete' | 'failed';
 type HasLeadFilter = 'all' | 'yes' | 'no';
+type SortCol = 'url' | 'status' | 'date';
+type SortDir = 'asc' | 'desc';
 
 const STATUS_PILLS: Array<{ value: ScanStatusFilter; label: string }> = [
   { value: 'all', label: 'All' },
@@ -27,6 +29,37 @@ const SCAN_STATUS_STYLES: Record<string, string> = {
   failed: 'bg-forge-critical/20 text-forge-critical',
 };
 
+function SortHeader({
+  col,
+  label,
+  sortCol,
+  sortDir,
+  onSort,
+  className,
+}: {
+  col: SortCol;
+  label: string;
+  sortCol: SortCol;
+  sortDir: SortDir;
+  onSort: (col: SortCol) => void;
+  className?: string;
+}) {
+  const active = sortCol === col;
+  return (
+    <th
+      onClick={() => onSort(col)}
+      className={`cursor-pointer select-none px-4 py-3 text-left font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A9890] hover:text-[#F0EFE9] transition-colors ${className ?? ''}`}
+    >
+      <span className="flex items-center gap-1">
+        {label}
+        <span className="material-symbols-outlined text-[14px]">
+          {active ? (sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more'}
+        </span>
+      </span>
+    </th>
+  );
+}
+
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
@@ -46,6 +79,24 @@ export default function AdminScansPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [sortCol, setSortCol] = useState<SortCol>('date');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  const handleSort = useCallback((col: SortCol) => {
+    if (col === sortCol) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortCol(col); setSortDir('desc'); }
+  }, [sortCol]);
+
+  const sortedScans = useMemo(() => {
+    if (!data?.scans) return [];
+    return [...data.scans].sort((a, b) => {
+      let cmp = 0;
+      if (sortCol === 'url') cmp = a.websiteUrl.localeCompare(b.websiteUrl);
+      else if (sortCol === 'status') cmp = a.status.localeCompare(b.status);
+      else cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }, [data?.scans, sortCol, sortDir]);
 
   const fetchScans = useCallback(async () => {
     setLoading(true);
@@ -150,11 +201,11 @@ export default function AdminScansPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-[rgba(255,107,43,0.08)] bg-[#282826]">
-              <th className="px-4 py-3 text-left font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A9890]">URL</th>
+              <SortHeader col="url" label="URL" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               <th className="hidden px-4 py-3 text-left font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A9890] sm:table-cell">Lead</th>
-              <th className="px-4 py-3 text-left font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A9890]">Status</th>
+              <SortHeader col="status" label="Status" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               <th className="hidden px-4 py-3 text-center font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A9890] md:table-cell">Stages</th>
-              <th className="px-4 py-3 text-right font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A9890]">When</th>
+              <SortHeader col="date" label="When" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-right" />
             </tr>
           </thead>
           <tbody className="divide-y divide-[rgba(255,107,43,0.06)]">
@@ -167,7 +218,7 @@ export default function AdminScansPage() {
                 </tr>
               ))
             ) : data && data.scans.length > 0 ? (
-              data.scans.map((scan) => (
+              sortedScans.map((scan) => (
                 <tr
                   key={scan.id}
                   onClick={() => router.push(`/admin/scan/${scan.id}`)}
