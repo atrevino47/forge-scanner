@@ -30,7 +30,7 @@ export function FooterSection() {
           >
             Your funnel has blind spots.
             <br />
-            <span style={{ color: 'var(--forge-accent)' }}>Let Adrian fix them.</span>
+            <span style={{ color: 'var(--forge-accent)' }}>Let us find every one.</span>
           </h2>
 
           <p
@@ -41,8 +41,8 @@ export function FooterSection() {
           </p>
 
           <button
-            onClick={() => openCalcom({ source: 'results_cta' })}
-            className="inline-flex items-center gap-2 rounded-[9px] px-8 py-3.5 font-body text-base font-semibold transition-all duration-200"
+            onClick={() => openCalcom({ source: 'footer_cta' })}
+            className="inline-flex items-center gap-2 rounded-[9px] px-8 py-3.5 font-body text-base font-semibold transition-colors duration-200"
             style={{
               background: 'var(--forge-accent)',
               color: '#FAFAF7',
@@ -61,21 +61,52 @@ export function FooterSection() {
 
       {/* Footer */}
       <footer
-        className="px-6 py-8"
+        className="px-6 py-10"
         style={{
-          background: '#141413',
-          borderTop: '1px solid rgba(255, 107, 43, 0.08)',
+          background: '#1A1917',
+          borderTop: '1px solid rgba(236, 234, 228, 0.08)',
         }}
       >
-        <div className="mx-auto flex max-w-[960px] items-center justify-between">
-          <span
-            className="font-display text-sm font-bold"
-            style={{ color: '#9A9890' }}
+        <div className="mx-auto max-w-[960px]">
+          {/* Top row: Logo + nav links */}
+          <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+            {/* Logo — FORGE in Outfit white */}
+            <span
+              className="font-display text-base font-black tracking-tight"
+              style={{ color: '#FAFAF7', letterSpacing: '-0.03em' }}
+            >
+              FORGE
+            </span>
+
+            {/* Nav links */}
+            <nav className="flex items-center gap-6">
+              <a
+                href="/privacy"
+                className="font-body text-sm transition-colors duration-150"
+                style={{ color: '#B8B5AD' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#FAFAF7'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#B8B5AD'; }}
+              >
+                Privacy
+              </a>
+              <a
+                href="/terms"
+                className="font-body text-sm transition-colors duration-150"
+                style={{ color: '#B8B5AD' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = '#FAFAF7'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = '#B8B5AD'; }}
+              >
+                Terms
+              </a>
+            </nav>
+          </div>
+
+          {/* Bottom row: Copyright */}
+          <p
+            className="font-body text-xs"
+            style={{ color: '#6B6860' }}
           >
-            FORGEWITH<span style={{ color: 'var(--forge-accent)' }}>.AI</span>
-          </span>
-          <p className="font-body text-xs" style={{ color: '#6B6860' }}>
-            Built by Adrian Trevino &middot; forgewith.ai
+            &copy; 2026 Forge Digital
           </p>
         </div>
       </footer>

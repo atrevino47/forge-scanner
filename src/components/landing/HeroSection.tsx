@@ -181,7 +181,7 @@ export function HeroSection() {
         {/* Trust indicators */}
         <div
           data-hero="trust"
-          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm"
+          className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-mono text-xs uppercase tracking-widest"
           style={{ color: 'var(--forge-text-muted)' }}
         >
           <span>Free, no card required</span>
