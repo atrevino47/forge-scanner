@@ -190,6 +190,69 @@ export interface AdminLeadsResponse {
   limit: number;
 }
 
+// GET /api/admin/payments
+export interface AdminPaymentsQuery {
+  page?: number;
+  limit?: number;
+  status?: 'all' | 'succeeded' | 'pending' | 'failed' | 'refunded';
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export interface AdminPaymentRow {
+  id: string;
+  createdAt: string;
+  scanId: string | null;
+  leadEmail: string | null;
+  leadName: string | null;
+  amountCents: number;
+  currency: string;
+  productType: string;
+  status: 'pending' | 'succeeded' | 'failed' | 'refunded';
+  stripePaymentIntentId: string;
+}
+
+export interface AdminPaymentsResponse {
+  payments: AdminPaymentRow[];
+  total: number;
+  page: number;
+  limit: number;
+  summary: {
+    totalRevenueCents: number;
+    thisMonthCents: number;
+    thisWeekCents: number;
+  };
+}
+
+// GET /api/admin/scans
+export interface AdminScansQuery {
+  page?: number;
+  limit?: number;
+  status?: 'all' | 'scanning' | 'complete' | 'failed';
+  hasLead?: 'all' | 'yes' | 'no';
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}
+
+export interface AdminScanRow {
+  id: string;
+  createdAt: string;
+  websiteUrl: string;
+  status: string;
+  leadEmail: string | null;
+  leadName: string | null;
+  overallScore: number | null;
+  stagesCompleted: number;
+}
+
+export interface AdminScansResponse {
+  scans: AdminScanRow[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 // GET /api/admin/dashboard
 export interface AdminDashboardResponse {
   totalScans: number;

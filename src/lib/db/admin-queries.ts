@@ -2,8 +2,14 @@
 // Admin-specific database queries using service role client (bypasses RLS)
 
 import { createServiceClient } from './client';
-import type { AdminDashboardResponse, AdminLeadsResponse } from '../../../contracts/api';
-import type { DbLead } from './types';
+import type {
+  AdminDashboardResponse,
+  AdminLeadsResponse,
+  AdminPaymentsResponse,
+  AdminScanRow,
+  AdminScansResponse,
+} from '../../../contracts/api';
+import type { DbLead, DbPayment, DbScan } from './types';
 
 /**
  * Fetches aggregate metrics for the admin dashboard.
@@ -184,4 +190,182 @@ export async function getAdminLeads(opts: {
     page,
     limit,
   };
+}
+
+/**
+ * Fetches paginated payments with lead enrichment and revenue summary.
+ */
+export async function getAdminPayments(opts: {
+  page: number;
+  limit: number;
+  status: string;
+  dateFrom?: string;
+  dateTo?: string;
+}): Promise<AdminPaymentsResponse> {
+  const db = createServiceClient();
+  const { page, limit, status, dateFrom, dateTo } = opts;
+  const offset = (page - 1) * limit;
+
+  let query = db
+    .from('payments')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false });
+
+  if (status !== 'all') {
+    query = query.eq('status', status);
+  }
+  if (dateFrom) {
+    query = query.gte('created_at', dateFrom);
+  }
+  if (dateTo) {
+    query = query.lte('created_at', dateTo);
+  }
+
+  query = query.range(offset, offset + limit - 1);
+
+  const { data: paymentsRaw, count } = await query;
+  const payments = (paymentsRaw ?? []) as DbPayment[];
+
+  // Revenue summary (across all matching statuses — always 'succeeded' only)
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [totalResult, monthResult, weekResult] = await Promise.all([
+    db.from('payments').select('amount_cents').eq('status', 'succeeded'),
+    db.from('payments').select('amount_cents').eq('status', 'succeeded').gte('created_at', monthStart),
+    db.from('payments').select('amount_cents').eq('status', 'succeeded').gte('created_at', weekStart),
+  ]);
+
+  const sumCents = (rows: Array<{ amount_cents: number }> | null) =>
+    (rows ?? []).reduce((s, r) => s + r.amount_cents, 0);
+
+  // Enrich with lead data
+  const leadIds = [...new Set(payments.map((p) => p.lead_id).filter(Boolean))];
+  const { data: leads } = leadIds.length > 0
+    ? await db.from('leads').select('id, email, full_name').in('id', leadIds)
+    : { data: [] as Array<{ id: string; email: string | null; full_name: string | null }> };
+
+  const leadMap = new Map((leads ?? []).map((l) => [l.id, l]));
+
+  return {
+    payments: payments.map((p) => {
+      const lead = leadMap.get(p.lead_id);
+      return {
+        id: p.id,
+        createdAt: p.created_at,
+        scanId: p.scan_id,
+        leadEmail: lead?.email ?? null,
+        leadName: lead?.full_name ?? null,
+        amountCents: p.amount_cents,
+        currency: p.currency,
+        productType: p.product_type,
+        status: p.status,
+        stripePaymentIntentId: p.stripe_payment_intent_id,
+      };
+    }),
+    total: count ?? 0,
+    page,
+    limit,
+    summary: {
+      totalRevenueCents: sumCents(totalResult.data),
+      thisMonthCents: sumCents(monthResult.data),
+      thisWeekCents: sumCents(weekResult.data),
+    },
+  };
+}
+
+/**
+ * Fetches paginated scans with lead enrichment.
+ */
+export async function getAdminScans(opts: {
+  page: number;
+  limit: number;
+  status: string;
+  hasLead: string;
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}): Promise<AdminScansResponse> {
+  const db = createServiceClient();
+  const { page, limit, status, hasLead, dateFrom, dateTo, search } = opts;
+  const offset = (page - 1) * limit;
+
+  let query = db
+    .from('scans')
+    .select('*', { count: 'exact' })
+    .order('created_at', { ascending: false });
+
+  if (status !== 'all') {
+    query = query.eq('status', status);
+  }
+  if (dateFrom) {
+    query = query.gte('created_at', dateFrom);
+  }
+  if (dateTo) {
+    query = query.lte('created_at', dateTo);
+  }
+  if (search) {
+    query = query.ilike('website_url', `%${search}%`);
+  }
+
+  query = query.range(offset, offset + limit - 1);
+
+  const { data: scansRaw, count } = await query;
+  const scans = (scansRaw ?? []) as DbScan[];
+
+  if (scans.length === 0) {
+    return { scans: [], total: count ?? 0, page, limit };
+  }
+
+  const leadIds = [...new Set(scans.map((s) => s.lead_id).filter(Boolean))];
+  const { data: leads } = leadIds.length > 0
+    ? await db.from('leads').select('id, email, full_name').in('id', leadIds)
+    : { data: [] as Array<{ id: string; email: string | null; full_name: string | null }> };
+
+  const leadMap = new Map((leads ?? []).map((l) => [l.id, l]));
+
+  // Fetch stage completion counts
+  const scanIds = scans.map((s) => s.id);
+  const { data: stages } = await db
+    .from('funnel_stages')
+    .select('scan_id, status')
+    .in('scan_id', scanIds)
+    .eq('status', 'complete');
+
+  const stageCountByScan = new Map<string, number>();
+  for (const stage of stages ?? []) {
+    const sid = stage.scan_id as string;
+    stageCountByScan.set(sid, (stageCountByScan.get(sid) ?? 0) + 1);
+  }
+
+  let enrichedScans: AdminScanRow[] = scans.map((s) => {
+    const lead = leadMap.get(s.lead_id);
+    return {
+      id: s.id,
+      createdAt: s.created_at,
+      websiteUrl: s.website_url,
+      status: s.status,
+      leadEmail: lead?.email ?? null,
+      leadName: lead?.full_name ?? null,
+      overallScore: null, // Computed from stage summaries — not stored on scan row
+      stagesCompleted: stageCountByScan.get(s.id) ?? 0,
+    };
+  });
+
+  // Filter by hasLead after enrichment (requires lead data)
+  if (hasLead === 'yes') {
+    enrichedScans = enrichedScans.filter((s) => s.leadEmail !== null);
+  } else if (hasLead === 'no') {
+    enrichedScans = enrichedScans.filter((s) => s.leadEmail === null);
+  }
+
+  // Secondary search by lead email (not possible with DB ilike on scans table)
+  if (search && search.includes('@')) {
+    enrichedScans = enrichedScans.filter(
+      (s) => s.leadEmail?.toLowerCase().includes(search.toLowerCase()),
+    );
+  }
+
+  return { scans: enrichedScans, total: count ?? 0, page, limit };
 }
