@@ -61,55 +61,6 @@ interface PrescriptionRule {
   };
 }
 
-/* TODO: APPLE GEO / AEO PRESCRIPTION RULES
- *
- * GEO (Generative Engine Optimization):
- * Apple Intelligence, Google SGE, and Perplexity use generative AI to
- * summarize and recommend businesses. GEO = optimizing content so AI
- * models cite/recommend your business in their generated answers.
- *
- * Key prescription opportunities:
- * - Missing structured data (Schema.org) → "AI Visibility Package"
- * - No FAQ sections or Q&A content → "Answer Engine Content"
- * - Weak entity markup → "Entity Authority Setup"
- * - No clear authoritative statements → "Topical Authority Buildout"
- * - Inconsistent NAP/brand across sources → "Brand Entity Consistency"
- *
- * AEO (Answer Engine Optimization):
- * Optimizing for featured snippets, People Also Ask, and AI-generated
- * answers in Google SGE, Bing Copilot, Apple Intelligence search.
- *
- * Key prescription opportunities:
- * - No concise, direct answers to common queries → "Featured Snippet Capture"
- * - Missing FAQ schema → "Schema Markup Package"
- * - Thin content that AI can't extract clear answers from → "Content Depth Buildout"
- *
- * Implementation:
- * 1. Add GEO/AEO checks to /src/lib/ai/ analysis prompts
- * 2. New finding categories: 'geo_visibility', 'aeo_readiness', 'schema_missing'
- * 3. New prescription rules below matching those categories
- * 4. New prescription templates:
- *    - serviceName: "AI Search Visibility" (priceTier: 'growth')
- *    - serviceName: "Answer Engine Setup" (priceTier: 'starter')
- *    - serviceName: "Entity Authority Package" (priceTier: 'scale')
- * 5. This is a major differentiator — no other scanner checks GEO/AEO readiness
- *
- * Example rule shape:
- * {
- *   titleKeywords: ['structured data', 'schema', 'ai visibility', 'ai search'],
- *   types: ['critical', 'warning', 'opportunity'],
- *   stages: ['traffic', 'landing'],
- *   template: {
- *     serviceName: 'AI Search Visibility',
- *     forgeFix: 'Implement comprehensive Schema.org markup, FAQ structured data, ...',
- *     expectedOutcome: 'Appear in AI-generated answers and featured snippets ...',
- *     effort: 'half-day',
- *     priceTier: 'growth',
- *     basePriority: 72,
- *   },
- * },
- */
-
 const RULES: PrescriptionRule[] = [
   // ── Landing / UX issues ──
   {
@@ -270,6 +221,60 @@ const RULES: PrescriptionRule[] = [
       effort: 'quick-win',
       priceTier: 'starter',
       basePriority: 78,
+    },
+  },
+  // ── GEO (Generative Engine Optimization) issues ──
+  {
+    titleKeywords: ['schema', 'structured data', 'json-ld', 'microdata'],
+    types: ['critical', 'warning', 'opportunity'],
+    stages: ['traffic'],
+    template: {
+      serviceName: 'AI Search Visibility',
+      forgeFix: 'Implement comprehensive Schema.org markup (Organization, LocalBusiness, FAQ, Product, BreadcrumbList) so AI systems can parse and recommend your business.',
+      expectedOutcome: 'Appear in ChatGPT, Perplexity, and Google AI Overview recommendations. Structured data is the #1 signal AI models use to cite businesses.',
+      effort: 'half-day',
+      priceTier: 'growth',
+      basePriority: 72,
+    },
+  },
+  {
+    titleKeywords: ['faq', 'q&a', 'entity', 'authority', 'topical depth'],
+    types: ['critical', 'warning', 'opportunity'],
+    stages: ['traffic'],
+    template: {
+      serviceName: 'Entity Authority Package',
+      forgeFix: 'Build clear entity definitions, FAQ sections with schema markup, and topical depth content that establishes your business as the authoritative source in your niche.',
+      expectedOutcome: 'AI models prioritize authoritative entities. When someone asks "best [your service] near me", AI should cite your business.',
+      effort: 'multi-day',
+      priceTier: 'scale',
+      basePriority: 68,
+    },
+  },
+  // ── AEO (Answer Engine Optimization) issues ──
+  {
+    titleKeywords: ['question', 'heading', 'answer', 'concise', 'definition', 'snippet'],
+    types: ['critical', 'warning', 'opportunity'],
+    stages: ['traffic'],
+    template: {
+      serviceName: 'Answer Engine Setup',
+      forgeFix: 'Restructure content with question-format headings, concise 40-60 word answer paragraphs, and definition patterns that featured snippet algorithms extract directly.',
+      expectedOutcome: 'Win featured snippets and People Also Ask boxes. Voice assistants read featured snippets aloud — this is the new SEO.',
+      effort: 'half-day',
+      priceTier: 'starter',
+      basePriority: 70,
+    },
+  },
+  {
+    titleKeywords: ['voice', 'list', 'table', 'freshness', 'content'],
+    types: ['critical', 'warning', 'opportunity'],
+    stages: ['traffic'],
+    template: {
+      serviceName: 'Voice Search Optimization',
+      forgeFix: 'Add speakable answer blocks, list/table formatting for comparison content, location keywords for "near me" queries, and content freshness signals.',
+      expectedOutcome: '50% of searches will be voice by 2027. Optimizing now means first-mover advantage in voice search results.',
+      effort: 'quick-win',
+      priceTier: 'starter',
+      basePriority: 62,
     },
   },
 ];

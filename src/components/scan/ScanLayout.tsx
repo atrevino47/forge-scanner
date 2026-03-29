@@ -29,6 +29,7 @@ import { StageFindingsView } from './StageFindingsView';
 import { HealthPotential } from './HealthPotential';
 import { ImplementationRoadmap } from './ImplementationRoadmap';
 import { PrescriptionSection } from './PrescriptionSection';
+import { GeoAeoSection } from './GeoAeoSection';
 
 // ── Stage ordering ──────────────────────────────────────
 const STAGE_ORDER: FunnelStage[] = [
@@ -636,6 +637,14 @@ export function ScanLayout({ scanId }: { scanId: string }) {
                 <HealthPotential
                   summary={state.completedSummary}
                   onInitiateOptimization={() => handleOpenCalcom('results_cta')}
+                />
+              )}
+
+              {/* GEO/AEO — AI discoverability analysis (findings extracted from traffic stage) */}
+              {isComplete && (
+                <GeoAeoSection
+                  stages={state.stages}
+                  onBookCall={() => handleOpenCalcom('geo_aeo_cta')}
                 />
               )}
 

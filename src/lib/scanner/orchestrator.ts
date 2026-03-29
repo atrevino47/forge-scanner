@@ -25,6 +25,8 @@ import {
   STAGE_ORDER,
   createStageResult,
 } from './utils';
+import { analyzeGeo } from './analyze-geo';
+import { analyzeAeo } from './analyze-aeo';
 
 // ============================================================
 // Event callbacks for SSE streaming
@@ -204,7 +206,32 @@ export async function runScanAnalysis(
     ),
   ];
 
-  const results = await Promise.all(stagePromises);
+  // Run GEO/AEO analysis in parallel with stages (non-blocking, uses homepage HTML)
+  const geoAeoPromise = homepageHtml
+    ? Promise.allSettled([analyzeGeo(homepageHtml), analyzeAeo(homepageHtml)])
+    : Promise.resolve(null);
+
+  const [results, geoAeoResults] = await Promise.all([
+    Promise.all(stagePromises),
+    geoAeoPromise,
+  ]);
+
+  // Merge GEO/AEO findings into the traffic stage result
+  // Frontend extracts them by ID prefix (geo-*, aeo-*) for dedicated display
+  if (geoAeoResults && Array.isArray(geoAeoResults)) {
+    const trafficResult = results.find((r) => r.stage === 'traffic');
+    if (trafficResult?.summary) {
+      const geoResult = geoAeoResults[0]?.status === 'fulfilled' ? geoAeoResults[0].value : null;
+      const aeoResult = geoAeoResults[1]?.status === 'fulfilled' ? geoAeoResults[1].value : null;
+
+      if (geoResult?.findings) {
+        trafficResult.summary.findings.push(...geoResult.findings);
+      }
+      if (aeoResult?.findings) {
+        trafficResult.summary.findings.push(...aeoResult.findings);
+      }
+    }
+  }
 
   // Calculate overall scan summary
   const overallHealth = calculateOverallScore(results);

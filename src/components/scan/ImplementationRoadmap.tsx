@@ -30,35 +30,8 @@ interface ImplementationRoadmapProps {
  * Beat 3 (1.20s): Forge Summary — scaleIn
  */
 
-/* TODO: PRESCRIPTION OFFERS (Hormozi-style)
- * After the roadmap findings, add a "Prescription" section that converts each critical/warning
- * finding into a specific, actionable recommendation with:
- * - Exact what-to-do (e.g., "Add a sticky CTA bar above the fold with your offer headline")
- * - Expected impact metric (e.g., "+15-25% capture rate based on industry data")
- * - Effort estimate (Quick Win / Half-Day / Multi-Day)
- * - "Forge can do this" flag linking to the Cal.com booking
- * This transforms the audit from "here's what's wrong" to "here's exactly what to do" —
- * the Hormozi $100M Leads approach of giving away the strategy to sell the execution.
- * Implementation: New <PrescriptionCard> component per finding, AI generates prescriptions
- * via a new /api/scan/prescribe endpoint using Sonnet with finding context.
- */
-
-/* TODO: APPLE GEO (Generative Experience Optimization) + AEO (Answer Engine Optimization)
- * Apple's "Apple Intelligence" search (via Safari/Siri) uses generative AI to summarize
- * and recommend businesses/content. GEO = optimizing content so AI models cite/recommend you.
- * AEO = optimizing for answer engines (Google SGE, Perplexity, ChatGPT search, Apple Intelligence).
- *
- * Where this fits in the scan:
- * - New analysis stage or sub-check within "traffic" stage
- * - Check for: structured data (Schema.org), FAQ sections, clear entity markup,
- *   concise authoritative answers to common queries, brand entity consistency
- * - Score: "AI Discoverability Index" — how likely AI models are to surface this business
- * - Findings: missing structured data, no FAQ schema, poor entity markup, thin content
- *   that AI can't extract clear answers from
- * - This is a differentiator: most scanners check SEO, none check GEO/AEO readiness
- * Implementation: Add GEO/AEO checks to the AI analysis prompt in /src/lib/ai/,
- * new finding types in contracts/types.ts, display in traffic stage results.
- */
+// Prescription offers: implemented in PrescriptionSection + src/lib/prescriptions.ts
+// GEO/AEO analysis: implemented in GeoAeoSection + src/lib/scanner/analyze-geo.ts, analyze-aeo.ts
 export function ImplementationRoadmap({ stages, onForgeSolution }: ImplementationRoadmapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
