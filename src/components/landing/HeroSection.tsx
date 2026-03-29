@@ -11,6 +11,7 @@ export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [url, setUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
 
   /* ANIMATION SEQUENCE:
@@ -45,8 +46,14 @@ export function HeroSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = url.trim();
-    if (!trimmed) return;
 
+    // Client-side validation: must be a non-empty string that looks like a domain or URL
+    if (!trimmed || !/\S+\.\S+/.test(trimmed)) {
+      setFormError('Please enter a valid website URL (e.g. example.com)');
+      return;
+    }
+
+    setFormError(null);
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/scan/start', {
@@ -55,10 +62,21 @@ export function HeroSection() {
         body: JSON.stringify({ url: trimmed }),
       });
 
-      if (!res.ok) throw new Error('Failed to start scan');
+      if (!res.ok) {
+        let message = 'Something went wrong. Please try again.';
+        try {
+          const errData = (await res.json()) as { error?: { message?: string } };
+          if (errData.error?.message) message = errData.error.message;
+        } catch {}
+        setFormError(message);
+        setIsSubmitting(false);
+        return;
+      }
+
       const data = (await res.json()) as { scanId: string };
       router.push(`/scan/${data.scanId}`);
     } catch {
+      setFormError('Something went wrong. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -151,7 +169,7 @@ export function HeroSection() {
               <input
                 type="text"
                 value={url}
-                onChange={(e) => setUrl(e.target.value)}
+                onChange={(e) => { setUrl(e.target.value); if (formError) setFormError(null); }}
                 placeholder="yourwebsite.com"
                 required
                 className="h-14 flex-1 bg-transparent px-5 font-body text-base placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
@@ -177,6 +195,9 @@ export function HeroSection() {
               {!isSubmitting && <ArrowRight className="h-4 w-4" />}
             </button>
           </div>
+          {formError && (
+            <p className="font-body text-sm text-forge-critical mt-2">{formError}</p>
+          )}
         </form>
 
         {/* Trust indicators */}

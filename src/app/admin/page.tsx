@@ -41,6 +41,11 @@ const PIPELINE_STAGES = [
 export default function AdminDashboard() {
   const [data, setData] = useState<AdminDashboardResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLocalhost, setIsLocalhost] = useState(false);
+
+  useEffect(() => {
+    setIsLocalhost(window.location.hostname === 'localhost');
+  }, []);
 
   useEffect(() => {
     fetch('/api/admin/dashboard')
@@ -119,6 +124,15 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8">
+      {/* Localhost warning banner */}
+      {isLocalhost && (
+        <div className="mb-6 rounded-lg border border-forge-warning/30 bg-forge-warning/10 px-4 py-3">
+          <p className="font-mono text-xs text-forge-warning">
+            ⚠ Running on localhost — Stripe webhooks and Twilio SMS will not work. Set NEXT_PUBLIC_APP_URL for production.
+          </p>
+        </div>
+      )}
+
       {/* Page header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>

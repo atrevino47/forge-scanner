@@ -40,6 +40,7 @@ function timeAgo(dateStr: string): string {
 export default function AdminScansPage() {
   const router = useRouter();
   const [data, setData] = useState<AdminScansResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<ScanStatusFilter>('all');
   const [hasLead, setHasLead] = useState<HasLeadFilter>('all');
   const [search, setSearch] = useState('');
@@ -48,14 +49,15 @@ export default function AdminScansPage() {
 
   const fetchScans = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({ page: String(page), limit: '25', status, hasLead });
       if (search) params.set('search', search);
       const res = await fetch(`/api/admin/scans?${params}`);
-      if (!res.ok) throw new Error('Failed to fetch');
+      if (!res.ok) throw new Error('Failed to load scans. Please try again.');
       setData((await res.json()) as AdminScansResponse);
-    } catch {
-      // Silently fail — UI shows empty state
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load scans. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -131,7 +133,19 @@ export default function AdminScansPage() {
         </div>
       </div>
 
+      {/* Error state */}
+      {error && (
+        <div className="rounded-xl border border-forge-critical/20 bg-forge-critical/5 p-8 text-center">
+          <span className="material-symbols-outlined text-[32px] text-forge-critical">error</span>
+          <p className="mt-2 font-body text-forge-critical">{error}</p>
+          <button onClick={fetchScans} className="mt-4 rounded-lg bg-forge-accent px-4 py-2 font-body text-sm text-white">
+            Try Again
+          </button>
+        </div>
+      )}
+
       {/* Table */}
+      {!error && (
       <div className="overflow-x-auto rounded-xl border border-[rgba(255,107,43,0.12)] bg-[#1E1E1C]">
         <table className="w-full">
           <thead>
@@ -209,6 +223,7 @@ export default function AdminScansPage() {
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

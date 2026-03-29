@@ -40,19 +40,21 @@ function formatDate(dateStr: string): string {
 
 export default function AdminPaymentsPage() {
   const [data, setData] = useState<AdminPaymentsResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<PaymentStatus>('all');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   const fetchPayments = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({ page: String(page), limit: '25', status });
       const res = await fetch(`/api/admin/payments?${params}`);
-      if (!res.ok) throw new Error('Failed to fetch');
+      if (!res.ok) throw new Error('Failed to load payments. Please try again.');
       setData((await res.json()) as AdminPaymentsResponse);
-    } catch {
-      // Silently fail — UI shows empty state
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load payments. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -115,7 +117,19 @@ export default function AdminPaymentsPage() {
         ))}
       </div>
 
+      {/* Error state */}
+      {error && (
+        <div className="rounded-xl border border-forge-critical/20 bg-forge-critical/5 p-8 text-center">
+          <span className="material-symbols-outlined text-[32px] text-forge-critical">error</span>
+          <p className="mt-2 font-body text-forge-critical">{error}</p>
+          <button onClick={fetchPayments} className="mt-4 rounded-lg bg-forge-accent px-4 py-2 font-body text-sm text-white">
+            Try Again
+          </button>
+        </div>
+      )}
+
       {/* Table */}
+      {!error && (
       <div className="overflow-x-auto rounded-xl border border-[rgba(255,107,43,0.12)] bg-[#1E1E1C]">
         <table className="w-full">
           <thead>
@@ -202,6 +216,7 @@ export default function AdminPaymentsPage() {
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (
