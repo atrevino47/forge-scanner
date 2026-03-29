@@ -89,7 +89,6 @@ function timeAgo(dateStr: string): string {
 
 function copyToClipboard(text: string, onCopied: () => void) {
   navigator.clipboard.writeText(text).then(() => {
-    onCopied();
     setTimeout(onCopied, 2000);
   });
 }

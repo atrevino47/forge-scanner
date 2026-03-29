@@ -26,7 +26,7 @@ const GROUPS: Array<{ title: string; keys: string[] }> = [
   },
   {
     title: 'Payments & Booking',
-    keys: ['STRIPE_SECRET_KEY', 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', 'STRIPE_WEBHOOK_SECRET', 'NEXT_PUBLIC_CALCOM_EMBED_URL', 'CALCOM_API_KEY'],
+    keys: ['STRIPE_SECRET_KEY', 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', 'STRIPE_WEBHOOK_SECRET', 'NEXT_PUBLIC_CALCOM_EMBED_URL', 'CALCOM_API_KEY', 'CALCOM_WEBHOOK_SECRET'],
   },
   {
     title: 'Analytics & Follow-up',

@@ -37,6 +37,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<SetupRespo
       check('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', 'Stripe Publishable Key', 'Set NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY'),
       check('STRIPE_WEBHOOK_SECRET', 'Stripe Webhook Secret', "Set STRIPE_WEBHOOK_SECRET — webhooks won't verify without it"),
       check('NEXT_PUBLIC_CALCOM_EMBED_URL', 'Cal.com Embed URL', 'Set NEXT_PUBLIC_CALCOM_EMBED_URL for booking modal'),
+      check('CALCOM_WEBHOOK_SECRET', 'Cal.com Webhook Secret', "Set CALCOM_WEBHOOK_SECRET — booking webhooks won't verify without it"),
       check('CALCOM_API_KEY', 'Cal.com API Key', 'Set CALCOM_API_KEY for calendar integration'),
       check('GOOGLE_PAGESPEED_API_KEY', 'Google PageSpeed API Key', 'Set GOOGLE_PAGESPEED_API_KEY for performance scoring'),
       check('GOOGLE_PLACES_API_KEY', 'Google Places API Key', 'Set GOOGLE_PLACES_API_KEY for GBP detection'),
