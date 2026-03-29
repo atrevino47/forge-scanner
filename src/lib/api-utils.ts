@@ -81,6 +81,55 @@ export function validateQuery<T>(url: URL, schema: ZodType<T>): T {
 }
 
 /**
+ * CSRF protection: verifies the Origin or Referer header matches the app host.
+ * Returns true (allowed) if the request passes the check.
+ *
+ * Should be called on all state-mutating endpoints (POST/PUT/DELETE) that
+ * operate on behalf of a session. Skips check for API-key-only routes.
+ *
+ * Note: Next.js App Router + Supabase SSR cookies are SameSite=Lax by default,
+ * which provides baseline CSRF protection. This adds an explicit host check as
+ * a defense-in-depth measure.
+ */
+export function verifyCsrf(request: NextRequest): boolean {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) {
+    // Can't verify without knowing the app URL — fail open in dev, fail closed in prod
+    return process.env.NODE_ENV !== 'production';
+  }
+
+  let appHost: string;
+  try {
+    appHost = new URL(appUrl).host;
+  } catch {
+    return false;
+  }
+
+  // Check Origin header first (most reliable)
+  const origin = request.headers.get('origin');
+  if (origin) {
+    try {
+      return new URL(origin).host === appHost;
+    } catch {
+      return false;
+    }
+  }
+
+  // Fall back to Referer header
+  const referer = request.headers.get('referer');
+  if (referer) {
+    try {
+      return new URL(referer).host === appHost;
+    } catch {
+      return false;
+    }
+  }
+
+  // No origin or referer — reject (could be a cross-site form POST)
+  return false;
+}
+
+/**
  * Extract the client IP address from the request.
  * Checks x-forwarded-for (set by Vercel / reverse proxies) first,
  * then falls back to x-real-ip.

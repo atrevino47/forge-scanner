@@ -85,9 +85,18 @@ export async function POST(
     // (b) Get client IP
     const clientIp = getClientIp(request);
 
-    // (c) Check rate limit: 3 scans per IP per 24h
-    const rateLimit = await checkRateLimit(clientIp, 'ip_scan', 3, 86400000);
+    // (c) Check rate limits: 5/minute burst guard, then 3/24h daily limit
+    const burstLimit = await checkRateLimit(clientIp, 'ip_api', 5, 60000);
+    if (!burstLimit.allowed) {
+      return apiError(
+        'RATE_LIMITED',
+        'Too many requests. Please slow down.',
+        429,
+        { remaining: 0, resetAt: burstLimit.resetAt }
+      );
+    }
 
+    const rateLimit = await checkRateLimit(clientIp, 'ip_scan', 3, 86400000);
     if (!rateLimit.allowed) {
       return apiError(
         'RATE_LIMITED',
