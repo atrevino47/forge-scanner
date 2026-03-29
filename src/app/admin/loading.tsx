@@ -6,8 +6,8 @@ export default function AdminLoading() {
     <div className="space-y-8">
       {/* Page header skeleton */}
       <div className="space-y-2">
-        <div className="h-7 w-36 animate-pulse rounded bg-[#282826]" />
-        <div className="h-4 w-52 animate-pulse rounded bg-[#1E1E1C]" />
+        <div className="h-7 w-36 rounded skeleton-dark" />
+        <div className="h-4 w-52 rounded skeleton-dark-deep" />
       </div>
 
       {/* Metric cards skeleton — 4 across */}
@@ -18,11 +18,11 @@ export default function AdminLoading() {
             className="rounded-xl border border-[rgba(255,107,43,0.08)] bg-[#1E1E1C] p-5"
           >
             <div className="mb-3 flex items-center gap-2">
-              <div className="h-4 w-4 animate-pulse rounded bg-[#282826]" />
-              <div className="h-3 w-20 animate-pulse rounded bg-[#282826]" />
+              <div className="h-4 w-4 rounded skeleton-dark" />
+              <div className="h-3 w-20 rounded skeleton-dark" />
             </div>
-            <div className="h-8 w-24 animate-pulse rounded bg-[#282826]" />
-            <div className="mt-2 h-3 w-28 animate-pulse rounded bg-[#1E1E1C]" />
+            <div className="h-8 w-24 rounded skeleton-dark" />
+            <div className="mt-2 h-3 w-28 rounded skeleton-dark-deep" />
           </div>
         ))}
       </div>
@@ -34,7 +34,7 @@ export default function AdminLoading() {
           {[120, 80, 60, 60].map((w, i) => (
             <div
               key={i}
-              className="h-3 animate-pulse rounded bg-[#353533]"
+              className="h-3 rounded skeleton-dark"
               style={{ width: `${w}px` }}
             />
           ))}
@@ -48,12 +48,12 @@ export default function AdminLoading() {
             style={{ opacity: 1 - i * 0.08 }}
           >
             <div className="flex-1 space-y-1.5">
-              <div className="h-4 w-40 animate-pulse rounded bg-[#282826]" />
-              <div className="h-3 w-28 animate-pulse rounded bg-[#1E1E1C]" />
+              <div className="h-4 w-40 rounded skeleton-dark" />
+              <div className="h-3 w-28 rounded skeleton-dark-deep" />
             </div>
-            <div className="h-5 w-16 animate-pulse rounded-sm bg-[#282826]" />
-            <div className="hidden h-4 w-12 animate-pulse rounded bg-[#1E1E1C] md:block" />
-            <div className="h-3 w-10 animate-pulse rounded bg-[#1E1E1C]" />
+            <div className="h-5 w-16 rounded-sm skeleton-dark" />
+            <div className="hidden h-4 w-12 rounded skeleton-dark-deep md:block" />
+            <div className="h-3 w-10 rounded skeleton-dark-deep" />
           </div>
         ))}
       </div>

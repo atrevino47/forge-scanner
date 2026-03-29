@@ -75,14 +75,14 @@ export default function AdminDashboard() {
   if (!data) {
     return (
       <div className="space-y-6">
-        <div className="h-8 w-48 animate-pulse rounded bg-[#282826]" />
+        <div className="h-8 w-48 rounded skeleton-dark" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-28 animate-pulse rounded-xl bg-[#1E1E1C]" />
+            <div key={i} className="h-28 rounded-xl skeleton-dark-deep" />
           ))}
         </div>
-        <div className="h-64 animate-pulse rounded-xl bg-[#1E1E1C]" />
-        <div className="h-40 animate-pulse rounded-xl bg-[#1E1E1C]" />
+        <div className="h-64 rounded-xl skeleton-dark-deep" />
+        <div className="h-40 rounded-xl skeleton-dark-deep" />
       </div>
     );
   }

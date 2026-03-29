@@ -103,10 +103,10 @@ export default function AdminSetupPage() {
         <div className="space-y-6">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="rounded-xl border border-[rgba(255,107,43,0.12)] bg-[#1E1E1C] p-6">
-              <div className="mb-4 h-4 w-40 animate-pulse rounded bg-[#282826]" />
+              <div className="mb-4 h-4 w-40 rounded skeleton-dark" />
               <div className="space-y-3">
                 {[...Array(4)].map((_, j) => (
-                  <div key={j} className="h-10 animate-pulse rounded-lg bg-[#282826]" />
+                  <div key={j} className="h-10 rounded-lg skeleton-dark" />
                 ))}
               </div>
             </div>

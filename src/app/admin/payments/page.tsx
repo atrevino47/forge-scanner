@@ -147,7 +147,7 @@ export default function AdminPaymentsPage() {
               [...Array(5)].map((_, i) => (
                 <tr key={i}>
                   <td colSpan={6} className="px-4 py-3">
-                    <div className="h-5 w-full animate-pulse rounded bg-[#282826]" />
+                    <div className="h-5 w-full rounded skeleton-dark" />
                   </td>
                 </tr>
               ))
