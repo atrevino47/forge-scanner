@@ -28,6 +28,7 @@ import { AuditOverview } from './AuditOverview';
 import { StageFindingsView } from './StageFindingsView';
 import { HealthPotential } from './HealthPotential';
 import { ImplementationRoadmap } from './ImplementationRoadmap';
+import { PrescriptionSection } from './PrescriptionSection';
 
 // ── Stage ordering ──────────────────────────────────────
 const STAGE_ORDER: FunnelStage[] = [
@@ -635,6 +636,14 @@ export function ScanLayout({ scanId }: { scanId: string }) {
                 <HealthPotential
                   summary={state.completedSummary}
                   onInitiateOptimization={() => handleOpenCalcom('results_cta')}
+                />
+              )}
+
+              {/* Prescription offers — Hormozi-style prescriptive fixes based on findings */}
+              {isComplete && (
+                <PrescriptionSection
+                  stages={state.stages}
+                  onBookCall={() => handleOpenCalcom('prescription_cta')}
                 />
               )}
             </div>
