@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { href: '/admin/leads', label: 'Leads', icon: 'group' },
   { href: '/admin/scans', label: 'Scans', icon: 'search' },
   { href: '/admin/payments', label: 'Payments', icon: 'payments' },
-  { href: '/admin/settings', label: 'Settings', icon: 'settings' },
+  { href: '/admin/setup', label: 'Setup', icon: 'build' },
 ] as const;
 
 export default function AdminLayout({
@@ -77,7 +77,7 @@ export default function AdminLayout({
         <span className="font-display text-lg font-black tracking-tight">FORGE</span>
         <div className="flex items-center gap-2">
           <nav className="flex gap-1">
-            {NAV_ITEMS.filter((i) => i.href !== '/admin/settings').map((item) => {
+            {NAV_ITEMS.filter((i) => i.href !== '/admin/setup').map((item) => {
               const isActive =
                 item.href === '/admin'
                   ? pathname === '/admin'
