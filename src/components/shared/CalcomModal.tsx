@@ -136,7 +136,7 @@ export function CalcomModal() {
             data-confirm="text"
             className="font-display text-2xl tracking-display text-forge-text"
           >
-            [COPY: booking confirmed]
+            You're booked. We'll see you on the call.
           </p>
         </div>
       </div>
@@ -157,7 +157,7 @@ export function CalcomModal() {
         {/* Header */}
         <div className="flex items-center justify-between border-b border-forge-border px-6 py-4">
           <h3 className="font-display text-lg tracking-display text-forge-text">
-            [COPY: book strategy call headline]
+            Book Your Free Strategy Call
           </h3>
           <button
             onClick={closeCalcom}
