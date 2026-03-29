@@ -132,38 +132,39 @@ export function HeroSection() {
 
         {/* URL Input */}
         <form data-hero="input" onSubmit={handleSubmit} className="mx-auto mb-8 max-w-xl">
-          <div
-            className="group relative flex items-center overflow-hidden rounded-xl border transition-all duration-300"
-            style={{
-              borderColor: 'var(--forge-border)',
-              background: 'var(--forge-surface)',
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(232, 83, 14, 0.3)';
-              e.currentTarget.style.boxShadow = '0 0 30px rgba(232, 83, 14, 0.06)';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = 'var(--forge-border)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <input
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="yourwebsite.com"
-              required
-              className="h-14 flex-1 bg-transparent px-5 font-body text-base placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
-              style={{ color: 'var(--forge-text)' }}
-            />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div
+              className="group relative flex flex-1 items-center overflow-hidden rounded-xl border transition-all duration-300"
+              style={{
+                borderColor: 'var(--forge-border)',
+                background: 'var(--forge-surface)',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(232, 83, 14, 0.3)';
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(232, 83, 14, 0.06)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--forge-border)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                placeholder="yourwebsite.com"
+                required
+                className="h-14 flex-1 bg-transparent px-5 font-body text-base placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
+                style={{ color: 'var(--forge-text)' }}
+              />
+            </div>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="mr-2 flex h-10 shrink-0 items-center gap-2 rounded-lg px-5 font-body text-sm font-semibold transition-all duration-200 disabled:opacity-50 sm:h-12 sm:px-6 sm:text-base"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl px-5 font-body text-sm font-semibold transition-all duration-200 disabled:opacity-50 sm:h-16 sm:w-auto sm:shrink-0 sm:px-6 sm:text-base"
               style={{
                 background: 'var(--forge-accent)',
                 color: '#FAFAF7',
-                borderRadius: '9px',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'var(--forge-accent-bright)';
