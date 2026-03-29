@@ -35,22 +35,22 @@ function SortHeader({
   sortCol,
   sortDir,
   onSort,
-  className,
+  align = 'left',
 }: {
   col: SortCol;
   label: string;
   sortCol: SortCol;
   sortDir: SortDir;
   onSort: (col: SortCol) => void;
-  className?: string;
+  align?: 'left' | 'right';
 }) {
   const active = sortCol === col;
   return (
     <th
       onClick={() => onSort(col)}
-      className={`cursor-pointer select-none px-4 py-3 text-left font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A9890] hover:text-[#F0EFE9] transition-colors ${className ?? ''}`}
+      className={`cursor-pointer select-none px-4 py-3 font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A9890] hover:text-[#F0EFE9] transition-colors ${align === 'right' ? 'text-right' : 'text-left'}`}
     >
-      <span className="flex items-center gap-1">
+      <span className={`flex items-center gap-1 ${align === 'right' ? 'justify-end' : ''}`}>
         {label}
         <span className="material-symbols-outlined text-[14px]">
           {active ? (sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more'}
@@ -205,7 +205,7 @@ export default function AdminScansPage() {
               <th className="hidden px-4 py-3 text-left font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A9890] sm:table-cell">Lead</th>
               <SortHeader col="status" label="Status" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} />
               <th className="hidden px-4 py-3 text-center font-mono text-[10px] font-bold uppercase tracking-widest text-[#9A9890] md:table-cell">Stages</th>
-              <SortHeader col="date" label="When" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} className="text-right" />
+              <SortHeader col="date" label="When" sortCol={sortCol} sortDir={sortDir} onSort={handleSort} align="right" />
             </tr>
           </thead>
           <tbody className="divide-y divide-[rgba(255,107,43,0.06)]">
