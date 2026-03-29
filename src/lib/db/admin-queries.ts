@@ -286,15 +286,23 @@ export async function getAdminScans(opts: {
   dateFrom?: string;
   dateTo?: string;
   search?: string;
+  sortBy?: string;
+  sortOrder?: string;
 }): Promise<AdminScansResponse> {
   const db = createServiceClient();
-  const { page, limit, status, hasLead, dateFrom, dateTo, search } = opts;
+  const { page, limit, status, hasLead, dateFrom, dateTo, search, sortBy, sortOrder } = opts;
   const offset = (page - 1) * limit;
+
+  // Map frontend sort column names to DB column names
+  const dbColumn = sortBy === 'url' ? 'website_url'
+    : sortBy === 'status' ? 'status'
+    : 'created_at';
+  const ascending = sortOrder === 'asc';
 
   let query = db
     .from('scans')
     .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false });
+    .order(dbColumn, { ascending });
 
   if (status !== 'all') {
     query = query.eq('status', status);

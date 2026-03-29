@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { AdminScansResponse } from '../../../../contracts/api';
@@ -87,22 +87,11 @@ export default function AdminScansPage() {
     else { setSortCol(col); setSortDir('desc'); }
   }, [sortCol]);
 
-  const sortedScans = useMemo(() => {
-    if (!data?.scans) return [];
-    return [...data.scans].sort((a, b) => {
-      let cmp = 0;
-      if (sortCol === 'url') cmp = a.websiteUrl.localeCompare(b.websiteUrl);
-      else if (sortCol === 'status') cmp = a.status.localeCompare(b.status);
-      else cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-  }, [data?.scans, sortCol, sortDir]);
-
   const fetchScans = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ page: String(page), limit: '25', status, hasLead });
+      const params = new URLSearchParams({ page: String(page), limit: '25', status, hasLead, sortBy: sortCol, sortOrder: sortDir });
       if (search) params.set('search', search);
       const res = await fetch(`/api/admin/scans?${params}`);
       if (!res.ok) throw new Error('Failed to load scans. Please try again.');
@@ -112,10 +101,10 @@ export default function AdminScansPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, status, hasLead, search]);
+  }, [page, status, hasLead, search, sortCol, sortDir]);
 
   useEffect(() => { fetchScans(); }, [fetchScans]);
-  useEffect(() => { setPage(1); }, [status, hasLead, search]);
+  useEffect(() => { setPage(1); }, [status, hasLead, search, sortCol, sortDir]);
 
   const totalPages = data ? Math.ceil(data.total / data.limit) : 1;
 
@@ -218,7 +207,7 @@ export default function AdminScansPage() {
                 </tr>
               ))
             ) : data && data.scans.length > 0 ? (
-              sortedScans.map((scan) => (
+              data.scans.map((scan) => (
                 <tr
                   key={scan.id}
                   onClick={() => router.push(`/admin/scan/${scan.id}`)}

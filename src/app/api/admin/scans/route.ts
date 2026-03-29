@@ -15,6 +15,8 @@ const querySchema = z.object({
   dateFrom: z.string().optional(),
   dateTo: z.string().optional(),
   search: z.string().optional(),
+  sortBy: z.enum(['url', 'status', 'date']).default('date'),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
 
 export async function GET(request: NextRequest): Promise<NextResponse<AdminScansResponse | ApiError>> {
@@ -31,6 +33,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<AdminScans
       dateFrom: searchParams.get('dateFrom') ?? undefined,
       dateTo: searchParams.get('dateTo') ?? undefined,
       search: searchParams.get('search') ?? undefined,
+      sortBy: searchParams.get('sortBy') ?? undefined,
+      sortOrder: searchParams.get('sortOrder') ?? undefined,
     });
 
     if (!parsed.success) {
