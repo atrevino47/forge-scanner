@@ -24,9 +24,9 @@ export function ResultsTopBar({ onBookCall, scannedUrl, showUrl }: ResultsTopBar
       </button>
 
       {/* Center: scanned URL (when results visible) or FORGE logo */}
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 max-w-[180px] overflow-hidden">
+      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 max-w-[180px] md:max-w-md overflow-hidden">
         {showUrl && displayUrl ? (
-          <span className="font-mono text-[11px] text-forge-text-secondary truncate">
+          <span className="font-mono text-[11px] md:text-xs text-forge-text-secondary truncate">
             {displayUrl}
           </span>
         ) : (

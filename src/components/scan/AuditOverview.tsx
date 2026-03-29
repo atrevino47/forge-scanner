@@ -106,16 +106,16 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
         </div>
         <h2
           data-ao="headline"
-          className="font-display text-4xl sm:text-5xl font-black text-forge-text leading-[0.9] tracking-tighter uppercase mb-8"
+          className="font-display text-4xl sm:text-5xl md:text-6xl font-black text-forge-text leading-[0.9] tracking-tighter uppercase mb-8"
         >
-          Where Your <br />Customers <br />
+          Where Your <br className="md:hidden" />Customers <br className="md:hidden" />
           <span className="text-forge-accent">Drop Off</span>
         </h2>
 
         {/* Health Score Card */}
         <div
           data-ao="score-card"
-          className="bg-forge-accent p-6 rounded-xl text-white shadow-xl shadow-forge-accent/20 flex items-end justify-between relative overflow-hidden"
+          className="bg-forge-accent p-6 md:p-8 rounded-xl text-white shadow-xl shadow-forge-accent/20 flex items-end justify-between relative overflow-hidden"
         >
           <div className="relative z-10 flex flex-col">
             <span className="font-mono text-[10px] uppercase tracking-widest text-white/70 mb-1">
@@ -173,91 +173,143 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
         )}
       </section>
 
-      {/* Pipeline Anatomy — Vertical Timeline */}
-      <section className="flex flex-col gap-0">
+      {/* Pipeline Anatomy — Vertical Timeline (mobile) / Grid (desktop) */}
+      <section>
         <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-forge-text-secondary font-bold mb-8 px-2">
           Pipeline Anatomy
         </h3>
 
-        {STAGE_ORDER.map((stage, index) => {
-          const { stageState, screenshotCount: _screenshotCount, totalAnnotations: _totalAnnotations, criticalCount: _criticalCount } = getStageMetrics(stage);
-          const score = stageState?.summary?.score ?? 0;
-          const exists = stageState?.summary?.exists ?? false;
-          const isLast = index === STAGE_ORDER.length - 1;
-          const isWeak = score < 40 && exists;
-          const isMissing = !exists && stageState?.summary !== undefined && stageState?.summary !== null;
-          const isDim = isMissing || (!exists && !stageState?.summary);
+        {/* Mobile: vertical timeline */}
+        <div className="flex flex-col gap-0 md:hidden">
+          {STAGE_ORDER.map((stage, index) => {
+            const { stageState, screenshotCount: _screenshotCount } = getStageMetrics(stage);
+            const score = stageState?.summary?.score ?? 0;
+            const exists = stageState?.summary?.exists ?? false;
+            const isLast = index === STAGE_ORDER.length - 1;
+            const isWeak = score < 40 && exists;
+            const isMissing = !exists && stageState?.summary !== undefined && stageState?.summary !== null;
+            const isDim = isMissing || (!exists && !stageState?.summary);
 
-          return (
-            <div
-              key={stage}
-              data-ao="stage"
-              className={`relative pl-10 ${!isLast ? 'pb-12 border-l-2' : ''} ${
-                isDim ? 'border-forge-accent/30' : 'border-forge-accent'
-              }`}
-            >
-              {/* Timeline dot */}
+            return (
               <div
-                className={`absolute -left-2.5 top-0 rounded-full border-4 border-forge-base ${
-                  isDim
-                    ? 'w-4 h-4 bg-forge-accent/30 -left-2'
-                    : 'w-5 h-5 bg-forge-accent shadow-[0_0_15px_rgba(232,83,14,0.4)]'
-                } ${isWeak ? 'shadow-[0_0_20px_rgba(232,83,14,0.6)]' : ''}`}
-              />
-
-              {/* Stage header */}
-              <div className="flex justify-between items-start mb-4">
-                <h4
-                  className={`font-display text-2xl font-black uppercase tracking-tighter ${
-                    isDim ? 'opacity-20' : isWeak ? 'text-forge-accent' : 'text-forge-text'
-                  }`}
-                >
-                  {STAGE_LABELS[stage]}
-                </h4>
-                {stageState?.summary && (
-                  <StageStatusBadge score={score} exists={exists} />
-                )}
-              </div>
-
-              {/* Stage metrics card */}
-              {stageState?.summary && exists ? (
-                <StageMetricsCard
-                  stage={stage}
-                  summary={stageState.summary}
-                  screenshotCount={_screenshotCount}
-                  isWeak={isWeak}
+                key={stage}
+                data-ao="stage"
+                className={`relative pl-10 ${!isLast ? 'pb-12 border-l-2' : ''} ${
+                  isDim ? 'border-forge-accent/30' : 'border-forge-accent'
+                }`}
+              >
+                <div
+                  className={`absolute -left-2.5 top-0 rounded-full border-4 border-forge-base ${
+                    isDim
+                      ? 'w-4 h-4 bg-forge-accent/30 -left-2'
+                      : 'w-5 h-5 bg-forge-accent shadow-[0_0_15px_rgba(232,83,14,0.4)]'
+                  } ${isWeak ? 'shadow-[0_0_20px_rgba(232,83,14,0.6)]' : ''}`}
                 />
-              ) : isDim ? (
-                <div className="bg-forge-card/30 p-6 rounded-sm border-dashed border-2 border-forge-text-muted/30 text-center">
-                  <span className="material-symbols-outlined text-forge-text-muted/50 mb-2">block</span>
-                  <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-forge-text-secondary font-bold">
-                    Insufficient Data Matrix
-                  </p>
+                <div className="flex justify-between items-start mb-4">
+                  <h4
+                    className={`font-display text-2xl font-black uppercase tracking-tighter ${
+                      isDim ? 'opacity-20' : isWeak ? 'text-forge-accent' : 'text-forge-text'
+                    }`}
+                  >
+                    {STAGE_LABELS[stage]}
+                  </h4>
+                  {stageState?.summary && (
+                    <StageStatusBadge score={score} exists={exists} />
+                  )}
                 </div>
-              ) : null}
-            </div>
-          );
-        })}
+                {stageState?.summary && exists ? (
+                  <StageMetricsCard
+                    stage={stage}
+                    summary={stageState.summary}
+                    screenshotCount={_screenshotCount}
+                    isWeak={isWeak}
+                  />
+                ) : isDim ? (
+                  <div className="bg-forge-card/30 p-6 rounded-sm border-dashed border-2 border-forge-text-muted/30 text-center">
+                    <span className="material-symbols-outlined text-forge-text-muted/50 mb-2">block</span>
+                    <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-forge-text-secondary font-bold">
+                      Insufficient Data Matrix
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop: horizontal pipeline grid — stages as cards in a row */}
+        <div className="hidden md:grid md:grid-cols-5 gap-4">
+          {STAGE_ORDER.map((stage, index) => {
+            const { stageState, screenshotCount: _screenshotCount } = getStageMetrics(stage);
+            const score = stageState?.summary?.score ?? 0;
+            const exists = stageState?.summary?.exists ?? false;
+            const isWeak = score < 40 && exists;
+            const isMissing = !exists && stageState?.summary !== undefined && stageState?.summary !== null;
+            const isDim = isMissing || (!exists && !stageState?.summary);
+
+            return (
+              <div
+                key={stage}
+                data-ao="stage"
+                className="relative"
+              >
+                {/* Connector line between cards */}
+                {index < STAGE_ORDER.length - 1 && (
+                  <div className={`absolute top-8 -right-2 w-4 h-0.5 ${isDim ? 'bg-forge-accent/20' : 'bg-forge-accent/60'}`} />
+                )}
+                <div className={`p-5 rounded-xl transition-all ${
+                  isDim ? 'bg-forge-surface/50 opacity-50' : isWeak ? 'bg-forge-surface ring-1 ring-forge-accent/20' : 'bg-forge-surface'
+                }`}>
+                  {/* Dot indicator */}
+                  <div className={`w-3 h-3 rounded-full mb-4 ${
+                    isDim ? 'bg-forge-accent/30' : 'bg-forge-accent shadow-[0_0_10px_rgba(232,83,14,0.4)]'
+                  }`} />
+                  <h4 className={`font-display text-lg font-black uppercase tracking-tighter mb-3 ${
+                    isDim ? 'opacity-30' : isWeak ? 'text-forge-accent' : 'text-forge-text'
+                  }`}>
+                    {STAGE_LABELS[stage]}
+                  </h4>
+                  {stageState?.summary ? (
+                    <div className="flex items-baseline justify-between">
+                      <span className={`font-display text-3xl font-black tabular-nums ${
+                        !exists ? 'text-forge-text-muted' : score >= 70 ? 'text-forge-positive' : score >= 40 ? 'text-forge-warning' : 'text-forge-critical'
+                      }`}>
+                        {exists ? score : '—'}
+                      </span>
+                      <StageStatusBadge score={score} exists={exists} />
+                    </div>
+                  ) : (
+                    <span className="font-mono text-[9px] text-forge-text-muted uppercase tracking-wider">
+                      Scanning
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       {/* CTA Card */}
       <section
         data-ao="cta"
-        className="p-8 text-white rounded-xl shadow-2xl forge-gradient-primary relative overflow-hidden forge-glow"
+        className="p-8 md:p-10 text-white rounded-xl shadow-2xl forge-gradient-primary relative overflow-hidden forge-glow"
       >
-        <div className="relative z-10 space-y-4">
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] opacity-80">
-            Foundry Insight
-          </span>
-          <h5 className="font-display text-2xl sm:text-3xl font-black uppercase tracking-tight leading-none">
-            Ready to Forge?
-          </h5>
-          <p className="text-sm font-body opacity-90 leading-relaxed font-medium">
-            {summary?.topFinding || 'Your funnel has critical leaks that are costing you leads every day. Let our builders fix it.'}
-          </p>
+        <div className="relative z-10 md:flex md:items-center md:justify-between md:gap-12">
+          <div className="space-y-4 md:flex-1">
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] opacity-80">
+              Foundry Insight
+            </span>
+            <h5 className="font-display text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight leading-none">
+              Ready to Forge?
+            </h5>
+            <p className="text-sm font-body opacity-90 leading-relaxed font-medium max-w-lg">
+              {summary?.topFinding || 'Your funnel has critical leaks that are costing you leads every day. Let our builders fix it.'}
+            </p>
+          </div>
           <button
             onClick={onInitiateFix}
-            className="w-full py-4 bg-[#FEFEFE] text-forge-accent font-display font-black text-xs uppercase tracking-[0.25em] rounded-lg active:scale-95 transition-all shadow-xl shadow-black/10 mt-4"
+            className="w-full md:w-auto md:shrink-0 py-4 md:px-10 bg-[#FEFEFE] text-forge-accent font-display font-black text-xs uppercase tracking-[0.25em] rounded-lg active:scale-95 transition-all shadow-xl shadow-black/10 mt-4 md:mt-0"
           >
             INITIATE FIX LOGIC
           </button>

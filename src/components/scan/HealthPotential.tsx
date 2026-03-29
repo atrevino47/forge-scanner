@@ -95,7 +95,7 @@ export function HealthPotential({ summary, onInitiateOptimization }: HealthPoten
       </section>
 
       {/* Stats Grid */}
-      <section className="grid grid-cols-3 gap-3">
+      <section className="grid grid-cols-3 gap-3 md:gap-5">
         <div data-hp="stat" className="bg-forge-surface p-4 flex flex-col gap-1 border border-forge-card rounded-lg">
           <span className="font-mono text-[10px] uppercase opacity-60 font-bold tracking-tighter">Found</span>
           <span className="font-display text-3xl font-black text-forge-text">
@@ -122,7 +122,7 @@ export function HealthPotential({ summary, onInitiateOptimization }: HealthPoten
           <span className="w-8 h-1 bg-forge-accent rounded-full" />
           <h2 className="font-display text-xl font-black uppercase tracking-tighter">Transformation Potential</h2>
         </div>
-        <div className="space-y-4">
+        <div className="space-y-4 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-6 md:space-y-0 md:items-stretch">
           {/* Status Quo Card */}
           <div className="bg-forge-surface p-6 rounded-xl border-l-4 border-forge-text-secondary/30 relative">
             <div className="flex justify-between items-start mb-6">
@@ -150,10 +150,11 @@ export function HealthPotential({ summary, onInitiateOptimization }: HealthPoten
             </div>
           </div>
 
-          {/* Arrow Bridge */}
-          <div className="flex justify-center -my-3 relative z-10">
+          {/* Arrow Bridge — vertical on mobile, horizontal on desktop */}
+          <div className="flex justify-center -my-3 md:my-0 md:items-center relative z-10">
             <div className="bg-forge-accent text-white w-10 h-10 flex items-center justify-center rounded-full shadow-lg shadow-forge-accent/30 ring-4 ring-forge-base">
-              <span className="material-symbols-outlined font-bold">south</span>
+              <span className="material-symbols-outlined font-bold md:hidden">south</span>
+              <span className="material-symbols-outlined font-bold hidden md:block">east</span>
             </div>
           </div>
 
@@ -201,23 +202,25 @@ export function HealthPotential({ summary, onInitiateOptimization }: HealthPoten
       {/* Audit Verdict CTA */}
       <section
         data-hp="cta"
-        className="bg-gradient-to-br from-forge-accent to-[#ff7a3d] p-8 rounded-2xl text-white relative overflow-hidden shadow-2xl shadow-forge-accent/30"
+        className="bg-gradient-to-br from-forge-accent to-[#ff7a3d] p-8 md:p-10 rounded-2xl text-white relative overflow-hidden shadow-2xl shadow-forge-accent/30"
       >
         <div className="absolute inset-0 inner-grid-pattern opacity-40 pointer-events-none" />
-        <div className="relative z-10">
-          <span className="font-mono text-[10px] uppercase tracking-widest opacity-80 block mb-2 font-bold">
-            Audit Verdict
-          </span>
-          <h2 className="font-display text-2xl sm:text-4xl font-black uppercase tracking-tighter leading-none mb-4">
-            Projected Score Improvement
-          </h2>
-          <p className="font-body text-sm text-white/90 mb-8 leading-relaxed max-w-[90%]">
-            By activating the {summary.stagesMissing} missing architectural stages, your ecosystem can leap from{' '}
-            {summary.overallHealth} to {projectedScore} in the next audit cycle.
-          </p>
+        <div className="relative z-10 md:flex md:items-center md:justify-between md:gap-12">
+          <div>
+            <span className="font-mono text-[10px] uppercase tracking-widest opacity-80 block mb-2 font-bold">
+              Audit Verdict
+            </span>
+            <h2 className="font-display text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter leading-none mb-4">
+              Projected Score Improvement
+            </h2>
+            <p className="font-body text-sm text-white/90 mb-8 md:mb-0 leading-relaxed max-w-lg">
+              By activating the {summary.stagesMissing} missing architectural stages, your ecosystem can leap from{' '}
+              {summary.overallHealth} to {projectedScore} in the next audit cycle.
+            </p>
+          </div>
           <button
             onClick={onInitiateOptimization}
-            className="w-full bg-[#FEFEFE] text-forge-accent font-mono py-5 rounded-lg font-black uppercase tracking-widest text-xs active:scale-95 transition-all duration-200 shadow-xl shadow-black/10"
+            className="w-full md:w-auto md:shrink-0 md:px-10 bg-[#FEFEFE] text-forge-accent font-mono py-5 rounded-lg font-black uppercase tracking-widest text-xs active:scale-95 transition-all duration-200 shadow-xl shadow-black/10"
           >
             INITIATE OPTIMIZATION
           </button>
