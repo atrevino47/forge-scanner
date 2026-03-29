@@ -30,7 +30,7 @@ const GROUPS: Array<{ title: string; keys: string[] }> = [
   },
   {
     title: 'Analytics & Follow-up',
-    keys: ['NEXT_PUBLIC_POSTHOG_KEY', 'RESEND_API_KEY', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER'],
+    keys: ['NEXT_PUBLIC_POSTHOG_KEY', 'RESEND_API_KEY', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER', 'WHATSAPP_API_TOKEN', 'WHATSAPP_PHONE_NUMBER_ID'],
   },
 ];
 
