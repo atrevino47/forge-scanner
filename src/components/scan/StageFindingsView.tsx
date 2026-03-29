@@ -128,17 +128,17 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
             className="relative bg-forge-card rounded-xl overflow-hidden shadow-2xl border border-forge-accent/20 forge-glow"
           >
             {/* Browser Chrome Bar */}
-            <div className="bg-forge-elevated h-10 flex items-center px-4 gap-2">
-              <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-forge-accent/40" />
-                <div className="w-2.5 h-2.5 rounded-full bg-forge-accent/20" />
-                <div className="w-2.5 h-2.5 rounded-full bg-forge-accent/10" />
+            <div className="bg-forge-elevated h-9 flex items-center px-3 gap-2 shrink-0">
+              <div className="flex gap-1.5 shrink-0">
+                <div className="w-2.5 h-2.5 rounded-full bg-forge-accent/50" />
+                <div className="w-2.5 h-2.5 rounded-full bg-forge-warning/40" />
+                <div className="w-2.5 h-2.5 rounded-full bg-forge-positive/40" />
               </div>
-              <div className="flex-1 bg-[#FEFEFE] h-6 rounded px-3 flex items-center justify-between border border-forge-accent/5">
-                <span className="text-[10px] font-mono text-forge-text-secondary truncate">
+              <div className="flex-1 bg-[#FEFEFE] h-5 rounded px-2 flex items-center justify-between border border-forge-card overflow-hidden">
+                <span className="font-mono text-[9px] text-forge-text-secondary truncate leading-none">
                   {primaryScreenshot.source}
                 </span>
-                <span className="material-symbols-outlined text-[14px] text-forge-accent">lock</span>
+                <span className="material-symbols-outlined text-[12px] text-forge-accent shrink-0 ml-1">lock</span>
               </div>
             </div>
 
@@ -227,8 +227,8 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
                         {config.icon}
                       </span>
                     </div>
-                    <h4 className="font-bold text-lg leading-snug">{finding.title}</h4>
-                    <p className="text-sm text-forge-text-secondary leading-relaxed">{finding.detail}</p>
+                    <h4 className="font-display font-bold text-lg leading-snug">{finding.title}</h4>
+                    <p className="text-sm text-forge-text-secondary leading-relaxed font-body">{finding.detail}</p>
                   </div>
                 </div>
               );

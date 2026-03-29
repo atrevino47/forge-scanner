@@ -210,28 +210,33 @@ export function ImplementationRoadmap({ stages, onForgeSolution }: Implementatio
         </section>
       )}
 
-      {/* Forge Summary Dark Card */}
+      {/* Bottom CTA — orange gradient card (spec: same style as stage CTA) */}
       <div
         data-ir="summary"
-        className="mt-12 p-6 bg-forge-text text-forge-base rounded-xl shadow-2xl ring-1 ring-white/10"
+        className="mt-12 p-8 text-white rounded-xl shadow-2xl shadow-forge-accent/30 relative overflow-hidden bg-gradient-to-br from-forge-accent to-[#ff7a3d]"
       >
-        <h5 className="font-mono text-xs font-bold uppercase tracking-[0.2em] mb-4 opacity-70">
-          The Forge Summary
-        </h5>
-        <div className="flex items-baseline gap-2 mb-6">
-          <span className="font-display text-6xl font-black text-forge-accent leading-none drop-shadow-[0_0_15px_rgba(232,83,14,0.6)]">
-            {String(critical.length).padStart(2, '0')}
-          </span>
-          <div className="font-mono text-[10px] leading-tight uppercase font-bold">
-            Critical Blocks<br />To Resolve
-          </div>
+        <div className="absolute top-0 right-0 p-4 opacity-10">
+          <span className="material-symbols-outlined text-9xl">construction</span>
         </div>
-        <button
-          onClick={onForgeSolution}
-          className="w-full forge-gradient-primary py-4 rounded-lg font-mono font-bold text-sm tracking-widest uppercase text-white shadow-[0_10px_20px_-5px_rgba(232,83,14,0.4)] active:scale-[0.98] transition-transform"
-        >
-          FORGE THE SOLUTION
-        </button>
+        <div className="relative z-10">
+          <span className="font-mono text-[10px] uppercase tracking-widest text-white/70 block mb-2 font-bold">
+            Implementation Plan Ready
+          </span>
+          <h5 className="font-display font-extrabold text-3xl tracking-tight mb-2">
+            Forge Your Solution
+          </h5>
+          <p className="text-sm text-white/90 leading-relaxed mb-6">
+            {critical.length > 0
+              ? `${critical.length} critical issue${critical.length === 1 ? '' : 's'} identified. Our builders are ready to resolve them and rebuild your funnel.`
+              : 'Let our builders turn these insights into a high-converting funnel system.'}
+          </p>
+          <button
+            onClick={onForgeSolution}
+            className="w-full bg-[#FEFEFE] text-forge-accent py-4 font-mono font-black text-xs uppercase tracking-[0.2em] rounded-lg active:scale-95 transition-all shadow-xl shadow-black/10"
+          >
+            FORGE THE SOLUTION
+          </button>
+        </div>
       </div>
     </div>
   );

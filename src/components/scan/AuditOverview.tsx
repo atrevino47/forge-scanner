@@ -147,8 +147,17 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
           </span>
         </div>
 
-        {/* Severity callout */}
-        {worstStages.length > 0 && (
+        {/* Headline Summary — AI-generated one-liner about biggest issue */}
+        {summary?.topFinding && (
+          <div data-ao="callout" className="mt-4 bg-forge-surface p-6 border-l-4 border-forge-accent">
+            <p className="font-display font-bold text-xl leading-tight text-forge-text">
+              {summary.topFinding}
+            </p>
+          </div>
+        )}
+
+        {/* Fallback callout if no topFinding but worst stages exist */}
+        {!summary?.topFinding && worstStages.length > 0 && (
           <div data-ao="callout" className="mt-4 bg-forge-surface p-5 border-l-4 border-forge-accent">
             <p className="text-sm text-forge-text-secondary leading-relaxed font-medium">
               Severe leaks detected in the{' '}
@@ -158,7 +167,7 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
                   <span className="font-bold text-forge-accent uppercase tracking-tighter">{s}</span>
                 </span>
               ))}{' '}
-              {worstStages.length === 1 ? 'stage' : 'stages'}. Immediate intervention required to prevent capital erosion.
+              {worstStages.length === 1 ? 'stage' : 'stages'}. Immediate intervention required.
             </p>
           </div>
         )}

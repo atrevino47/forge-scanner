@@ -496,7 +496,11 @@ export function ScanLayout({ scanId }: { scanId: string }) {
   return (
     <div className="min-h-screen bg-forge-base">
       {/* Fixed top bar */}
-      <ResultsTopBar onBookCall={() => handleOpenCalcom('banner_cta')} />
+      <ResultsTopBar
+        onBookCall={() => handleOpenCalcom('banner_cta')}
+        scannedUrl={state.websiteUrl}
+        showUrl={isComplete}
+      />
 
       <main className="pt-24 pb-28 px-6 max-w-lg mx-auto">
         {/* Progress indicator — visible while scanning */}
@@ -529,6 +533,54 @@ export function ScanLayout({ scanId }: { scanId: string }) {
                 screenshots={state.screenshots}
                 onInitiateFix={() => handleOpenCalcom('results_cta')}
               />
+
+              {/* Stage Summary Grid — horizontal scrollable pills, navigates to Stages tab */}
+              {isComplete && STAGE_ORDER.some((s) => state.stages[s]) && (
+                <section>
+                  <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-forge-text-secondary mb-4">
+                    Stage Breakdown
+                  </h3>
+                  <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
+                    {STAGE_ORDER.map((stage) => {
+                      const stageState = state.stages[stage];
+                      if (!stageState) return null;
+                      const score = stageState.summary?.score ?? 0;
+                      const exists = stageState.summary?.exists ?? false;
+                      const scoreColor = !exists
+                        ? 'text-forge-text-muted'
+                        : score >= 70
+                          ? 'text-forge-positive'
+                          : score >= 40
+                            ? 'text-forge-warning'
+                            : 'text-forge-critical';
+                      return (
+                        <button
+                          key={stage}
+                          onClick={() => {
+                            setActiveTab('stages');
+                            setActiveStage(stage);
+                          }}
+                          className="shrink-0 flex flex-col items-center gap-1 px-4 py-3 bg-forge-surface border border-forge-card rounded-xl hover:bg-forge-card transition-all active:scale-[0.98]"
+                        >
+                          <span className="font-mono text-[9px] uppercase tracking-widest text-forge-text-secondary font-bold whitespace-nowrap">
+                            {STAGE_LABELS[stage]}
+                          </span>
+                          {stageState.summary ? (
+                            <span className={`font-display text-xl font-black tabular-nums ${scoreColor}`}>
+                              {exists ? score : '—'}
+                            </span>
+                          ) : (
+                            <span className="font-mono text-[9px] text-forge-text-muted uppercase tracking-wider">
+                              Scanning
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              )}
+
               {state.completedSummary && (
                 <HealthPotential
                   summary={state.completedSummary}

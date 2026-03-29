@@ -91,18 +91,18 @@ export function BlueprintCTA({
     <div ref={containerRef} className="py-8">
       <div
         data-blueprint="card"
-        className="glass-card rounded-xl p-8 text-center"
+        className="bg-forge-surface border-2 border-dashed border-forge-card rounded-xl p-8 text-center"
       >
         {error ? (
           /* Error state */
           <>
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-forge-critical/10">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-forge-critical/10 border border-forge-critical/20">
               <AlertTriangle className="h-6 w-6 text-forge-critical" />
             </div>
-            <h3 className="font-display mb-2 text-xl tracking-display text-forge-text">
-              [COPY: blueprint generation failed]
+            <h3 className="font-display font-bold text-xl text-forge-text mb-2">
+              Blueprint generation failed
             </h3>
-            <p className="mx-auto mb-6 max-w-md text-sm text-forge-text-muted">
+            <p className="mx-auto mb-6 max-w-md text-sm text-forge-text-secondary font-body">
               {error}
             </p>
             <button
@@ -116,29 +116,31 @@ export function BlueprintCTA({
         ) : (
           /* Normal state */
           <>
-            <h3 className="font-display mb-3 text-2xl tracking-display text-forge-text">
-              [COPY: blueprint CTA headline]
+            <div className="w-10 h-10 mx-auto mb-4 rounded-xl bg-forge-accent/10 flex items-center justify-center">
+              <span className="material-symbols-outlined text-forge-accent" style={{ fontVariationSettings: "'FILL' 1" }}>
+                auto_awesome
+              </span>
+            </div>
+            <h3 className="font-display font-bold text-2xl text-forge-text mb-2">
+              Generate Your Optimized Blueprint
             </h3>
-            <p className="mx-auto mb-6 max-w-md text-sm text-forge-text-muted">
-              [COPY: blueprint CTA description]
+            <p className="mx-auto mb-6 max-w-md text-sm text-forge-text-secondary font-body leading-relaxed">
+              See what your funnel should look like — with your brand colors and a rebuilt landing page.
             </p>
             <button
               onClick={handleGenerate}
               disabled={isGenerating || generated}
-              className="inline-flex items-center gap-2 rounded-lg bg-forge-accent px-8 py-3 font-body font-semibold text-white transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50"
+              className="w-full rounded-lg bg-forge-accent py-4 font-body font-semibold text-white transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50 active:scale-[0.99]"
             >
               {isGenerating ? (
-                <>
+                <span className="flex items-center justify-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Generating your blueprint...
-                </>
+                </span>
               ) : generated ? (
                 'Blueprint ready'
               ) : (
-                <>
-                  [COPY: generate blueprint button]
-                  <ArrowRight className="h-4 w-4" />
-                </>
+                'Generate Blueprint'
               )}
             </button>
           </>
