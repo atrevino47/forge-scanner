@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /scan/
+Disallow: /api/
+
+Sitemap: https://audit.forgedigital.com/sitemap.xml

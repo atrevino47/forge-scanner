@@ -34,8 +34,29 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'FORGEWITH.AI — AI-Powered Funnel Scanner',
-  description: 'Get a free AI-powered audit of your entire sales funnel. We capture real screenshots, annotate issues, and generate an optimized blueprint — in under 60 seconds.',
+  title: 'FORGEWITH.AI — Free AI-Powered Funnel Audit',
+  description: 'Get a free AI-powered audit of your entire sales funnel. Real screenshots, annotated issues, and an optimized blueprint — in under 60 seconds.',
+  openGraph: {
+    title: 'FORGEWITH.AI — Free AI-Powered Funnel Audit',
+    description: 'Get a free AI-powered audit of your entire sales funnel. Real screenshots, annotated issues, and an optimized blueprint — in under 60 seconds.',
+    url: 'https://audit.forgedigital.com',
+    siteName: 'Forge Funnel Scanner',
+    type: 'website',
+    images: [
+      {
+        url: 'https://audit.forgedigital.com/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Forge Funnel Scanner — AI-Powered Sales Funnel Audit',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FORGEWITH.AI — Free AI-Powered Funnel Audit',
+    description: 'Get a free AI-powered audit of your entire sales funnel in under 60 seconds.',
+    images: ['https://audit.forgedigital.com/og-image.png'],
+  },
 };
 
 export default function RootLayout({
