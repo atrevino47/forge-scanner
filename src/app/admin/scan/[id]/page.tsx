@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, use, useCallback } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import type { ScanResultsResponse } from '../../../../../contracts/api';
 import type { FunnelStage, FunnelStageResult } from '../../../../../contracts/types';
@@ -803,12 +804,13 @@ function StageContent({ stage }: { stage: FunnelStageResult }) {
                   )}
                 </div>
                 <div className="max-h-[400px] overflow-y-auto">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={ss.storageUrl}
                     alt={`${ss.sourceType} ${ss.viewport}`}
-                    className="w-full"
-                    loading="lazy"
+                    width={0}
+                    height={0}
+                    sizes="100vw"
+                    className="w-full h-auto"
                   />
                 </div>
               </div>

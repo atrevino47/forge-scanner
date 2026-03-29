@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import type { FunnelStage, Annotation, AnnotationType, StageFinding } from '../../../contracts/types';
@@ -146,12 +147,13 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
             <div className="max-h-[480px] overflow-y-auto overscroll-contain">
               {/* Screenshot with Annotation Dots — relative wrapper matches full image size for % positioning */}
               <div className="relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={primaryScreenshot.thumbnailUrl}
                   alt={`${STAGE_LABELS[stage]} screenshot`}
-                  className="w-full block"
-                  loading="lazy"
+                  width={0}
+                  height={0}
+                  sizes="100vw"
+                  className="w-full h-auto block"
                 />
                 {/* Annotation dots — positioned relative to full image dimensions */}
                 {primaryScreenshot.annotations.map((annotation, i) => (
