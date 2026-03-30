@@ -26,6 +26,7 @@ const STATUS_PILLS: Array<{ value: LeadStatus; label: string }> = [
 
 export default function AdminLeadsPage() {
   const [data, setData] = useState<AdminLeadsResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<LeadStatus>('all');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -33,6 +34,7 @@ export default function AdminLeadsPage() {
 
   const fetchLeads = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({
         page: String(page),
@@ -42,11 +44,11 @@ export default function AdminLeadsPage() {
       if (search) params.set('search', search);
 
       const res = await fetch(`/api/admin/leads?${params}`);
-      if (!res.ok) throw new Error('Failed to fetch');
+      if (!res.ok) throw new Error('Failed to load leads. Please try again.');
       const d = (await res.json()) as AdminLeadsResponse;
       setData(d);
-    } catch {
-      // Silently fail — UI shows empty state
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load leads. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -106,7 +108,19 @@ export default function AdminLeadsPage() {
         </div>
       </div>
 
+      {/* Error state */}
+      {error && (
+        <div className="rounded-xl border border-forge-critical/20 bg-forge-critical/5 p-8 text-center">
+          <span className="material-symbols-outlined text-[32px] text-forge-critical">error</span>
+          <p className="mt-2 font-body text-forge-critical">{error}</p>
+          <button onClick={fetchLeads} className="mt-4 rounded-lg bg-forge-accent px-4 py-2 font-body text-sm text-white">
+            Try Again
+          </button>
+        </div>
+      )}
+
       {/* Table */}
+      {!error && (
       <div className="overflow-x-auto rounded-xl border border-[rgba(255,107,43,0.12)] bg-[#1E1E1C]">
         <table className="w-full">
           <thead>
@@ -133,7 +147,7 @@ export default function AdminLeadsPage() {
               [...Array(5)].map((_, i) => (
                 <tr key={i}>
                   <td colSpan={5} className="px-4 py-3">
-                    <div className="h-5 w-full animate-pulse rounded bg-[#282826]" />
+                    <div className="h-5 w-full rounded skeleton-dark" />
                   </td>
                 </tr>
               ))
@@ -221,6 +235,7 @@ export default function AdminLeadsPage() {
           </tbody>
         </table>
       </div>
+      )}
 
       {/* Pagination */}
       {totalPages > 1 && (

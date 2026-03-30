@@ -10,11 +10,10 @@ export function TopBanner() {
   const { openCalcom } = useCalcom();
 
   /* ANIMATION SEQUENCE:
-   * Ambient: CTA pill underline grows on hover (CSS handles this)
+   * Entrance: Banner slides down from -10px, opacity 0→1
    */
   useGSAP(
     () => {
-      // Subtle entrance — banner slides down from -10px
       gsap.from(containerRef.current, {
         y: -10,
         opacity: 0,
@@ -28,48 +27,52 @@ export function TopBanner() {
   return (
     <nav
       ref={containerRef}
-      className="fixed inset-x-0 top-0 z-50 flex h-[52px] items-center justify-between border-b px-8"
+      className="fixed inset-x-0 top-0 z-50 flex h-[56px] items-center justify-between border-b px-4 sm:px-8"
       style={{
         background: 'rgba(250, 250, 247, 0.92)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
-        borderBottomColor: 'rgba(255, 107, 43, 0.08)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderBottomColor: '#ECEAE4',
       }}
     >
-      {/* Left: CTA pill */}
+      {/* Left: CTA — font-mono uppercase tracking-widest text-xs */}
       <button
         data-banner="cta"
         onClick={() => openCalcom({ source: 'banner_cta' })}
-        className="group relative overflow-hidden rounded-full border px-4 py-1.5 font-body text-[0.6875rem] font-semibold uppercase tracking-[0.06em] transition-all duration-300"
-        style={{
-          color: 'var(--forge-accent)',
-          borderColor: 'rgba(232, 83, 14, 0.15)',
-        }}
+        className="font-mono text-xs uppercase tracking-widest transition-colors duration-200"
+        style={{ color: 'var(--forge-text-secondary)' }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(232, 83, 14, 0.08)';
-          e.currentTarget.style.borderColor = 'rgba(232, 83, 14, 0.35)';
+          e.currentTarget.style.color = 'var(--forge-accent)';
+          (e.currentTarget as HTMLElement).style.textShadow = '0 0 12px rgba(232, 83, 14, 0.25)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.borderColor = 'rgba(232, 83, 14, 0.15)';
+          e.currentTarget.style.color = 'var(--forge-text-secondary)';
+          (e.currentTarget as HTMLElement).style.textShadow = 'none';
         }}
       >
         Book a Free Strategy Call
       </button>
 
-      {/* Center: Logo */}
+      {/* Center: FORGE logo — Outfit weight 900, tracking tight */}
       <div className="absolute left-1/2 -translate-x-1/2">
-        <span className="font-display text-[19px] font-black tracking-[-0.5px]">
-          FORGEWITH<span style={{ color: 'var(--forge-accent)' }}>.AI</span>
+        <span
+          className="font-display font-black tracking-tight"
+          style={{ fontSize: '18px', letterSpacing: '-0.03em', color: 'var(--forge-text)' }}
+        >
+          FORGE
         </span>
       </div>
 
-      {/* Right: Scan status (shows during active scan) or empty */}
-      <div className="flex items-center gap-5">
-        <span className="font-mono text-[0.6875rem] text-forge-text-muted">
-          {/* Populated dynamically during scan */}
-        </span>
-      </div>
+      {/* Right: Hamburger icon (decorative) */}
+      <button
+        className="flex flex-col items-end gap-[5px] p-1"
+        aria-label="Menu"
+        style={{ color: 'var(--forge-text-secondary)' }}
+      >
+        <span className="block h-px w-5 bg-current" />
+        <span className="block h-px w-3.5 bg-current" />
+        <span className="block h-px w-4 bg-current" />
+      </button>
     </nav>
   );
 }

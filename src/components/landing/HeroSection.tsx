@@ -11,6 +11,7 @@ export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [url, setUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
 
   /* ANIMATION SEQUENCE:
@@ -45,8 +46,13 @@ export function HeroSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = url.trim();
-    if (!trimmed) return;
 
+    if (!trimmed) {
+      setFormError('Please enter your website URL.');
+      return;
+    }
+
+    setFormError(null);
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/scan/start', {
@@ -55,10 +61,21 @@ export function HeroSection() {
         body: JSON.stringify({ url: trimmed }),
       });
 
-      if (!res.ok) throw new Error('Failed to start scan');
+      if (!res.ok) {
+        let message = 'Something went wrong. Please try again.';
+        try {
+          const errData = (await res.json()) as { error?: { message?: string } };
+          if (errData.error?.message) message = errData.error.message;
+        } catch {}
+        setFormError(message);
+        setIsSubmitting(false);
+        return;
+      }
+
       const data = (await res.json()) as { scanId: string };
       router.push(`/scan/${data.scanId}`);
     } catch {
+      setFormError('Something went wrong. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -66,7 +83,7 @@ export function HeroSection() {
   return (
     <section
       ref={containerRef}
-      className="relative flex min-h-screen items-center justify-center px-6 pt-20"
+      className="relative flex min-h-screen items-center justify-center px-4 pt-20 sm:px-6"
       id="hero"
     >
       {/* Orange radial gradient glow */}
@@ -132,38 +149,39 @@ export function HeroSection() {
 
         {/* URL Input */}
         <form data-hero="input" onSubmit={handleSubmit} className="mx-auto mb-8 max-w-xl">
-          <div
-            className="group relative flex items-center overflow-hidden rounded-xl border transition-all duration-300"
-            style={{
-              borderColor: 'var(--forge-border)',
-              background: 'var(--forge-surface)',
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(232, 83, 14, 0.3)';
-              e.currentTarget.style.boxShadow = '0 0 30px rgba(232, 83, 14, 0.06)';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = 'var(--forge-border)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            <input
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="yourwebsite.com"
-              required
-              className="h-14 flex-1 bg-transparent px-5 font-body text-base placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
-              style={{ color: 'var(--forge-text)' }}
-            />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div
+              className="group relative flex flex-1 items-center overflow-hidden rounded-xl border transition-all duration-300"
+              style={{
+                borderColor: 'var(--forge-border)',
+                background: 'var(--forge-surface)',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(232, 83, 14, 0.3)';
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(232, 83, 14, 0.06)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--forge-border)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => { setUrl(e.target.value); if (formError) setFormError(null); }}
+                placeholder="yourwebsite.com"
+                required
+                className="h-14 flex-1 bg-transparent px-5 font-body text-base placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
+                style={{ color: 'var(--forge-text)' }}
+              />
+            </div>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="mr-2 flex h-10 shrink-0 items-center gap-2 rounded-lg px-5 font-body text-sm font-semibold transition-all duration-200 disabled:opacity-50 sm:h-12 sm:px-6 sm:text-base"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl px-5 font-body text-sm font-semibold transition-all duration-200 disabled:opacity-50 sm:h-16 sm:w-auto sm:shrink-0 sm:px-6 sm:text-base"
               style={{
                 background: 'var(--forge-accent)',
                 color: '#FAFAF7',
-                borderRadius: '9px',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'var(--forge-accent-bright)';
@@ -176,12 +194,15 @@ export function HeroSection() {
               {!isSubmitting && <ArrowRight className="h-4 w-4" />}
             </button>
           </div>
+          {formError && (
+            <p className="font-body text-sm text-forge-critical mt-2">{formError}</p>
+          )}
         </form>
 
         {/* Trust indicators */}
         <div
           data-hero="trust"
-          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm"
+          className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-mono text-xs uppercase tracking-widest"
           style={{ color: 'var(--forge-text-muted)' }}
         >
           <span>Free, no card required</span>

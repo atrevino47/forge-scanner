@@ -3,116 +3,94 @@
 import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Globe, Scan, FileText } from 'lucide-react';
-import { clipReveal, fadeSlideUp } from '@/lib/gsap-presets';
+import { scaleIn } from '@/lib/gsap-presets';
 
 const steps = [
   {
     number: '01',
-    icon: Globe,
-    title: 'Enter your URL',
-    description: 'Drop your website URL and we start scanning immediately. We find your social profiles, GBP, and ads automatically.',
+    title: 'Enter Your URL',
+    description:
+      'Paste your website URL. Our AI starts scanning your entire digital presence immediately.',
   },
   {
     number: '02',
-    icon: Scan,
-    title: 'AI scans your funnel',
-    description: 'We capture real screenshots of every touchpoint. AI annotates what\'s broken, what\'s missing, and what\'s costing you leads.',
+    title: 'AI Analyzes Everything',
+    description:
+      'We capture real screenshots of your site, socials, ads, and GBP. AI annotates every issue with specific callouts.',
   },
   {
     number: '03',
-    icon: FileText,
-    title: 'Get your blueprint',
-    description: 'See your current funnel vs. the optimized version. Get a visual mockup of the fix — and book a free strategy call.',
+    title: 'Get Your Blueprint',
+    description:
+      'See your optimized funnel map and a professional mockup of your weakest piece. Then book a free strategy call.',
   },
 ];
 
 export function HowItWorksSection() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  /* ANIMATION SEQUENCE (scroll-triggered at top 80% viewport):
-   * Beat 1 (0.00s): Section headline — clipReveal
-   * Beat 2 (0.20s): Step cards — fadeSlideUp with 150ms stagger
+  /* ANIMATION SEQUENCE (scroll-triggered at top 85% viewport):
+   * Beat 1 (0.00s): Step cards — scaleIn with 120ms stagger
    */
   useGSAP(
     () => {
-      const tl = gsap.timeline({
+      const cards = scaleIn({ stagger: 0.12 });
+      gsap.fromTo('[data-how="card"]', cards.from, {
+        ...cards.vars,
         scrollTrigger: {
           trigger: containerRef.current,
-          start: 'top 80%',
+          start: 'top 85%',
           toggleActions: 'play none none none',
         },
       });
-
-      const headline = clipReveal();
-      tl.fromTo('[data-how="headline"]', headline.from, headline.vars, 0);
-
-      const cards = fadeSlideUp({ stagger: 0.15 });
-      tl.fromTo('[data-how="card"]', cards.from, cards.vars, 0.2);
     },
     { scope: containerRef },
   );
 
   return (
-    <section ref={containerRef} className="relative px-6 py-24 sm:py-32">
+    <section
+      ref={containerRef}
+      className="relative px-4 py-14 sm:px-6 sm:py-24 lg:py-32"
+      style={{ background: '#F5F4F0' }}
+    >
       <div className="mx-auto max-w-[1120px]">
-        <h2
-          data-how="headline"
-          className="mb-16 text-center font-display font-bold"
-          style={{
-            fontSize: 'clamp(2rem, 3vw + 0.5rem, 3rem)',
-            letterSpacing: '-0.02em',
-            color: 'var(--forge-text)',
-          }}
+        {/* Section label — font-mono xs uppercase tracking-widest */}
+        <p
+          className="mb-12 text-center font-mono text-xs uppercase tracking-widest"
+          style={{ color: '#6B6860' }}
         >
-          How it works
-        </h2>
+          How It Works
+        </p>
 
         <div className="grid gap-6 sm:grid-cols-3">
           {steps.map((step) => (
             <div
               key={step.number}
               data-how="card"
-              className="rounded-xl border p-8 transition-all duration-300"
+              className="relative overflow-hidden rounded-xl border p-8"
               style={{
-                borderColor: 'var(--forge-border)',
-                background: 'var(--forge-surface)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#FFF7F2';
-                e.currentTarget.style.borderColor = '#FFD4B3';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'var(--forge-surface)';
-                e.currentTarget.style.borderColor = 'var(--forge-border)';
+                borderColor: '#ECEAE4',
+                background: '#FAFAF7',
+                minHeight: '200px',
               }}
             >
+              {/* Step number — font-mono text-6xl Forge Orange opacity 0.15 */}
               <span
-                className="font-mono text-sm font-medium"
-                style={{ color: 'var(--forge-accent)' }}
+                className="pointer-events-none absolute right-4 top-2 select-none font-mono text-7xl font-bold leading-none"
+                style={{ color: '#E8530E', opacity: 0.15 }}
               >
                 {step.number}
               </span>
 
-              <div
-                className="mt-4 mb-4 flex h-12 w-12 items-center justify-center rounded-lg border"
-                style={{
-                  borderColor: 'var(--forge-border)',
-                  background: 'var(--forge-base)',
-                }}
-              >
-                <step.icon className="h-5 w-5" style={{ color: 'var(--forge-text-secondary)' }} />
-              </div>
-
               <h3
-                className="mb-2 font-display text-lg font-bold"
-                style={{ color: 'var(--forge-text)' }}
+                className="mb-3 font-display text-xl font-bold"
+                style={{ color: '#1A1917', letterSpacing: '-0.01em' }}
               >
                 {step.title}
               </h3>
               <p
                 className="font-body text-sm"
-                style={{ lineHeight: 1.65, color: 'var(--forge-text-secondary)' }}
+                style={{ lineHeight: 1.65, color: '#6B6860' }}
               >
                 {step.description}
               </p>

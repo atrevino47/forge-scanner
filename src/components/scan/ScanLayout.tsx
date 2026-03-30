@@ -28,6 +28,8 @@ import { AuditOverview } from './AuditOverview';
 import { StageFindingsView } from './StageFindingsView';
 import { HealthPotential } from './HealthPotential';
 import { ImplementationRoadmap } from './ImplementationRoadmap';
+import { PrescriptionSection } from './PrescriptionSection';
+import { GeoAeoSection } from './GeoAeoSection';
 
 // ── Stage ordering ──────────────────────────────────────
 const STAGE_ORDER: FunnelStage[] = [
@@ -496,9 +498,13 @@ export function ScanLayout({ scanId }: { scanId: string }) {
   return (
     <div className="min-h-screen bg-forge-base">
       {/* Fixed top bar */}
-      <ResultsTopBar onBookCall={() => handleOpenCalcom('banner_cta')} />
+      <ResultsTopBar
+        onBookCall={() => handleOpenCalcom('banner_cta')}
+        scannedUrl={state.websiteUrl}
+        showUrl={isComplete}
+      />
 
-      <main className="pt-24 pb-28 px-6 max-w-lg mx-auto">
+      <main className="pt-20 md:pt-24 pb-28 md:pb-12 px-4 sm:px-6 lg:px-8 w-full max-w-lg md:max-w-[1120px] mx-auto">
         {/* Progress indicator — visible while scanning */}
         {isScanning && <ProgressIndicator messages={state.progressMessages} />}
 
@@ -514,6 +520,36 @@ export function ScanLayout({ scanId }: { scanId: string }) {
           </div>
         )}
 
+        {/* Desktop inline tab navigation — hidden on mobile (bottom nav used instead) */}
+        {isComplete && (
+          <nav className="hidden md:flex items-center gap-1 mb-8 bg-forge-surface/60 backdrop-blur-sm p-1 rounded-lg w-fit">
+            {(['overview', 'stages', 'roadmap'] as const).map((tab) => {
+              const labels = { overview: 'Overview', stages: 'Stages', roadmap: 'Roadmap' };
+              const icons = { overview: 'dashboard', stages: 'architecture', roadmap: 'analytics' };
+              const isActive = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-md font-mono text-[11px] font-bold uppercase tracking-widest transition-all ${
+                    isActive
+                      ? 'bg-forge-base text-forge-accent shadow-sm'
+                      : 'text-forge-text-secondary hover:text-forge-text'
+                  }`}
+                >
+                  <span
+                    className="material-symbols-outlined text-base"
+                    style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                  >
+                    {icons[tab]}
+                  </span>
+                  {labels[tab]}
+                </button>
+              );
+            })}
+          </nav>
+        )}
+
         {/* Results content (GSAP-driven blur when email gate is active) */}
         <div
           ref={resultsRef}
@@ -523,16 +559,100 @@ export function ScanLayout({ scanId }: { scanId: string }) {
           {/* ── TAB CONTENT ── */}
           {activeTab === 'overview' && (
             <div className="space-y-12">
-              <AuditOverview
-                summary={state.completedSummary}
-                stages={state.stages}
-                screenshots={state.screenshots}
-                onInitiateFix={() => handleOpenCalcom('results_cta')}
-              />
+              {/* Desktop: two-column layout — audit left, sidebar right */}
+              <div className="md:grid md:grid-cols-[1fr_380px] md:gap-10 md:items-start">
+                {/* Left column — main audit content */}
+                <div className="space-y-12">
+                  <AuditOverview
+                    summary={state.completedSummary}
+                    stages={state.stages}
+                    screenshots={state.screenshots}
+                    onInitiateFix={() => handleOpenCalcom('results_cta')}
+                  />
+                </div>
+
+                {/* Right column — sidebar: stage breakdown + health potential (desktop only, stacked below on mobile) */}
+                <aside className="space-y-8 md:sticky md:top-28">
+                  {/* Stage Summary Grid */}
+                  {isComplete && STAGE_ORDER.some((s) => state.stages[s]) && (
+                    <section className="bg-forge-surface p-5 rounded-xl">
+                      <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-forge-text-secondary mb-4">
+                        Stage Breakdown
+                      </h3>
+                      <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 -mx-2 px-2 md:mx-0 md:px-0 scrollbar-hide">
+                        {STAGE_ORDER.map((stage) => {
+                          const stageState = state.stages[stage];
+                          if (!stageState) return null;
+                          const score = stageState.summary?.score ?? 0;
+                          const exists = stageState.summary?.exists ?? false;
+                          const scoreColor = !exists
+                            ? 'text-forge-text-muted'
+                            : score >= 70
+                              ? 'text-forge-positive'
+                              : score >= 40
+                                ? 'text-forge-warning'
+                                : 'text-forge-critical';
+                          return (
+                            <button
+                              key={stage}
+                              onClick={() => {
+                                setActiveTab('stages');
+                                setActiveStage(stage);
+                              }}
+                              className="shrink-0 md:shrink md:w-full flex flex-col md:flex-row md:justify-between items-center md:items-center gap-1 md:gap-0 px-4 py-3 bg-forge-base border border-forge-card rounded-lg hover:bg-forge-card transition-all active:scale-[0.98]"
+                            >
+                              <span className="font-mono text-[9px] uppercase tracking-widest text-forge-text-secondary font-bold whitespace-nowrap">
+                                {STAGE_LABELS[stage]}
+                              </span>
+                              {stageState.summary ? (
+                                <span className={`font-display text-xl md:text-lg font-black tabular-nums ${scoreColor}`}>
+                                  {exists ? score : '—'}
+                                </span>
+                              ) : (
+                                <span className="font-mono text-[9px] text-forge-text-muted uppercase tracking-wider">
+                                  Scanning
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Blueprint CTA — sidebar placement on desktop */}
+                  {isComplete && state.emailCaptured && !state.blueprintData && (
+                    <BlueprintCTA
+                      scanId={scanId}
+                      blueprintAvailable={state.blueprintAvailable}
+                      onGenerated={(blueprint) =>
+                        dispatch({ type: 'BLUEPRINT_GENERATED', blueprint })
+                      }
+                    />
+                  )}
+                </aside>
+              </div>
+
               {state.completedSummary && (
                 <HealthPotential
                   summary={state.completedSummary}
                   onInitiateOptimization={() => handleOpenCalcom('results_cta')}
+                />
+              )}
+
+              {/* GEO/AEO — AI discoverability analysis (findings extracted from traffic stage) */}
+              {isComplete && (
+                <GeoAeoSection
+                  stages={state.stages}
+                  onBookCall={() => handleOpenCalcom('geo_aeo_cta')}
+                />
+              )}
+
+              {/* Prescription offers — Hormozi-style prescriptive fixes based on findings */}
+              {isComplete && (
+                <PrescriptionSection
+                  stages={state.stages}
+                  onBookCall={() => handleOpenCalcom('prescription_cta')}
                 />
               )}
             </div>
@@ -576,18 +696,7 @@ export function ScanLayout({ scanId }: { scanId: string }) {
             />
           )}
 
-          {/* Blueprint CTA — shown in overview tab after scan + email captured */}
-          {activeTab === 'overview' && isComplete && state.emailCaptured && !state.blueprintData && (
-            <BlueprintCTA
-              scanId={scanId}
-              blueprintAvailable={state.blueprintAvailable}
-              onGenerated={(blueprint) =>
-                dispatch({ type: 'BLUEPRINT_GENERATED', blueprint })
-              }
-            />
-          )}
-
-          {/* Blueprint view — after blueprint generated (overview tab) */}
+          {/* Blueprint view — after blueprint generated (overview tab, full width) */}
           {activeTab === 'overview' && state.blueprintData && (
             <BlueprintView blueprint={state.blueprintData} />
           )}

@@ -75,7 +75,7 @@ export function SocialConfirmation({
         className="glass-card mx-4 w-full max-w-md rounded-xl p-6"
       >
         <h3 className="font-display mb-1 text-lg tracking-display text-forge-text">
-          [COPY: social confirmation headline]
+          Which profile is yours?
         </h3>
         <p className="mb-4 text-sm text-forge-text-muted">
           We found multiple {platform} profiles. Which one is yours?

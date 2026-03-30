@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import type { ApiError } from '@/../contracts/api';
+import { requireAdminSession } from '@/lib/auth/admin';
 
 // ---------- Shared Types ----------
 
@@ -85,11 +86,12 @@ const MOCK_MEMBERS: TeamMember[] = [
 
 // ---------- GET: List team members ----------
 
-export async function GET(): Promise<NextResponse<TeamListResponse | ApiError>> {
+export async function GET(request: NextRequest): Promise<NextResponse<TeamListResponse | ApiError>> {
   try {
-    // TODO: Verify admin authentication
-    // TODO: Query actual team members from Supabase
+    const authError = await requireAdminSession(request);
+    if (authError) return authError as NextResponse<ApiError>;
 
+    // TODO: Query actual team members from Supabase
     const mockResponse: TeamListResponse = {
       members: MOCK_MEMBERS,
       total: MOCK_MEMBERS.length,
@@ -114,7 +116,8 @@ export async function GET(): Promise<NextResponse<TeamListResponse | ApiError>> 
 
 export async function POST(request: NextRequest): Promise<NextResponse<TeamMemberResponse | ApiError>> {
   try {
-    // TODO: Verify admin authentication
+    const authError = await requireAdminSession(request);
+    if (authError) return authError as NextResponse<ApiError>;
 
     const body: unknown = await request.json();
     const parsed = createMemberSchema.safeParse(body);
@@ -164,7 +167,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<TeamMembe
 
 export async function PUT(request: NextRequest): Promise<NextResponse<TeamMemberResponse | ApiError>> {
   try {
-    // TODO: Verify admin authentication
+    const authError = await requireAdminSession(request);
+    if (authError) return authError as NextResponse<ApiError>;
 
     const body: unknown = await request.json();
     const parsed = updateMemberSchema.safeParse(body);
@@ -225,7 +229,8 @@ export async function PUT(request: NextRequest): Promise<NextResponse<TeamMember
 
 export async function DELETE(request: NextRequest): Promise<NextResponse<TeamDeleteResponse | ApiError>> {
   try {
-    // TODO: Verify admin authentication
+    const authError = await requireAdminSession(request);
+    if (authError) return authError as NextResponse<ApiError>;
 
     const body: unknown = await request.json();
     const parsed = deleteMemberSchema.safeParse(body);

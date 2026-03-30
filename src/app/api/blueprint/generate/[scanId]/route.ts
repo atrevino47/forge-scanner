@@ -73,6 +73,16 @@ export async function POST(
     }
 
     const { scanId } = parsed.data;
+
+    // 1b. Verify ANTHROPIC_API_KEY is set before proceeding
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return apiError(
+        'INTERNAL',
+        'Blueprint generation is not available — AI service is not configured.',
+        503,
+      );
+    }
+
     const supabase = createServiceClient();
 
     // 2. Fetch the scan

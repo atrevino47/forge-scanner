@@ -38,6 +38,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreatePay
 
     const { leadId, scanId, amountCents, currency, productType, description } = parsed.data;
 
+    // Verify Stripe is configured before proceeding
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'INTERNAL',
+            message: 'Payments are not configured. Set STRIPE_SECRET_KEY in environment variables.',
+          },
+        },
+        { status: 503 },
+      );
+    }
+
     // Look up lead email for Stripe metadata
     const db = createServiceClient();
     const { data: lead } = await db

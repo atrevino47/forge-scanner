@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import type { Annotation } from '../../../contracts/types';
@@ -54,12 +55,13 @@ export function ScreenshotCard({ screenshot }: ScreenshotCardProps) {
       {/* Screenshot image in scrollable container */}
       <div className="relative max-h-[600px] overflow-y-auto">
         <div className="relative">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={screenshot.thumbnailUrl}
             alt={`${screenshot.source} screenshot (${screenshot.viewport})`}
-            className="w-full"
-            loading="lazy"
+            width={0}
+            height={0}
+            sizes="100vw"
+            className="w-full h-auto"
           />
 
           {/* Annotation dots overlaid */}

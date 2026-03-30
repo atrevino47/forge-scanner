@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import type { AdminLeadsResponse, ApiError } from '@/../contracts/api';
 import { getAdminLeads } from '@/lib/db/admin-queries';
+import { requireAdminSession } from '@/lib/auth/admin';
 
 const querySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
@@ -18,7 +19,8 @@ const querySchema = z.object({
 
 export async function GET(request: NextRequest): Promise<NextResponse<AdminLeadsResponse | ApiError>> {
   try {
-    // TODO: Wire admin auth once ADMIN_EMAILS is configured
+    const authError = await requireAdminSession(request);
+    if (authError) return authError as NextResponse<ApiError>;
 
     const { searchParams } = new URL(request.url);
     const parsed = querySchema.safeParse({

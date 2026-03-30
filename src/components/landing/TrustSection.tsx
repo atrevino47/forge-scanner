@@ -6,10 +6,10 @@ import { useGSAP } from '@gsap/react';
 import { clipReveal, scaleIn } from '@/lib/gsap-presets';
 
 const stats = [
-  { value: '60s', label: 'Average scan time' },
-  { value: '5', label: 'Funnel stages analyzed' },
-  { value: '12+', label: 'AI annotations per scan' },
-  { value: 'Free', label: 'No card required' },
+  { value: '500+', label: 'Scans Completed' },
+  { value: '< 60s', label: 'Average Scan Time' },
+  { value: '5', label: 'Funnel Stages Analyzed' },
+  { value: 'Free', label: 'Always' },
 ];
 
 export function TrustSection() {
@@ -41,20 +41,21 @@ export function TrustSection() {
   return (
     <section
       ref={containerRef}
-      className="relative px-6 py-24 sm:py-32"
-      style={{ background: 'var(--forge-surface)' }}
+      className="relative px-4 py-14 sm:px-6 sm:py-24 lg:py-32"
+      style={{ background: '#FAFAF7' }}
     >
       <div className="mx-auto max-w-[1120px]">
         <h2
           data-trust="headline"
           className="mb-16 text-center font-display font-bold"
           style={{
-            fontSize: 'clamp(2rem, 3vw + 0.5rem, 3rem)',
+            fontSize: 'clamp(1.75rem, 3vw + 0.5rem, 2.75rem)',
             letterSpacing: '-0.02em',
-            color: 'var(--forge-text)',
+            lineHeight: 1.08,
+            color: '#1A1917',
           }}
         >
-          Built for speed and precision
+          Built for businesses that want to grow
         </h2>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
@@ -64,22 +65,24 @@ export function TrustSection() {
               data-trust="stat"
               className="rounded-xl border p-6 text-center sm:p-8"
               style={{
-                borderColor: 'var(--forge-border)',
-                background: '#FFFFFF',
+                borderColor: '#ECEAE4',
+                background: '#FAFAF7',
               }}
             >
+              {/* Number — font-display text-4xl weight-800 */}
               <p
-                className="font-display text-3xl font-bold sm:text-4xl"
+                className="font-display text-4xl font-extrabold"
                 style={{
                   letterSpacing: '-0.02em',
-                  color: 'var(--forge-text)',
+                  color: '#1A1917',
                 }}
               >
                 {stat.value}
               </p>
+              {/* Label — font-mono text-xs uppercase */}
               <p
-                className="mt-2 font-body text-sm"
-                style={{ color: 'var(--forge-text-secondary)' }}
+                className="mt-2 font-mono text-xs uppercase tracking-widest"
+                style={{ color: '#6B6860' }}
               >
                 {stat.label}
               </p>

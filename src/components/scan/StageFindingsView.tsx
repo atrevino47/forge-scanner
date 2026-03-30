@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Image from 'next/image';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import type { FunnelStage, Annotation, AnnotationType, StageFinding } from '../../../contracts/types';
@@ -91,12 +92,12 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
       <section className="space-y-6">
         <div
           data-sf="score"
-          className="flex items-end gap-4 bg-forge-accent p-6 rounded-xl text-white shadow-xl shadow-forge-accent/20"
+          className="flex items-end gap-4 bg-forge-accent p-6 md:p-8 rounded-xl text-white shadow-xl shadow-forge-accent/20"
         >
           <div className="flex flex-col">
             <span className="font-mono text-[10px] uppercase tracking-widest text-white/70 mb-1">Audit Score</span>
             <div className="flex items-baseline gap-1">
-              <span className="font-display text-7xl leading-none text-white">{score}</span>
+              <span className="font-display text-5xl sm:text-7xl leading-none text-white">{score}</span>
               <span className="font-display text-2xl text-white/50">/100</span>
             </div>
           </div>
@@ -110,149 +111,148 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
         {/* Summary Card */}
         {headline && (
           <div data-sf="summary" className="bg-forge-surface p-6 border-l-4 border-forge-accent shadow-sm">
-            <p className="font-display font-bold text-xl leading-tight">{headline}</p>
+            <p className="font-display font-bold text-xl md:text-2xl leading-tight">{headline}</p>
           </div>
         )}
       </section>
 
-      {/* Browser Mockup & Visual Audit */}
-      {primaryScreenshot && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-mono text-xs uppercase tracking-[0.2em] font-bold text-forge-text-secondary">
-              Visual Context
-            </h3>
-          </div>
-          <div
-            data-sf="mockup"
-            className="relative bg-forge-card rounded-xl overflow-hidden shadow-2xl border border-forge-accent/20 forge-glow"
-          >
-            {/* Browser Chrome Bar */}
-            <div className="bg-forge-elevated h-10 flex items-center px-4 gap-2">
-              <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-forge-accent/40" />
-                <div className="w-2.5 h-2.5 rounded-full bg-forge-accent/20" />
-                <div className="w-2.5 h-2.5 rounded-full bg-forge-accent/10" />
-              </div>
-              <div className="flex-1 bg-[#FEFEFE] h-6 rounded px-3 flex items-center justify-between border border-forge-accent/5">
-                <span className="text-[10px] font-mono text-forge-text-secondary truncate">
-                  {primaryScreenshot.source}
-                </span>
-                <span className="material-symbols-outlined text-[14px] text-forge-accent">lock</span>
-              </div>
+      {/* Desktop: screenshot + findings side by side / Mobile: stacked */}
+      <div className="md:grid md:grid-cols-[1fr_1fr] md:gap-8 md:items-start space-y-8 md:space-y-0">
+        {/* Browser Mockup & Visual Audit */}
+        {primaryScreenshot && (
+          <section className="space-y-4 md:sticky md:top-28">
+            <div className="flex items-center justify-between">
+              <h3 className="font-mono text-xs uppercase tracking-[0.2em] font-bold text-forge-text-secondary">
+                Visual Context
+              </h3>
             </div>
-
-            {/* Scrollable screenshot viewport — phone-screen height, user scrolls to see full page */}
-            <div className="max-h-[480px] overflow-y-auto overscroll-contain">
-              {/* Screenshot with Annotation Dots — relative wrapper matches full image size for % positioning */}
-              <div className="relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={primaryScreenshot.thumbnailUrl}
-                  alt={`${STAGE_LABELS[stage]} screenshot`}
-                  className="w-full block"
-                  loading="lazy"
-                />
-                {/* Annotation dots — positioned relative to full image dimensions */}
-                {primaryScreenshot.annotations.map((annotation, i) => (
-                  <button
-                    key={annotation.id}
-                    data-sf-dot=""
-                    onClick={() => setActiveAnnotation(
-                      activeAnnotation?.id === annotation.id ? null : annotation
-                    )}
-                    className={`absolute w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white shadow-lg cursor-pointer z-10 ${
-                      annotation.type === 'critical' || annotation.type === 'warning'
-                        ? 'bg-forge-accent shadow-[0_0_12px_rgba(232,83,14,0.6)]'
-                        : annotation.type === 'positive'
-                          ? 'bg-forge-positive shadow-[0_0_12px_rgba(45,140,78,0.6)]'
-                          : 'bg-forge-opportunity shadow-[0_0_12px_rgba(43,123,212,0.6)]'
-                    }`}
-                    style={{
-                      left: `${annotation.position.x}%`,
-                      top: `${annotation.position.y}%`,
-                      transform: 'translate(-50%, -50%)',
-                    }}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-
-                {/* Active popover */}
-                {activeAnnotation && (
-                  <AnnotationPopover
-                    annotation={activeAnnotation}
-                    onClose={() => setActiveAnnotation(null)}
-                  />
-                )}
-              </div>
-            </div>
-            {/* Scroll hint — subtle gradient at bottom of viewport */}
-            <div className="h-6 bg-gradient-to-t from-forge-card to-transparent -mt-6 relative z-[5] pointer-events-none" />
-          </div>
-        </section>
-      )}
-
-      {/* Detailed Findings List */}
-      {findings.length > 0 && (
-        <section className="space-y-8">
-          <h3 className="font-mono text-xs uppercase tracking-[0.2em] font-bold text-forge-text-secondary">
-            Detailed Findings ({findings.length})
-          </h3>
-          <div className="space-y-4">
-            {findings.map((finding, i) => {
-              const config = SEVERITY_CONFIG[finding.type];
-              const isCritical = finding.type === 'critical';
-              return (
-                <div
-                  key={finding.id}
-                  data-sf="finding"
-                  className={`bg-[#FEFEFE] p-5 flex gap-4 relative overflow-hidden ${
-                    isCritical ? 'border border-forge-accent/10' : ''
-                  }`}
-                >
-                  {/* Forge Stripe — 1.5px for critical, 1px for others */}
-                  <div className={`absolute left-0 top-0 bottom-0 ${isCritical ? 'w-1.5 bg-forge-accent' : `w-1 ${config.borderClass.replace('border-', 'bg-')}`}`} />
-                  {/* Index number */}
-                  <div className={`font-display text-2xl opacity-40 ${config.textClass}`}>
-                    {String(i + 1).padStart(2, '0')}
-                  </div>
-                  {/* Content */}
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className={`${config.bgClass} ${config.textClass} text-[10px] font-mono px-2 py-0.5 font-bold uppercase`}>
-                        {config.label}
-                      </span>
-                      <span className={`material-symbols-outlined ${config.textClass}`}>
-                        {config.icon}
-                      </span>
-                    </div>
-                    <h4 className="font-bold text-lg leading-snug">{finding.title}</h4>
-                    <p className="text-sm text-forge-text-secondary leading-relaxed">{finding.detail}</p>
-                  </div>
+            <div
+              data-sf="mockup"
+              className="relative bg-forge-card rounded-xl overflow-hidden shadow-2xl border border-forge-accent/20 forge-glow"
+            >
+              {/* Browser Chrome Bar */}
+              <div className="bg-forge-elevated h-9 flex items-center px-3 gap-2 shrink-0">
+                <div className="flex gap-1.5 shrink-0">
+                  <div className="w-2.5 h-2.5 rounded-full bg-forge-accent/50" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-forge-warning/40" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-forge-positive/40" />
                 </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+                <div className="flex-1 bg-[#FEFEFE] h-5 rounded px-2 flex items-center justify-between border border-forge-card overflow-hidden">
+                  <span className="font-mono text-[9px] text-forge-text-secondary truncate leading-none">
+                    {primaryScreenshot.source}
+                  </span>
+                  <span className="material-symbols-outlined text-[12px] text-forge-accent shrink-0 ml-1">lock</span>
+                </div>
+              </div>
 
-      {/* Bottom CTA */}
+              {/* Scrollable screenshot viewport */}
+              <div className="max-h-[480px] md:max-h-[600px] overflow-y-auto overscroll-contain">
+                <div className="relative">
+                  <Image
+                    src={primaryScreenshot.thumbnailUrl}
+                    alt={`${STAGE_LABELS[stage]} screenshot`}
+                    width={0}
+                    height={0}
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="w-full h-auto block"
+                  />
+                  {primaryScreenshot.annotations.map((annotation, i) => (
+                    <button
+                      key={annotation.id}
+                      data-sf-dot=""
+                      onClick={() => setActiveAnnotation(
+                        activeAnnotation?.id === annotation.id ? null : annotation
+                      )}
+                      className={`absolute w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[10px] font-bold text-white shadow-lg cursor-pointer z-10 ${
+                        annotation.type === 'critical' || annotation.type === 'warning'
+                          ? 'bg-forge-accent shadow-[0_0_12px_rgba(232,83,14,0.6)]'
+                          : annotation.type === 'positive'
+                            ? 'bg-forge-positive shadow-[0_0_12px_rgba(45,140,78,0.6)]'
+                            : 'bg-forge-opportunity shadow-[0_0_12px_rgba(43,123,212,0.6)]'
+                      }`}
+                      style={{
+                        left: `${annotation.position.x}%`,
+                        top: `${annotation.position.y}%`,
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+
+                  {activeAnnotation && (
+                    <AnnotationPopover
+                      annotation={activeAnnotation}
+                      onClose={() => setActiveAnnotation(null)}
+                    />
+                  )}
+                </div>
+              </div>
+              <div className="h-6 bg-gradient-to-t from-forge-card to-transparent -mt-6 relative z-[5] pointer-events-none" />
+            </div>
+          </section>
+        )}
+
+        {/* Detailed Findings List — right column on desktop */}
+        {findings.length > 0 && (
+          <section className="space-y-6">
+            <h3 className="font-mono text-xs uppercase tracking-[0.2em] font-bold text-forge-text-secondary">
+              Detailed Findings ({findings.length})
+            </h3>
+            <div className="space-y-4">
+              {findings.map((finding, i) => {
+                const config = SEVERITY_CONFIG[finding.type];
+                const isCritical = finding.type === 'critical';
+                return (
+                  <div
+                    key={finding.id}
+                    data-sf="finding"
+                    className={`bg-[#FEFEFE] p-5 flex gap-4 relative overflow-hidden ${
+                      isCritical ? 'border border-forge-accent/10' : ''
+                    }`}
+                  >
+                    <div className={`absolute left-0 top-0 bottom-0 ${isCritical ? 'w-1.5 bg-forge-accent' : `w-1 ${config.borderClass.replace('border-', 'bg-')}`}`} />
+                    <div className={`font-display text-2xl opacity-40 ${config.textClass}`}>
+                      {String(i + 1).padStart(2, '0')}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className={`${config.bgClass} ${config.textClass} text-[10px] font-mono px-2 py-0.5 font-bold uppercase`}>
+                          {config.label}
+                        </span>
+                        <span className={`material-symbols-outlined ${config.textClass}`}>
+                          {config.icon}
+                        </span>
+                      </div>
+                      <h4 className="font-display font-bold text-lg leading-snug">{finding.title}</h4>
+                      <p className="text-sm text-forge-text-secondary leading-relaxed font-body">{finding.detail}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+      </div>
+
+      {/* Bottom CTA — full width */}
       <section
         data-sf="cta"
-        className="text-white p-8 rounded-xl space-y-6 shadow-2xl shadow-forge-accent/30 relative overflow-hidden bg-gradient-to-br from-forge-accent to-[#ff7a3d]"
+        className="text-white p-6 sm:p-8 md:p-10 rounded-xl shadow-2xl shadow-forge-accent/30 relative overflow-hidden bg-gradient-to-br from-forge-accent to-[#ff7a3d]"
       >
         <div className="absolute top-0 right-0 p-4 opacity-10">
           <span className="material-symbols-outlined text-9xl">construction</span>
         </div>
-        <div className="relative z-10">
-          <h4 className="font-display font-bold text-3xl tracking-tight">Ready to Forge?</h4>
-          <p className="text-sm text-white/90 leading-relaxed mt-2 max-w-[80%]">
-            Our builders are ready to refactor these findings into a high-converting {STAGE_LABELS[stage].toLowerCase()}. Stop leaking pipeline today.
-          </p>
+        <div className="relative z-10 md:flex md:items-center md:justify-between md:gap-12">
+          <div>
+            <h4 className="font-display font-bold text-2xl sm:text-3xl md:text-4xl tracking-tight">Ready to Forge?</h4>
+            <p className="text-sm text-white/90 leading-relaxed mt-2 max-w-lg">
+              Our builders are ready to refactor these findings into a high-converting {STAGE_LABELS[stage].toLowerCase()}. Stop leaking pipeline today.
+            </p>
+          </div>
           <button
             onClick={onInitiateFix}
-            className="w-full bg-[#FEFEFE] text-forge-accent py-4 font-black tracking-[0.2em] text-xs uppercase rounded-lg active:scale-95 transition-all mt-6 shadow-xl shadow-black/10"
+            className="w-full md:w-auto md:shrink-0 md:px-10 bg-[#FEFEFE] text-forge-accent py-4 font-black tracking-[0.2em] text-xs uppercase rounded-lg active:scale-95 transition-all mt-6 md:mt-0 shadow-xl shadow-black/10"
           >
             INITIATE REFACTOR
           </button>

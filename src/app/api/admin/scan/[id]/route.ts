@@ -7,17 +7,19 @@ import { createServiceClient } from '@/lib/db/client';
 import type { ScanResultsResponse, ApiError } from '@/../contracts/api';
 import type { DbScan, DbLead, DbScreenshot, DbFunnelStage } from '@/lib/db/types';
 import { dbLeadToLead, buildScanResult } from '@/lib/db/mappers';
+import { requireAdminSession } from '@/lib/auth/admin';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: RouteParams,
 ): Promise<NextResponse<ScanResultsResponse | ApiError>> {
   try {
-    // TODO: Wire admin auth once ADMIN_EMAILS is configured
+    const authError = await requireAdminSession(request);
+    if (authError) return authError as NextResponse<ApiError>;
 
     const { id: scanId } = await params;
 

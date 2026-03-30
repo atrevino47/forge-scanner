@@ -182,3 +182,35 @@ body::before {
   background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
   background-size: 20px 20px;
 }
+
+/* ── Skeleton shimmer — replaces animate-pulse on loading skeletons ── */
+@keyframes skeleton-sweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-dark {
+  background-image: linear-gradient(
+    90deg,
+    #282826 0%,
+    #282826 30%,
+    #383836 50%,
+    #282826 70%,
+    #282826 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.8s ease-in-out infinite;
+}
+
+.skeleton-dark-deep {
+  background-image: linear-gradient(
+    90deg,
+    #1E1E1C 0%,
+    #1E1E1C 30%,
+    #2A2A28 50%,
+    #1E1E1C 70%,
+    #1E1E1C 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.8s ease-in-out infinite;
+}

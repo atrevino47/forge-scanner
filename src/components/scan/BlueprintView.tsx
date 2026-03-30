@@ -97,7 +97,7 @@ export function BlueprintView({ blueprint }: BlueprintViewProps) {
         className="font-display mb-8 text-center tracking-display leading-display"
         style={{ fontSize: 'clamp(1.8rem, 3vw + 0.5rem, 2.5rem)' }}
       >
-        [COPY: your optimized funnel blueprint]
+        Your Optimized Funnel Blueprint
       </h2>
 
       {/* ── Funnel Map ── */}

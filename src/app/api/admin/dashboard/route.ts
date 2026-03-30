@@ -1,14 +1,15 @@
 // GET /api/admin/dashboard
 // Returns aggregate metrics for the admin dashboard
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import type { AdminDashboardResponse, ApiError } from '@/../contracts/api';
 import { getAdminDashboardMetrics } from '@/lib/db/admin-queries';
+import { requireAdminSession } from '@/lib/auth/admin';
 
-export async function GET(): Promise<NextResponse<AdminDashboardResponse | ApiError>> {
+export async function GET(request: NextRequest): Promise<NextResponse<AdminDashboardResponse | ApiError>> {
   try {
-    // TODO: Wire admin auth once ADMIN_EMAILS is configured
-    // For now, admin routes are accessible without auth (localhost-only)
+    const authError = await requireAdminSession(request);
+    if (authError) return authError as NextResponse<ApiError>;
 
     const metrics = await getAdminDashboardMetrics();
     return NextResponse.json(metrics, { status: 200 });
