@@ -8,6 +8,7 @@ import { GSAPProvider } from '@/components/providers/GSAPProvider';
 import { CalcomProvider } from '@/components/providers/CalcomContext';
 import { PostHogProvider } from '@/components/providers/PostHogProvider';
 import { SupabaseProvider } from '@/components/providers/SupabaseProvider';
+import { Analytics } from '@vercel/analytics/react';
 import { TopBanner } from '@/components/shared/TopBanner';
 import { CalcomModal } from '@/components/shared/CalcomModal';
 import './globals.css';
@@ -87,6 +88,7 @@ export default function RootLayout({
             </GSAPProvider>
           </PostHogProvider>
         </SupabaseProvider>
+        <Analytics />
       </body>
     </html>
   );
