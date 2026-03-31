@@ -20,6 +20,7 @@ import { analyzeWithSonnet } from '@/lib/ai/client';
 import { extractJSON } from '@/lib/ai/client';
 import type { ApiError } from '@/../contracts/api';
 import type { DbFollowup, DbScan, DbLead, DbFunnelStage, DbScreenshot } from '@/lib/db/types';
+import { renderFollowupEmail } from '@/lib/followup/email-template';
 
 const BATCH_SIZE = 10; // Max follow-ups to process per cron invocation
 const FROM_EMAIL = 'Forge Digital <insights@forgedigital.com>';
@@ -203,11 +204,24 @@ async function processFollowup(
     throw new Error('AI failed to generate valid email content');
   }
 
-  // Step 5: Send via Resend
+  // Step 5: Render branded HTML template and send via Resend
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://audit.forgedigital.com';
+  const scanUrl = followup.scan_id ? `${appUrl}/scan/${followup.scan_id}` : undefined;
+
+  const html = renderFollowupEmail({
+    subject: emailContent.subject,
+    body: emailContent.body,
+    position,
+    businessName: lead.business_name ?? scanContext.websiteUrl,
+    calcomUrl: CALCOM_URL,
+    scanUrl,
+  });
+
   const { error: sendError } = await resend.emails.send({
     from: FROM_EMAIL,
     to: lead.email,
     subject: emailContent.subject,
+    html,
     text: emailContent.body,
     tags: [
       { name: 'sequence_id', value: followup.sequence_id },

@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/followup-sender",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/stale-scans",
+      "schedule": "*/15 * * * *"
+    }
+  ]
+}
