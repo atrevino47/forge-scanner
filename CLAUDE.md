@@ -7,8 +7,8 @@
 1. **This file** (`CLAUDE.md`) — shared rules, architecture, current state
 2. **Your agent file** (`docs/AGENT-BACKEND.md`, `docs/AGENT-FRONTEND.md`, `docs/AGENT-AI-ENGINE.md`, or `docs/AGENT-ORCHESTRATOR.md`)
 3. **Active plans** (`docs/plans/PLAN-LOG.md`) — find active plans, read their files for multi-session context
-4. **The spec** (`docs/FORGE-FUNNEL-SCANNER-SPEC.md`) — source of truth for what we're building
-5. **The business plan** (`docs/FORGE-BUSINESS-PLAN.md`) — why we're building it
+4. **The spec** (`../../specs-plans/FORGE-FUNNEL-SCANNER-SPEC.md`) — source of truth for what we're building
+5. **The business plan** (`../../specs-plans/FORGE-BUSINESS-PLAN.md`) — why we're building it
 6. **Latest audit** (`docs/audits/AUDIT-{NNN}.md`) — where we are right now
 7. **Fix log** (`docs/fixes/FIX-LOG.md`) — what's been done and what's pending
 
@@ -18,7 +18,7 @@ Skipping any of these causes decisions that conflict with the spec, the architec
 
 ## What we're building
 
-`audit.forgedigital.com` — a premium AI-powered funnel scanner that IS Forge Digital's primary lead generation machine. A user enters a URL, the system captures real screenshots of their website/socials/GBP/ads, AI annotates them with specific issues, generates an optimized blueprint + mockup, and an AI Sales Agent (Hormozi-trained CLOSER) drives them to book a strategy call with Adrián.
+**forgewith.ai scanner** — a premium AI-powered funnel scanner that IS Forge's primary lead generation machine. A user enters a URL, the system captures real screenshots of their website/socials/GBP/ads, AI annotates them with specific issues, generates an optimized blueprint + mockup, and an AI Sales Agent (Hormozi-trained CLOSER) drives them to book a strategy call with Adrián.
 
 **The one goal:** Convert free scan users into Forge strategy calls. Every feature serves this conversion.
 

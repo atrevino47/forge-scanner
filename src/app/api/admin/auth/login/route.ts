@@ -54,8 +54,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-    // Build response first so we can set cookies on it
-    let response = NextResponse.json({ success: true }, { status: 200 });
+    // Accumulate cookies set by the Supabase client, then apply them to the
+    // final response. Previous implementation rebuilt the response inside setAll,
+    // which discarded cookies from earlier setAll calls (access + refresh tokens).
+    const pendingCookies: Array<{ name: string; value: string; options?: Record<string, unknown> }> = [];
 
     const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
@@ -63,11 +65,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          // Rebuild response with cookies
-          response = NextResponse.json({ success: true }, { status: 200 });
-          for (const { name, value, options } of cookiesToSet) {
-            response.cookies.set(name, value, options);
-          }
+          pendingCookies.push(...cookiesToSet);
         },
       },
     });
@@ -81,6 +79,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json(errBody, { status: 401 });
     }
 
+    // Build response and apply all accumulated cookies at once
+    const response = NextResponse.json({ success: true }, { status: 200 });
+    for (const { name, value, options } of pendingCookies) {
+      response.cookies.set(name, value, options);
+    }
     return response;
   } catch (err) {
     const errBody: ApiError = {
@@ -95,7 +98,7 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-  let response = NextResponse.json({ success: true }, { status: 200 });
+  const pendingCookies: Array<{ name: string; value: string; options?: Record<string, unknown> }> = [];
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -103,14 +106,16 @@ export async function DELETE(request: NextRequest): Promise<NextResponse> {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        response = NextResponse.json({ success: true }, { status: 200 });
-        for (const { name, value, options } of cookiesToSet) {
-          response.cookies.set(name, value, options);
-        }
+        pendingCookies.push(...cookiesToSet);
       },
     },
   });
 
   await supabase.auth.signOut();
+
+  const response = NextResponse.json({ success: true }, { status: 200 });
+  for (const { name, value, options } of pendingCookies) {
+    response.cookies.set(name, value, options);
+  }
   return response;
 }

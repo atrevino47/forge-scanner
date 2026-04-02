@@ -40,12 +40,12 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'FORGEWITH.AI — Free AI-Powered Funnel Audit',
     description: 'Get a free AI-powered audit of your entire sales funnel. Real screenshots, annotated issues, and an optimized blueprint — in under 60 seconds.',
-    url: 'https://audit.forgedigital.com',
+    url: process.env.NEXT_PUBLIC_APP_URL ?? 'https://forgewith.ai',
     siteName: 'Forge Funnel Scanner',
     type: 'website',
     images: [
       {
-        url: 'https://audit.forgedigital.com/og-image.png',
+        url: `${process.env.NEXT_PUBLIC_APP_URL ?? 'https://forgewith.ai'}/og-image.png`,
         width: 1200,
         height: 630,
         alt: 'Forge Funnel Scanner — AI-Powered Sales Funnel Audit',
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'FORGEWITH.AI — Free AI-Powered Funnel Audit',
     description: 'Get a free AI-powered audit of your entire sales funnel in under 60 seconds.',
-    images: ['https://audit.forgedigital.com/og-image.png'],
+    images: [`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://forgewith.ai'}/og-image.png`],
   },
 };
 

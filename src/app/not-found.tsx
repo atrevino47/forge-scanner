@@ -90,7 +90,7 @@ export default function NotFound() {
 
       {/* Footer mark */}
       <p className="absolute bottom-8 font-mono text-[10px] text-[#B8B5AD]">
-        audit.forgedigital.com
+        forgewith.ai
       </p>
     </div>
   );

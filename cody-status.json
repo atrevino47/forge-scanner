@@ -1,26 +1,24 @@
 {
   "agent": "cody",
   "project": "forge-scanner",
-  "timestamp": "2026-03-30T01:00:00Z",
+  "timestamp": "2026-03-31T10:00:00Z",
   "branch": "dev",
-  "lastCommit": "4211410",
-  "task": "Production Build Verification & Deploy Prep",
+  "lastCommit": "c5baccb",
+  "task": "OG Image + Follow-up Email System",
   "status": "complete",
-  "summary": "Production build passes clean (34 routes, 4 pages). Fixed not-found.tsx Server Component build error. Added upfront env var validation on blueprint/generate (ANTHROPIC_API_KEY) and payments/create-intent (STRIPE_SECRET_KEY) routes. Comprehensive .env.example with 30 vars grouped by category with setup instructions. Admin setup page now checks 25 env vars across 6 groups including Admin & Security and Enrichment. No hardcoded localhost (all dynamic via NEXT_PUBLIC_APP_URL). Ready for Monday demo.",
+  "summary": "Generated OG image (1200x630, Forge branding, funnel score visualization). Built branded HTML email template for 3-touch follow-up sequence with dark Forge styling, responsive layout, position-specific CTAs. Updated cron sender to use HTML+text fallback via Resend. Added vercel.json with cron schedules (followup-sender every 1min, stale-scans every 15min). The full follow-up pipeline is now end-to-end: trigger → DB insert → cron pick-up → AI-generate → HTML wrap → Resend → status update.",
   "filesChanged": [
-    "src/app/not-found.tsx",
-    "src/app/admin/setup/page.tsx",
-    "src/app/api/admin/setup/route.ts",
-    "src/app/api/blueprint/generate/[scanId]/route.ts",
-    "src/app/api/payments/create-intent/route.ts",
-    ".env.example"
+    "public/og-image.png",
+    "public/og-image.svg",
+    "src/lib/followup/email-template.ts",
+    "src/app/api/cron/followup-sender/route.ts",
+    "vercel.json"
   ],
   "tscErrors": 0,
-  "buildStatus": "pass",
   "nextSteps": [
-    "Set NEXT_PUBLIC_APP_URL to production URL before deploy",
-    "Configure Vercel env vars from .env.example",
-    "Test full scan flow on production",
-    "Follow-up system build (email/SMS/WhatsApp drip)"
+    "Test follow-up sequence with a real scan + exit",
+    "Set CRON_SECRET in Vercel env vars",
+    "Configure Resend domain verification",
+    "Hormozi Sales Agent training"
   ]
 }

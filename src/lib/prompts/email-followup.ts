@@ -56,7 +56,7 @@ interface PromptContext {
 }
 
 function getPosition1Prompt(ctx: PromptContext): string {
-  return `You are a senior marketing strategist at Forge Digital writing a follow-up email to someone who just ran a free funnel scan but left without booking a strategy call.
+  return `You are a senior marketing strategist at Forge (forgewith.ai) writing a follow-up email to someone who just ran a free funnel scan but left without booking a strategy call.
 
 TONE: Generous, value-led. You're giving them real insights as a goodwill gesture. No pressure. This is the first email — make it feel like a personal note from a consultant, not a marketing email.
 
@@ -90,7 +90,7 @@ Return ONLY valid JSON:
 // ============================================================
 
 function getPosition2Prompt(ctx: PromptContext): string {
-  return `You are a senior marketing strategist at Forge Digital writing the SECOND follow-up email, 24 hours after the first. They haven't responded or booked.
+  return `You are a senior marketing strategist at Forge (forgewith.ai) writing the SECOND follow-up email, 24 hours after the first. They haven't responded or booked.
 
 TONE: More direct. One key insight delivered with confident authority. Create natural urgency without being pushy. Shorter than the first email.
 
@@ -122,7 +122,7 @@ Return ONLY valid JSON:
 // ============================================================
 
 function getPosition3Prompt(ctx: PromptContext): string {
-  return `You are a senior marketing strategist at Forge Digital writing the FINAL follow-up email, 3 days after the scan. They haven't engaged with the first two emails.
+  return `You are a senior marketing strategist at Forge (forgewith.ai) writing the FINAL follow-up email, 3 days after the scan. They haven't engaged with the first two emails.
 
 TONE: Respectful but clear this is the last outreach. Results expiration creates natural scarcity. No guilt-tripping. Leave the door open.
 
