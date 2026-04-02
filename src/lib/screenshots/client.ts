@@ -12,6 +12,15 @@ const MOBILE_VIEWPORT = { width: 375, height: 812 } as const;
 
 const NAVIGATION_TIMEOUT_MS = 30_000;
 
+// "Patient visitor" scroll constants — simulate a real human scrolling
+// so scroll-triggered animations (GSAP ScrollTrigger, AOS, Intersection
+// Observer) fire and play to completion before we capture.
+const SCROLL_STEP_PX = 300;
+const SCROLL_PAUSE_MS = 400;
+const SCROLL_BACK_SETTLE_MS = 2000;
+const IDLE_WAIT_MAX_MS = 3000;
+const MAX_SCROLL_TIME_MS = 30_000;
+
 // ============================================================
 // Types
 // ============================================================
@@ -148,54 +157,104 @@ export async function capturePageWithMetadata(
       }
     }
 
-    // Scroll down incrementally to trigger scroll-based animations (GSAP, Framer Motion, etc.)
+    /* PATIENT VISITOR CAPTURE SEQUENCE
+     * Simulates a real human visiting the page so scroll-triggered
+     * animations (GSAP ScrollTrigger, AOS, Intersection Observer) fire
+     * and play to completion. No CSS force-overrides — the screenshot
+     * shows exactly what a visitor sees.
+     *
+     * Phase 1 (0s):   Initial settle — wait for above-the-fold animations
+     * Phase 2 (~3s):  Slow scroll down — 300px steps, 400ms pause each
+     * Phase 3 (var):  Scroll back to top — 2s settle for hero replays
+     * Phase 4 (var):  Final paint wait — idle detection before capture
+     */
+
+    // Phase 1 — Initial settle: wait for above-the-fold animations to complete
     try {
-      await page.evaluate(async () => {
-        const scrollStep = Math.max(window.innerHeight * 0.8, 400);
-        const maxScroll = document.body.scrollHeight;
-        let currentScroll = 0;
+      await page.evaluate(async (maxWait: number) => {
+        await new Promise<void>((resolve) => {
+          const timeout = setTimeout(resolve, maxWait);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              if (typeof requestIdleCallback === 'function') {
+                requestIdleCallback(() => { clearTimeout(timeout); resolve(); });
+              } else {
+                setTimeout(() => { clearTimeout(timeout); resolve(); }, 500);
+              }
+            });
+          });
+        });
+      }, IDLE_WAIT_MAX_MS);
+    } catch (settleError: unknown) {
+      const settleMessage =
+        settleError instanceof Error ? settleError.message : String(settleError);
+      console.warn(
+        `[screenshots/client] Initial settle failed for ${url}: ${settleMessage}. Continuing.`,
+      );
+    }
 
-        while (currentScroll < maxScroll) {
-          window.scrollBy(0, scrollStep);
-          currentScroll += scrollStep;
-          await new Promise((r) => setTimeout(r, 200));
+    // Phase 2 — Slow scroll down: trigger scroll-based animations
+    try {
+      await page.evaluate(async (opts: { stepPx: number; pauseMs: number; maxTimeMs: number }) => {
+        const startTime = Date.now();
+        let previousHeight = 0;
+
+        // Scroll until we've seen the full page (including lazy-loaded content)
+        while (Date.now() - startTime < opts.maxTimeMs) {
+          const currentHeight = document.body.scrollHeight;
+          const currentPosition = window.scrollY + window.innerHeight;
+
+          // If we've scrolled past the bottom and height hasn't changed, we're done
+          if (currentPosition >= currentHeight && currentHeight === previousHeight) {
+            break;
+          }
+
+          previousHeight = currentHeight;
+          window.scrollBy(0, opts.stepPx);
+          await new Promise((r) => setTimeout(r, opts.pauseMs));
         }
-
-        // Scroll back to top
-        window.scrollTo(0, 0);
-      });
-
-      // Wait for animations to settle after scrolling
-      await page.waitForTimeout(1500);
+      }, { stepPx: SCROLL_STEP_PX, pauseMs: SCROLL_PAUSE_MS, maxTimeMs: MAX_SCROLL_TIME_MS });
     } catch (scrollError: unknown) {
       const scrollMessage =
         scrollError instanceof Error ? scrollError.message : String(scrollError);
       console.warn(
-        `[screenshots/client] Scroll routine failed for ${url}: ${scrollMessage}. Capturing without scroll.`,
+        `[screenshots/client] Scroll routine failed for ${url}: ${scrollMessage}. Capturing without full scroll.`,
       );
     }
 
-    // Wait for JS-driven content (carousels, lazy-loaded sections) to initialize
-    await page.waitForTimeout(2000);
-
-    // Force hidden animated elements visible — minimal override
-    // ONLY opacity and visibility. Do NOT override transform, animation,
-    // transition, or clip-path — those break carousels and positioned elements.
+    // Phase 3 — Scroll back to top and settle for hero animations
     try {
-      await page.addStyleTag({
-        content: `
-          *, *::before, *::after {
-            opacity: 1 !important;
-            visibility: visible !important;
-          }
-        `,
-      });
-      await page.waitForTimeout(300);
-    } catch (styleError: unknown) {
-      const styleMessage =
-        styleError instanceof Error ? styleError.message : String(styleError);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.waitForTimeout(SCROLL_BACK_SETTLE_MS);
+    } catch (scrollBackError: unknown) {
+      const scrollBackMessage =
+        scrollBackError instanceof Error ? scrollBackError.message : String(scrollBackError);
       console.warn(
-        `[screenshots/client] Style injection failed for ${url}: ${styleMessage}. Capturing as-is.`,
+        `[screenshots/client] Scroll-back failed for ${url}: ${scrollBackMessage}. Capturing at current position.`,
+      );
+    }
+
+    // Phase 4 — Final paint wait: ensure all repaints from scroll-back are done
+    try {
+      await page.evaluate(async (maxWait: number) => {
+        await new Promise<void>((resolve) => {
+          const timeout = setTimeout(resolve, maxWait);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              if (typeof requestIdleCallback === 'function') {
+                requestIdleCallback(() => { clearTimeout(timeout); resolve(); });
+              } else {
+                setTimeout(() => { clearTimeout(timeout); resolve(); }, 500);
+              }
+            });
+          });
+        });
+      }, IDLE_WAIT_MAX_MS);
+    } catch (finalWaitError: unknown) {
+      const finalWaitMessage =
+        finalWaitError instanceof Error ? finalWaitError.message : String(finalWaitError);
+      console.warn(
+        `[screenshots/client] Final paint wait failed for ${url}: ${finalWaitMessage}. Capturing as-is.`,
       );
     }
 
