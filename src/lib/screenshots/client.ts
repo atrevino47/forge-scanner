@@ -12,6 +12,35 @@ const MOBILE_VIEWPORT = { width: 375, height: 812 } as const;
 
 const NAVIGATION_TIMEOUT_MS = 30_000;
 
+// Realistic user-agent — avoids "HeadlessChrome" detection that causes
+// sites to serve blank pages, CAPTCHAs, or bot-block redirects.
+const CHROME_USER_AGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
+
+// Common cookie consent selectors — dismissed before capture so overlays
+// don't hide page content. Ordered by prevalence.
+const COOKIE_DISMISS_SELECTORS = [
+  // Generic patterns (most cookie banners)
+  '[id*="cookie"] button[class*="accept"]',
+  '[id*="cookie"] button[class*="agree"]',
+  '[id*="cookie"] button[class*="close"]',
+  '[class*="cookie"] button[class*="accept"]',
+  '[class*="cookie"] button[class*="agree"]',
+  '[class*="cookie"] button[class*="close"]',
+  // CookieBot
+  '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
+  // OneTrust
+  '#onetrust-accept-btn-handler',
+  // Complianz
+  '.cmplz-accept',
+  // Cookie Notice plugin
+  '.cookie-notice-container .cn-set-cookie',
+  // Generic "Accept" / "Accept All" buttons in common banner positions
+  '[aria-label*="cookie" i] button',
+  '[aria-label*="consent" i] button',
+  'button[id*="accept"]',
+];
+
 // "Patient visitor" scroll constants — simulate a real human scrolling
 // so scroll-triggered animations (GSAP ScrollTrigger, AOS, Intersection
 // Observer) fire and play to completion before we capture.
@@ -57,7 +86,7 @@ export async function connectBrowser(): Promise<Browser> {
 
   try {
     const browser = await chromium.connectOverCDP(
-      `wss://chrome.browserless.io?token=${apiKey}`,
+      `wss://chrome.browserless.io?token=${apiKey}&stealth`,
     );
     return browser;
   } catch (error: unknown) {
@@ -125,11 +154,13 @@ export async function capturePageWithMetadata(
   let page: Page | null = null;
 
   try {
-    // Create a new page in the first available browser context,
-    // or create a new context if none exist.
-    const contexts = browser.contexts();
-    const context =
-      contexts.length > 0 ? contexts[0] : await browser.newContext();
+    // Fresh context per capture — prevents cookie/state bleed between
+    // pages and ensures each capture starts with a clean session.
+    const context = await browser.newContext({
+      userAgent: CHROME_USER_AGENT,
+      locale: 'en-US',
+      javaScriptEnabled: true,
+    });
     page = await context.newPage();
 
     await page.setViewportSize(viewportSize);
@@ -155,6 +186,48 @@ export async function capturePageWithMetadata(
           `[screenshots/client] Navigation to ${url} failed: ${navMessage}`,
         );
       }
+    }
+
+    // ── DOM readiness: ensure the page actually has rendered content ──
+    // networkidle fires when network goes quiet, but SPAs (React, Vue, etc.)
+    // may not have hydrated yet. Wait for at least one visible element in <body>.
+    try {
+      await page.waitForFunction(
+        () => {
+          const body = document.body;
+          if (!body) return false;
+          // Check that body has child elements with actual dimensions
+          const children = body.querySelectorAll('*');
+          for (const el of children) {
+            const rect = el.getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0 && rect.top < window.innerHeight) {
+              return true;
+            }
+          }
+          return false;
+        },
+        { timeout: 10_000 },
+      );
+    } catch {
+      console.warn(
+        `[screenshots/client] DOM readiness check timed out for ${url}. Page may be empty or blocked. Continuing.`,
+      );
+    }
+
+    // ── Cookie consent dismissal ──
+    // Try to dismiss cookie banners that can overlay the entire page.
+    // Best-effort: if no banner exists, selectors simply don't match.
+    try {
+      for (const selector of COOKIE_DISMISS_SELECTORS) {
+        const button = await page.$(selector);
+        if (button) {
+          await button.click();
+          await page.waitForTimeout(500);
+          break; // One dismissal is usually enough
+        }
+      }
+    } catch {
+      // Cookie dismissal is non-critical — continue with capture
     }
 
     /* PATIENT VISITOR CAPTURE SEQUENCE
@@ -285,14 +358,17 @@ export async function capturePageWithMetadata(
       `[screenshots/client] Failed to capture page ${url} (${viewport}): ${message}`,
     );
   } finally {
+    // Close the entire context (not just the page) to release all
+    // resources and prevent cookie/state bleed between captures.
     if (page) {
       try {
-        await page.close();
+        const ctx = page.context();
+        await ctx.close();
       } catch (closeError: unknown) {
         const closeMessage =
           closeError instanceof Error ? closeError.message : String(closeError);
         console.warn(
-          `[screenshots/client] Failed to close page for ${url}: ${closeMessage}`,
+          `[screenshots/client] Failed to close context for ${url}: ${closeMessage}`,
         );
       }
     }
