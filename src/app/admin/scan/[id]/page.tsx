@@ -860,7 +860,13 @@ function StageContent({ stage }: { stage: FunnelStageResult }) {
                           Forge Fix
                         </p>
                         <p className="font-body text-xs text-[#9A9890]">
-                          [COPY: brief talking point for what Forge would do to fix this issue]
+                          {f.type === 'critical'
+                            ? `We'd prioritize fixing "${f.title.toLowerCase()}" immediately — this is actively costing conversions.`
+                            : f.type === 'warning'
+                            ? `We'd address "${f.title.toLowerCase()}" in the first sprint — quick win with measurable impact.`
+                            : f.type === 'opportunity'
+                            ? `There's a clear opportunity here: "${f.title.toLowerCase()}" — we'd build this into the growth roadmap.`
+                            : `"${f.title.toLowerCase()}" is already working well — we'd double down on this pattern.`}
                         </p>
                       </div>
                     </div>
