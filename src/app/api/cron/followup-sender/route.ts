@@ -23,7 +23,7 @@ import type { DbFollowup, DbScan, DbLead, DbFunnelStage, DbScreenshot } from '@/
 import { renderFollowupEmail } from '@/lib/followup/email-template';
 
 const BATCH_SIZE = 10; // Max follow-ups to process per cron invocation
-const FROM_EMAIL = 'Forge Digital <insights@forgedigital.com>';
+const FROM_EMAIL = 'Forge <insights@forgewith.ai>';
 const CALCOM_URL = process.env.NEXT_PUBLIC_CALCOM_EMBED_URL || 'https://cal.com/forge';
 
 interface CronFollowupResult {
@@ -194,7 +194,7 @@ async function processFollowup(
   );
 
   const aiResponse = await analyzeWithSonnet({
-    systemPrompt: 'You are a senior marketing strategist at Forge Digital. Generate follow-up emails that feel personal, data-driven, and consultative. Return ONLY valid JSON.',
+    systemPrompt: 'You are a senior marketing strategist at Forge (forgewith.ai). Generate follow-up emails that feel personal, data-driven, and consultative. Return ONLY valid JSON.',
     userPrompt: prompt,
     maxTokens: 1024,
   });
@@ -205,7 +205,7 @@ async function processFollowup(
   }
 
   // Step 5: Render branded HTML template and send via Resend
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://audit.forgedigital.com';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://forgewith.ai';
   const scanUrl = followup.scan_id ? `${appUrl}/scan/${followup.scan_id}` : undefined;
 
   const html = renderFollowupEmail({

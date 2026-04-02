@@ -57,7 +57,7 @@ const deleteMemberSchema = z.object({
 const MOCK_MEMBERS: TeamMember[] = [
   {
     id: 'team_001',
-    email: 'admin@forgedigital.com',
+    email: 'admin@forgewith.ai',
     fullName: 'Adrian Trevino',
     role: 'admin',
     active: true,
@@ -66,7 +66,7 @@ const MOCK_MEMBERS: TeamMember[] = [
   },
   {
     id: 'team_002',
-    email: 'closer@forgedigital.com',
+    email: 'closer@forgewith.ai',
     fullName: 'Jamie Rivera',
     role: 'closer',
     active: true,
@@ -75,7 +75,7 @@ const MOCK_MEMBERS: TeamMember[] = [
   },
   {
     id: 'team_003',
-    email: 'viewer@forgedigital.com',
+    email: 'viewer@forgewith.ai',
     fullName: 'Alex Kim',
     role: 'viewer',
     active: false,

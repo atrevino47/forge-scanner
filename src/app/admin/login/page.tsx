@@ -81,7 +81,7 @@ export default function AdminLoginPage() {
                 required
                 autoComplete="email"
                 className="w-full rounded-lg border border-[rgba(255,107,43,0.12)] bg-[#282826] px-4 py-2.5 font-body text-sm text-[#F0EFE9] placeholder:text-[#9A9890]/40 focus:border-forge-accent/40 focus:outline-none"
-                placeholder="admin@forgedigital.com"
+                placeholder="admin@forgewith.ai"
               />
             </div>
 
@@ -115,7 +115,7 @@ export default function AdminLoginPage() {
         </div>
 
         <p className="mt-6 text-center font-mono text-[10px] text-[#9A9890]/50">
-          audit.forgedigital.com
+          forgewith.ai
         </p>
       </div>
     </div>

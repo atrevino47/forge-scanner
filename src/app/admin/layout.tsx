@@ -67,7 +67,7 @@ export default function AdminLayout({
         {/* Footer */}
         <div className="border-t border-[rgba(255,107,43,0.12)] px-6 py-4">
           <p className="font-mono text-[10px] text-[#9A9890]">
-            audit.forgedigital.com
+            forgewith.ai
           </p>
         </div>
       </aside>
@@ -156,7 +156,7 @@ export default function AdminLayout({
             </nav>
             <div className="border-t border-[rgba(255,107,43,0.12)] px-6 py-4">
               <p className="font-mono text-[10px] text-[#9A9890]">
-                audit.forgedigital.com
+                forgewith.ai
               </p>
             </div>
           </aside>

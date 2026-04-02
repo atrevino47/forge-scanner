@@ -106,7 +106,7 @@ export function FooterSection() {
             className="font-body text-xs"
             style={{ color: '#6B6860' }}
           >
-            &copy; 2026 Forge Digital
+            &copy; 2026 forgewith.ai
           </p>
         </div>
       </footer>
