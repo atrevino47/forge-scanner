@@ -1,0 +1,17 @@
+services:
+  chrome:
+    build: .
+    ports:
+      - "127.0.0.1:9222:9222"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+    # Health check — CDP endpoint responds
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9222/json/version"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

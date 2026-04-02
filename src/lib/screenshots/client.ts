@@ -1,5 +1,6 @@
 // src/lib/screenshots/client.ts
-// Browserless.io screenshot client — connects via CDP WebSocket and captures pages.
+// Screenshot client — connects to headless Chrome via CDP WebSocket and captures pages.
+// Supports self-hosted Chrome (BROWSER_WS_ENDPOINT) with Browserless.io fallback.
 
 import { chromium, type Browser, type Page } from 'playwright-core';
 
@@ -71,30 +72,39 @@ export interface PageWithMetadata {
 // ============================================================
 
 /**
- * Connects to Browserless.io via CDP WebSocket.
- * Requires BROWSERLESS_API_KEY environment variable.
+ * Connects to a headless Chrome instance via CDP WebSocket.
+ *
+ * Priority: BROWSER_WS_ENDPOINT (self-hosted Chrome on Hetzner VPS)
+ * Fallback: BROWSERLESS_API_KEY (Browserless.io hosted service)
+ *
+ * See docs/HETZNER-SETUP.md for self-hosted Chrome deployment.
  */
 export async function connectBrowser(): Promise<Browser> {
-  const apiKey = process.env.BROWSERLESS_API_KEY;
+  // Self-hosted Chrome (Hetzner VPS) takes priority over Browserless.io
+  const wsEndpoint = process.env.BROWSER_WS_ENDPOINT;
+  const browserlessKey = process.env.BROWSERLESS_API_KEY;
 
-  if (!apiKey) {
+  if (!wsEndpoint && !browserlessKey) {
     throw new Error(
-      '[screenshots/client] BROWSERLESS_API_KEY environment variable is not set. ' +
-        'Set it to your Browserless.io API key to enable screenshot capture.',
+      '[screenshots/client] No browser endpoint configured. ' +
+        'Set BROWSER_WS_ENDPOINT (self-hosted Chrome) or BROWSERLESS_API_KEY (Browserless.io).',
     );
   }
 
+  const url = wsEndpoint || `wss://chrome.browserless.io?token=${browserlessKey}&stealth&timeout=300000`;
+  const label = wsEndpoint ? 'self-hosted Chrome' : 'Browserless.io';
+
   try {
-    const browser = await chromium.connectOverCDP(
-      `wss://chrome.browserless.io?token=${apiKey}&stealth&timeout=300000`,
-    );
+    const browser = await chromium.connectOverCDP(url);
+    console.log(`[screenshots/client] Connected to ${label}`);
     return browser;
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : String(error);
+    const message = error instanceof Error ? error.message : String(error);
     throw new Error(
-      `[screenshots/client] Failed to connect to Browserless.io: ${message}. ` +
-        'Check that your BROWSERLESS_API_KEY is valid and the service is reachable.',
+      `[screenshots/client] Failed to connect to ${label}: ${message}. ` +
+        (wsEndpoint
+          ? 'Check that your VPS is running and the Chrome container is healthy.'
+          : 'Check that your BROWSERLESS_API_KEY is valid and the service is reachable.'),
     );
   }
 }

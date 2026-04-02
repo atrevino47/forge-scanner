@@ -22,7 +22,7 @@ const GROUPS: Array<{ title: string; keys: string[] }> = [
   },
   {
     title: 'AI & Capture',
-    keys: ['ANTHROPIC_API_KEY', 'BROWSERLESS_API_KEY', 'GOOGLE_PAGESPEED_API_KEY', 'GOOGLE_PLACES_API_KEY'],
+    keys: ['ANTHROPIC_API_KEY', 'BROWSER_WS_ENDPOINT', 'BROWSERLESS_API_KEY', 'GOOGLE_PAGESPEED_API_KEY', 'GOOGLE_PLACES_API_KEY'],
   },
   {
     title: 'Payments & Booking',
