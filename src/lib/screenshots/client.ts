@@ -86,7 +86,7 @@ export async function connectBrowser(): Promise<Browser> {
 
   try {
     const browser = await chromium.connectOverCDP(
-      `wss://chrome.browserless.io?token=${apiKey}&stealth`,
+      `wss://chrome.browserless.io?token=${apiKey}&stealth&timeout=300000`,
     );
     return browser;
   } catch (error: unknown) {
@@ -136,17 +136,32 @@ export async function captureScreenshot(
 // ============================================================
 
 /**
+ * Two-tier capture modes:
+ * - 'full': Patient visitor — slow scroll, idle detection, cookie dismiss.
+ *           Used for homepage where screenshot quality = client trust.
+ * - 'fast': Quick capture — networkidle + short settle. Used for inner
+ *           pages, social profiles, GBP where AI analysis matters more
+ *           than pixel-perfect screenshots.
+ */
+export type CaptureMode = 'full' | 'fast';
+
+/**
  * Creates a new page, navigates to the URL, captures a screenshot,
  * extracts HTML and page title, then closes the page.
+ *
+ * Uses a shared browser context for cookie continuity within a scan
+ * (inner pages may need session cookies from the homepage visit).
  *
  * @param browser - Browser instance from connectBrowser()
  * @param url - URL to navigate to
  * @param viewport - 'desktop' (1440x900) or 'mobile' (375x812)
+ * @param mode - 'full' (patient visitor) or 'fast' (quick capture). Defaults to 'fast'.
  */
 export async function capturePageWithMetadata(
   browser: Browser,
   url: string,
   viewport: 'desktop' | 'mobile',
+  mode: CaptureMode = 'fast',
 ): Promise<PageWithMetadata> {
   const viewportSize =
     viewport === 'desktop' ? DESKTOP_VIEWPORT : MOBILE_VIEWPORT;
@@ -154,13 +169,18 @@ export async function capturePageWithMetadata(
   let page: Page | null = null;
 
   try {
-    // Fresh context per capture — prevents cookie/state bleed between
-    // pages and ensures each capture starts with a clean session.
-    const context = await browser.newContext({
-      userAgent: CHROME_USER_AGENT,
-      locale: 'en-US',
-      javaScriptEnabled: true,
-    });
+    // Shared context per browser — preserves cookies between captures
+    // within a scan (e.g., homepage cookies available for inner pages).
+    // First call creates the context with a real user-agent; subsequent
+    // calls reuse it.
+    const contexts = browser.contexts();
+    const context = contexts.length > 0
+      ? contexts[0]
+      : await browser.newContext({
+          userAgent: CHROME_USER_AGENT,
+          locale: 'en-US',
+          javaScriptEnabled: true,
+        });
     page = await context.newPage();
 
     await page.setViewportSize(viewportSize);
@@ -196,7 +216,6 @@ export async function capturePageWithMetadata(
         () => {
           const body = document.body;
           if (!body) return false;
-          // Check that body has child elements with actual dimensions
           const children = body.querySelectorAll('*');
           for (const el of children) {
             const rect = el.getBoundingClientRect();
@@ -206,7 +225,7 @@ export async function capturePageWithMetadata(
           }
           return false;
         },
-        { timeout: 10_000 },
+        { timeout: 5_000 },
       );
     } catch {
       console.warn(
@@ -214,121 +233,135 @@ export async function capturePageWithMetadata(
       );
     }
 
+    // ── Diagnostic: log anchor count to detect blocked pages ──
+    try {
+      const anchorCount = await page.evaluate(() => document.querySelectorAll('a').length);
+      if (anchorCount < 3) {
+        console.warn(
+          `[screenshots/client] Only ${anchorCount} links found on ${url} — page may be blocked by bot detection`,
+        );
+      }
+    } catch {
+      // Non-critical diagnostic
+    }
+
     // ── Cookie consent dismissal ──
-    // Try to dismiss cookie banners that can overlay the entire page.
-    // Best-effort: if no banner exists, selectors simply don't match.
     try {
       for (const selector of COOKIE_DISMISS_SELECTORS) {
         const button = await page.$(selector);
         if (button) {
           await button.click();
           await page.waitForTimeout(500);
-          break; // One dismissal is usually enough
+          break;
         }
       }
     } catch {
-      // Cookie dismissal is non-critical — continue with capture
+      // Cookie dismissal is non-critical
     }
 
-    /* PATIENT VISITOR CAPTURE SEQUENCE
-     * Simulates a real human visiting the page so scroll-triggered
-     * animations (GSAP ScrollTrigger, AOS, Intersection Observer) fire
-     * and play to completion. No CSS force-overrides — the screenshot
-     * shows exactly what a visitor sees.
-     *
-     * Phase 1 (0s):   Initial settle — wait for above-the-fold animations
-     * Phase 2 (~3s):  Slow scroll down — 300px steps, 400ms pause each
-     * Phase 3 (var):  Scroll back to top — 2s settle for hero replays
-     * Phase 4 (var):  Final paint wait — idle detection before capture
-     */
+    // ── Capture mode: full (patient visitor) vs fast ──
+    if (mode === 'full') {
+      /* PATIENT VISITOR CAPTURE SEQUENCE
+       * Simulates a real human visiting the page so scroll-triggered
+       * animations (GSAP ScrollTrigger, AOS, Intersection Observer) fire
+       * and play to completion. No CSS force-overrides — the screenshot
+       * shows exactly what a visitor sees.
+       *
+       * Phase 1 (0s):   Initial settle — wait for above-the-fold animations
+       * Phase 2 (~3s):  Slow scroll down — 300px steps, 400ms pause each
+       * Phase 3 (var):  Scroll back to top — 2s settle for hero replays
+       * Phase 4 (var):  Final paint wait — idle detection before capture
+       */
 
-    // Phase 1 — Initial settle: wait for above-the-fold animations to complete
-    try {
-      await page.evaluate(async (maxWait: number) => {
-        await new Promise<void>((resolve) => {
-          const timeout = setTimeout(resolve, maxWait);
-          requestAnimationFrame(() => {
+      // Phase 1 — Initial settle
+      try {
+        await page.evaluate(async (maxWait: number) => {
+          await new Promise<void>((resolve) => {
+            const timeout = setTimeout(resolve, maxWait);
             requestAnimationFrame(() => {
-              if (typeof requestIdleCallback === 'function') {
-                requestIdleCallback(() => { clearTimeout(timeout); resolve(); });
-              } else {
-                setTimeout(() => { clearTimeout(timeout); resolve(); }, 500);
-              }
+              requestAnimationFrame(() => {
+                if (typeof requestIdleCallback === 'function') {
+                  requestIdleCallback(() => { clearTimeout(timeout); resolve(); });
+                } else {
+                  setTimeout(() => { clearTimeout(timeout); resolve(); }, 500);
+                }
+              });
             });
           });
-        });
-      }, IDLE_WAIT_MAX_MS);
-    } catch (settleError: unknown) {
-      const settleMessage =
-        settleError instanceof Error ? settleError.message : String(settleError);
-      console.warn(
-        `[screenshots/client] Initial settle failed for ${url}: ${settleMessage}. Continuing.`,
-      );
-    }
+        }, IDLE_WAIT_MAX_MS);
+      } catch (settleError: unknown) {
+        const settleMessage =
+          settleError instanceof Error ? settleError.message : String(settleError);
+        console.warn(
+          `[screenshots/client] Initial settle failed for ${url}: ${settleMessage}. Continuing.`,
+        );
+      }
 
-    // Phase 2 — Slow scroll down: trigger scroll-based animations
-    try {
-      await page.evaluate(async (opts: { stepPx: number; pauseMs: number; maxTimeMs: number }) => {
-        const startTime = Date.now();
-        let previousHeight = 0;
+      // Phase 2 — Slow scroll down
+      try {
+        await page.evaluate(async (opts: { stepPx: number; pauseMs: number; maxTimeMs: number }) => {
+          const startTime = Date.now();
+          let previousHeight = 0;
 
-        // Scroll until we've seen the full page (including lazy-loaded content)
-        while (Date.now() - startTime < opts.maxTimeMs) {
-          const currentHeight = document.body.scrollHeight;
-          const currentPosition = window.scrollY + window.innerHeight;
+          while (Date.now() - startTime < opts.maxTimeMs) {
+            const currentHeight = document.body.scrollHeight;
+            const currentPosition = window.scrollY + window.innerHeight;
 
-          // If we've scrolled past the bottom and height hasn't changed, we're done
-          if (currentPosition >= currentHeight && currentHeight === previousHeight) {
-            break;
+            if (currentPosition >= currentHeight && currentHeight === previousHeight) {
+              break;
+            }
+
+            previousHeight = currentHeight;
+            window.scrollBy(0, opts.stepPx);
+            await new Promise((r) => setTimeout(r, opts.pauseMs));
           }
+        }, { stepPx: SCROLL_STEP_PX, pauseMs: SCROLL_PAUSE_MS, maxTimeMs: MAX_SCROLL_TIME_MS });
+      } catch (scrollError: unknown) {
+        const scrollMessage =
+          scrollError instanceof Error ? scrollError.message : String(scrollError);
+        console.warn(
+          `[screenshots/client] Scroll routine failed for ${url}: ${scrollMessage}. Capturing without full scroll.`,
+        );
+      }
 
-          previousHeight = currentHeight;
-          window.scrollBy(0, opts.stepPx);
-          await new Promise((r) => setTimeout(r, opts.pauseMs));
-        }
-      }, { stepPx: SCROLL_STEP_PX, pauseMs: SCROLL_PAUSE_MS, maxTimeMs: MAX_SCROLL_TIME_MS });
-    } catch (scrollError: unknown) {
-      const scrollMessage =
-        scrollError instanceof Error ? scrollError.message : String(scrollError);
-      console.warn(
-        `[screenshots/client] Scroll routine failed for ${url}: ${scrollMessage}. Capturing without full scroll.`,
-      );
-    }
+      // Phase 3 — Scroll back to top
+      try {
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.waitForTimeout(SCROLL_BACK_SETTLE_MS);
+      } catch (scrollBackError: unknown) {
+        const scrollBackMessage =
+          scrollBackError instanceof Error ? scrollBackError.message : String(scrollBackError);
+        console.warn(
+          `[screenshots/client] Scroll-back failed for ${url}: ${scrollBackMessage}. Capturing at current position.`,
+        );
+      }
 
-    // Phase 3 — Scroll back to top and settle for hero animations
-    try {
-      await page.evaluate(() => window.scrollTo(0, 0));
-      await page.waitForTimeout(SCROLL_BACK_SETTLE_MS);
-    } catch (scrollBackError: unknown) {
-      const scrollBackMessage =
-        scrollBackError instanceof Error ? scrollBackError.message : String(scrollBackError);
-      console.warn(
-        `[screenshots/client] Scroll-back failed for ${url}: ${scrollBackMessage}. Capturing at current position.`,
-      );
-    }
-
-    // Phase 4 — Final paint wait: ensure all repaints from scroll-back are done
-    try {
-      await page.evaluate(async (maxWait: number) => {
-        await new Promise<void>((resolve) => {
-          const timeout = setTimeout(resolve, maxWait);
-          requestAnimationFrame(() => {
+      // Phase 4 — Final paint wait
+      try {
+        await page.evaluate(async (maxWait: number) => {
+          await new Promise<void>((resolve) => {
+            const timeout = setTimeout(resolve, maxWait);
             requestAnimationFrame(() => {
-              if (typeof requestIdleCallback === 'function') {
-                requestIdleCallback(() => { clearTimeout(timeout); resolve(); });
-              } else {
-                setTimeout(() => { clearTimeout(timeout); resolve(); }, 500);
-              }
+              requestAnimationFrame(() => {
+                if (typeof requestIdleCallback === 'function') {
+                  requestIdleCallback(() => { clearTimeout(timeout); resolve(); });
+                } else {
+                  setTimeout(() => { clearTimeout(timeout); resolve(); }, 500);
+                }
+              });
             });
           });
-        });
-      }, IDLE_WAIT_MAX_MS);
-    } catch (finalWaitError: unknown) {
-      const finalWaitMessage =
-        finalWaitError instanceof Error ? finalWaitError.message : String(finalWaitError);
-      console.warn(
-        `[screenshots/client] Final paint wait failed for ${url}: ${finalWaitMessage}. Capturing as-is.`,
-      );
+        }, IDLE_WAIT_MAX_MS);
+      } catch (finalWaitError: unknown) {
+        const finalWaitMessage =
+          finalWaitError instanceof Error ? finalWaitError.message : String(finalWaitError);
+        console.warn(
+          `[screenshots/client] Final paint wait failed for ${url}: ${finalWaitMessage}. Capturing as-is.`,
+        );
+      }
+    } else {
+      // Fast mode — just a short settle for basic JS rendering
+      await page.waitForTimeout(2000);
     }
 
     // Capture screenshot (full page for desktop, viewport-only for mobile)
@@ -339,10 +372,7 @@ export async function capturePageWithMetadata(
 
     // Extract page content and title
     const html = await page.content();
-
     const title = await page.title();
-
-    // Get the final URL (after any redirects)
     const finalUrl = page.url();
 
     return {
@@ -358,17 +388,15 @@ export async function capturePageWithMetadata(
       `[screenshots/client] Failed to capture page ${url} (${viewport}): ${message}`,
     );
   } finally {
-    // Close the entire context (not just the page) to release all
-    // resources and prevent cookie/state bleed between captures.
+    // Close the page but keep the context alive for subsequent captures
     if (page) {
       try {
-        const ctx = page.context();
-        await ctx.close();
+        await page.close();
       } catch (closeError: unknown) {
         const closeMessage =
           closeError instanceof Error ? closeError.message : String(closeError);
         console.warn(
-          `[screenshots/client] Failed to close context for ${url}: ${closeMessage}`,
+          `[screenshots/client] Failed to close page for ${url}: ${closeMessage}`,
         );
       }
     }
