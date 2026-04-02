@@ -80,6 +80,9 @@ export interface ScanAnalysisInput {
 
   /** Apify social profile metrics (traffic stage) */
   socialEnrichment?: SocialEnrichmentResult;
+
+  /** Google Ads Transparency detection results (traffic stage) */
+  googleAdsDetection?: import('./detect-google-ads').GoogleAdsResult;
 }
 
 // ============================================================
@@ -98,6 +101,7 @@ export async function runScanAnalysis(
     videoData,
     adDetection,
     socialEnrichment,
+    googleAdsDetection,
   } = input;
 
   // Group screenshots by stage
@@ -130,6 +134,7 @@ export async function runScanAnalysis(
             videoData,
             adDetection,
             socialEnrichment,
+            googleAdsDetection,
           },
           makeStageCallback('traffic'),
           callbacks.onAnnotationReady,

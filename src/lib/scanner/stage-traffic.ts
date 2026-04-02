@@ -12,6 +12,7 @@ import type {
   StageSummary,
   VideoAnalysis,
 } from '@/../../contracts/types';
+import type { GoogleAdsResult } from './detect-google-ads';
 import { annotateStageScreenshots, generateStageSummary } from '../ai/annotate';
 import { analyzeVideoContent, type ProfileVideoData } from '../ai/video-analysis';
 import { createStageResult } from './utils';
@@ -48,6 +49,7 @@ export interface TrafficStageInput {
   videoData?: ProfileVideoData[];
   adDetection?: AdDetectionResult;
   socialEnrichment?: SocialEnrichmentResult;
+  googleAdsDetection?: GoogleAdsResult;
 }
 
 export async function analyzeTrafficStage(
@@ -56,11 +58,12 @@ export async function analyzeTrafficStage(
   onAnnotationReady?: AnnotationReadyCallback,
   onVideoAnalysis?: VideoAnalysisCallback,
 ): Promise<FunnelStageResult> {
-  const { screenshots, screenshotFetcher, businessContext, videoData, adDetection, socialEnrichment } = input;
+  const { screenshots, screenshotFetcher, businessContext, videoData, adDetection, socialEnrichment, googleAdsDetection } = input;
 
   const hasAnyData = screenshots.length > 0
     || (videoData && videoData.length > 0)
     || adDetection?.isAdvertising
+    || googleAdsDetection?.hasActiveAds
     || (socialEnrichment && socialEnrichment.profiles.length > 0);
 
   if (!hasAnyData) {
@@ -125,6 +128,11 @@ export async function analyzeTrafficStage(
   // Add ad detection annotations
   if (adDetection) {
     allAnnotations.push(...adDetectionToAnnotations(adDetection));
+  }
+
+  // Add Google Ads detection annotations
+  if (googleAdsDetection) {
+    allAnnotations.push(...googleAdsToAnnotations(googleAdsDetection));
   }
 
   // Add social enrichment annotations
@@ -325,6 +333,39 @@ function adDetectionToAnnotations(adDetection: AdDetectionResult): Annotation[] 
   }
 
   return annotations;
+}
+
+// ============================================================
+// Google Ads detection → annotations
+// ============================================================
+
+function googleAdsToAnnotations(result: GoogleAdsResult): Annotation[] {
+  if (result.hasActiveAds) {
+    return [
+      {
+        id: 'traffic-google-ads-active',
+        position: { x: 50, y: 12 },
+        type: 'positive',
+        title: 'Active Google Ads detected',
+        detail: `This business is running Google Ads.${
+          result.adCount !== null ? ` Approximately ${result.adCount} active ads found.` : ''
+        } This indicates paid search investment — the key question is whether landing pages are optimized for the traffic these ads drive.`,
+        category: 'paid_traffic',
+      },
+    ];
+  }
+
+  return [
+    {
+      id: 'traffic-google-ads-none',
+      position: { x: 50, y: 12 },
+      type: 'opportunity',
+      title: 'No Google Ads detected',
+      detail:
+        'No active Google Ads found. If competitors are bidding on relevant keywords, this business is missing high-intent search traffic. Google Ads can capture buyers actively searching for their services.',
+      category: 'paid_traffic',
+    },
+  ];
 }
 
 // ============================================================

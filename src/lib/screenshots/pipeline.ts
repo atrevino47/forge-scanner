@@ -6,6 +6,7 @@ import { createServiceClient } from '@/lib/db/client';
 import { runScanAnalysis } from '@/lib/scanner/orchestrator';
 import { buildBusinessContext } from '@/lib/scanner/utils';
 import { detectMetaAds } from '@/lib/scanner/ad-detection';
+import { detectGoogleAds, type GoogleAdsResult } from '@/lib/scanner/detect-google-ads';
 import { enrichSocialProfiles, enrichmentToContext } from '@/lib/scanner/apify-enrichment';
 import { connectBrowser, capturePageWithMetadata, disconnectBrowser as closeBrowser } from './client';
 import { detectInnerPages, detectSocialLinks, detectGbpFromHtml } from './social-detector';
@@ -214,17 +215,19 @@ export async function runScreenshotPipeline(params: {
     // --------------------------------------------------------
     let adDetection: AdDetectionResult | null = null;
     let socialEnrichment: SocialEnrichmentResult | null = null;
+    let googleAdsDetection: GoogleAdsResult | null = null;
 
     try {
       // Extract business name from page title or URL for ad search
       const businessNameForSearch = businessName || extractBusinessNameFromUrl(websiteUrl);
 
-      // Run ad detection and social enrichment in parallel
-      // These are optional enrichments — pipeline continues if either fails
-      const [adResult, enrichResult] = await Promise.allSettled([
+      // Run ad detection, Google Ads check, and social enrichment in parallel
+      // These are optional enrichments — pipeline continues if any fail
+      const [adResult, googleAdsResult, enrichResult] = await Promise.allSettled([
         businessNameForSearch
           ? detectMetaAds(businessNameForSearch, websiteUrl)
           : Promise.resolve(null),
+        detectGoogleAds(websiteUrl),
         enrichSocialProfiles(detectedSocials),
       ]);
 
@@ -235,6 +238,15 @@ export async function runScreenshotPipeline(params: {
         }
       } else {
         console.error('[pipeline] Ad detection failed:', adResult.reason);
+      }
+
+      if (googleAdsResult.status === 'fulfilled') {
+        googleAdsDetection = googleAdsResult.value;
+        if (googleAdsDetection.hasActiveAds) {
+          console.log('[pipeline] Google Ads detected for domain');
+        }
+      } else {
+        console.error('[pipeline] Google Ads detection failed:', googleAdsResult.reason);
       }
 
       if (enrichResult.status === 'fulfilled') {
@@ -410,6 +422,9 @@ export async function runScreenshotPipeline(params: {
     if (adDetection) {
       businessContext += '\n\n' + adDetectionToContext(adDetection);
     }
+    if (googleAdsDetection) {
+      businessContext += '\n\n' + googleAdsToContext(googleAdsDetection);
+    }
 
     const analysisInput: ScanAnalysisInput = {
       scanId,
@@ -421,6 +436,7 @@ export async function runScreenshotPipeline(params: {
       homepageHtml: homepageHtml || undefined,
       adDetection: adDetection || undefined,
       socialEnrichment: socialEnrichment || undefined,
+      googleAdsDetection: googleAdsDetection || undefined,
     };
 
     const analysisCallbacks: ScanEventCallbacks = {
@@ -691,6 +707,16 @@ function adDetectionToContext(adDetection: AdDetectionResult): string {
       }
     }
   }
+  return lines.join('\n');
+}
+
+function googleAdsToContext(result: GoogleAdsResult): string {
+  const lines = ['GOOGLE ADS TRANSPARENCY DATA:'];
+  lines.push(`  Has active ads: ${result.hasActiveAds}`);
+  if (result.adCount !== null) {
+    lines.push(`  Approximate ad count: ${result.adCount}`);
+  }
+  lines.push(`  Transparency URL: ${result.transparencyUrl}`);
   return lines.join('\n');
 }
 
