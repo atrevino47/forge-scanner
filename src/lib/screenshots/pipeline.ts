@@ -118,8 +118,8 @@ export async function runScreenshotPipeline(params: {
     try {
       await updateStageStatus(supabase, scanId, 'landing', 'capturing');
 
-      // Desktop capture
-      const desktopResult = await capturePageWithMetadata(browser, websiteUrl, 'desktop');
+      // Desktop capture — full patient visitor mode for homepage (client-facing screenshot)
+      const desktopResult = await capturePageWithMetadata(browser, websiteUrl, 'desktop', 'full');
       homepageHtml = desktopResult.html;
 
       pendingScreenshots.push({
@@ -131,8 +131,8 @@ export async function runScreenshotPipeline(params: {
         viewport: 'desktop',
       });
 
-      // Mobile capture
-      const mobileResult = await capturePageWithMetadata(browser, websiteUrl, 'mobile');
+      // Mobile capture — full mode (also client-facing)
+      const mobileResult = await capturePageWithMetadata(browser, websiteUrl, 'mobile', 'full');
 
       pendingScreenshots.push({
         id: generateScreenshotId(),
@@ -154,10 +154,12 @@ export async function runScreenshotPipeline(params: {
     try {
       if (homepageHtml) {
         const innerPages = detectInnerPages(homepageHtml, websiteUrl);
+        console.log(`[pipeline] Inner page detection found ${innerPages.length} pages for ${websiteUrl}`);
         const pagesToCapture = innerPages.slice(0, MAX_INNER_PAGES);
 
         for (const pageInfo of pagesToCapture) {
           try {
+            // Fast mode for inner pages — AI analysis matters more than pixel-perfect screenshots
             const result = await capturePageWithMetadata(browser, pageInfo.url, 'desktop');
 
             pendingScreenshots.push({
@@ -188,6 +190,9 @@ export async function runScreenshotPipeline(params: {
       if (homepageHtml) {
         const detection = detectSocialLinks(homepageHtml, websiteUrl);
         detectedSocials = detection.resolved;
+        const resolvedCount = Object.keys(detection.resolved).length;
+        const ambiguousCount = Object.keys(detection.ambiguous).length;
+        console.log(`[pipeline] Social detection: ${resolvedCount} resolved, ${ambiguousCount} ambiguous for ${websiteUrl}`);
 
         // Store both resolved and ambiguous socials in the scan record
         const socialsForDb: Record<string, unknown> = { ...detection.resolved };

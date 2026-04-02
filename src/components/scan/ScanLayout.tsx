@@ -353,17 +353,38 @@ export function ScanLayout({ scanId }: { scanId: string }) {
   }, [scanId]);
 
   // ── SSE connection for real-time updates ──
+  // Ref tracks the EventSource so we can close it from the message handler
+  // when the scan reaches a terminal state (completed/failed). Without this,
+  // EventSource auto-reconnects after the server closes the stream, replays
+  // all events from scratch, and the ProgressIndicator re-mounts — yanking
+  // the user back to the top of the page in an infinite loop.
+  const esRef = useRef<EventSource | null>(null);
+
   useEffect(() => {
+    // Don't open SSE if the scan is already in a terminal state
+    if (state.status === 'completed' || state.status === 'failed') return;
+
     const es = new EventSource(`/api/scan/status/${scanId}`);
+    esRef.current = es;
+
     es.onmessage = (e) => {
       try {
         const event = JSON.parse(e.data as string) as ScanSSEEvent;
         dispatch({ type: 'SSE_EVENT', event });
+
+        // Terminal events — close SSE to prevent auto-reconnect loop
+        if (event.type === 'scan_completed' || event.type === 'scan_failed') {
+          es.close();
+          esRef.current = null;
+        }
       } catch {}
     };
     es.onerror = () => {};
-    return () => es.close();
-  }, [scanId]);
+    return () => {
+      es.close();
+      esRef.current = null;
+    };
+  }, [scanId, state.status]);
 
   // ── 30s auto-open chat after scan completes ──
   useEffect(() => {
