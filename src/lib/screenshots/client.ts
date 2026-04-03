@@ -91,10 +91,25 @@ export async function connectBrowser(): Promise<Browser> {
     );
   }
 
-  const url = wsEndpoint || `wss://chrome.browserless.io?token=${browserlessKey}&stealth&timeout=300000`;
   const label = wsEndpoint ? 'self-hosted Chrome' : 'Browserless.io';
 
   try {
+    let url: string;
+
+    if (wsEndpoint) {
+      // Self-hosted Chrome: discover the WebSocket debugger URL via /json/version
+      // then rewrite it to use the tunnel hostname (Chrome returns ws://localhost/...)
+      const httpUrl = wsEndpoint.replace(/^wss:/, 'https:').replace(/^ws:/, 'http:');
+      const versionRes = await fetch(`${httpUrl}/json/version`);
+      const version = await versionRes.json() as { webSocketDebuggerUrl: string };
+      // Rewrite ws://localhost/devtools/... → wss://chrome.forgewith.ai/devtools/...
+      const path = new URL(version.webSocketDebuggerUrl).pathname;
+      url = `${wsEndpoint}${path}`;
+      console.log(`[screenshots/client] Discovered CDP endpoint: ${url}`);
+    } else {
+      url = `wss://chrome.browserless.io?token=${browserlessKey}&stealth&timeout=300000`;
+    }
+
     const browser = await chromium.connectOverCDP(url);
     console.log(`[screenshots/client] Connected to ${label}`);
     return browser;
