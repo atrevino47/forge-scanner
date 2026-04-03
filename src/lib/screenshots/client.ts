@@ -284,6 +284,19 @@ export async function capturePageWithMetadata(
       // Cookie dismissal is non-critical
     }
 
+    // ── Force lazy images to eager ──
+    // Override loading="lazy" on all images so they load immediately
+    // instead of waiting for viewport intersection during scroll.
+    try {
+      await page.evaluate(() => {
+        document.querySelectorAll('img[loading="lazy"]').forEach((img) => {
+          img.setAttribute('loading', 'eager');
+        });
+      });
+    } catch {
+      // Non-critical
+    }
+
     // ── Capture mode: full (patient visitor) vs fast ──
     if (mode === 'full') {
       /* PATIENT VISITOR CAPTURE SEQUENCE
@@ -347,6 +360,16 @@ export async function capturePageWithMetadata(
         console.warn(
           `[screenshots/client] Scroll routine failed for ${url}: ${scrollMessage}. Capturing without full scroll.`,
         );
+      }
+
+      // Phase 2.5 — Wait for lazy-loaded images to finish downloading
+      // After scrolling triggered all lazy images (loading="lazy", Intersection Observer),
+      // wait for network to settle so images actually load before we capture.
+      try {
+        await page.waitForLoadState('networkidle', { timeout: 10_000 });
+      } catch {
+        // networkidle may not fire on pages with persistent connections (analytics, chat widgets)
+        console.warn(`[screenshots/client] Network idle timeout for ${url}. Continuing.`);
       }
 
       // Phase 3 — Scroll back to top
