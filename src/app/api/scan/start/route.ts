@@ -96,7 +96,7 @@ export async function POST(
       );
     }
 
-    const rateLimit = await checkRateLimit(clientIp, 'ip_scan', 3, 86400000);
+    const rateLimit = await checkRateLimit(clientIp, 'ip_scan', 20, 86400000);
     if (!rateLimit.allowed) {
       return apiError(
         'RATE_LIMITED',
