@@ -15,6 +15,7 @@ function supabaseHostname(): string {
 }
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['apify-client'],
   images: {
     remotePatterns: [
       {
