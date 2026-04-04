@@ -437,7 +437,36 @@ After the Offer Architect, Leads Agent, and Money Model Agent complete their nex
 ### IDEA-09: Custom Cal.com booking page HTML
 The Cal.com embed currently uses the default Cal.com booking UI. Build a custom-styled booking page that matches the Forge brand (Outfit font, warm white background, Forge Orange accents, glassmorphism). The current embed works but visually breaks the $100K feel — it looks like a third-party widget dropped into a premium product. Custom HTML for the booking flow would maintain brand continuity from scan results → chat → booking.
 
-### IDEA-10: Live scan counter replacing fake stat
+### IDEA-10: Conversational onboarding flow (Unrot-style)
+
+**Origin:** Adrián, during Session 2 review (2026-04-04). Reference: Unrot app onboarding screenshots in `~/Downloads/example flow/`.
+
+**Priority: HIGH — this is a product-level redesign, not a copy tweak.**
+
+The current landing page is a static hero section with a form. Unrot (a screen time app) proves that the onboarding experience IS the product experience. Their flow:
+
+1. **Animated mascot splash** with stats badge (4.8 rating, 300K users) — credibility in 2 seconds
+2. **Personalization first** — "What's your name?" → uses it everywhere after
+3. **Conversational progression** — chat bubbles with typing indicators, not a wall of text. The app talks TO you.
+4. **Pattern interrupt** — calls out the user's pain directly ("The one you kept ignoring at 2am")
+5. **Social proof mid-flow** — "290,000 people share the same story" — embedded in conversation, not a stat card
+6. **Choice-based engagement** — user picks from response options, feels in control, every path converges
+
+**What this means for the Forge scanner:**
+
+Replace the static hero → form → results flow with a guided conversational entry:
+
+- **Splash:** Animated FORGE wordmark entrance → stats bar (live scan count + "Free forever") with GSAP
+- **Conversational input:** "What's your website?" → user types → "Got it. Want us to check your socials too?" → optional fields → "Starting your scan..."
+- **Personalization:** If they provide a name during capture-info, the entire results page uses it. The AI Sales Agent already does this — extend it to the scan experience.
+- **Social proof in flow:** Not a stat section — weave proof into the conversation: "We've scanned X funnels. Yours is about to be next."
+- **The results page already has the chat** — but the entry should feel like a conversation too, not a traditional SaaS landing page.
+
+**Scope:** This is a PLAN-level initiative — either a new PLAN or folded into PLAN-0001 (Stitch redesign). Requires: new component architecture, GSAP sequenced animations, state machine for the conversational flow, mobile-first design. Estimated: Frontend Agent, multi-session.
+
+**Key constraint:** Must still work as a shareable URL for outreach. Someone clicking a link from an email should land on a page that works — not require a 10-step onboarding. The conversational flow should be the delightful path, with a fast-track "just paste your URL" escape hatch visible.
+
+### IDEA-11: Live scan counter replacing fake stat
 Replace the hardcoded "500+ Scans Completed" trust stat on the landing page with a live count from the `scans` table (`status = 'completed'`). Honest number that grows with outreach. Even "12" is more credible than a fabricated "500+". Aligns with brand direction's "anti-hype honesty" principle. Slated for Session 2 (copy rewrite).
 
 ---
