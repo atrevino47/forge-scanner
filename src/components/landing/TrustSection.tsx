@@ -14,7 +14,7 @@ export function TrustSection({ scanCount }: TrustSectionProps) {
     { value: scanCount !== undefined ? String(scanCount) : '—', label: 'Funnels Scanned' },
     { value: '5', label: 'Stages Analyzed' },
     { value: 'Free', label: 'No Card Required' },
-    { value: 'AI', label: 'Powered by Claude' },
+    { value: '100%', label: 'Yours to Keep' },
   ];
   const containerRef = useRef<HTMLDivElement>(null);
 
