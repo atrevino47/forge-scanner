@@ -17,9 +17,9 @@ const faqs = [
       "We capture real screenshots of your website, Google Business Profile, social media pages (Instagram, Facebook, TikTok), and any active ads. Our AI analyzes each one against proven funnel principles.",
   },
   {
-    question: 'How does the AI analysis work?',
+    question: 'How does the analysis work?',
     answer:
-      "We use Claude (Anthropic's AI) to visually analyze each screenshot. It identifies specific issues — missing CTAs, weak headlines, broken trust signals — and marks them directly on the screenshots with numbered annotations.",
+      "We capture real screenshots of every page, then visually analyze each one for specific issues — missing CTAs, weak headlines, broken trust signals — and mark them directly on the screenshots with numbered annotations. No generic checklists. Every finding references something on your actual site.",
   },
   {
     question: 'Do I need to create an account?',
