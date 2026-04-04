@@ -12,7 +12,6 @@ export function HeroSection() {
   const [url, setUrl] = useState('');
   const [instagram, setInstagram] = useState('');
   const [facebook, setFacebook] = useState('');
-  const [showSocials, setShowSocials] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
@@ -184,6 +183,7 @@ export function HeroSection() {
                 onChange={(e) => { setUrl(e.target.value); if (formError) setFormError(null); }}
                 placeholder="yourwebsite.com"
                 required
+                autoFocus
                 className="h-14 flex-1 bg-transparent px-5 font-body text-base placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
                 style={{ color: 'var(--forge-text)' }}
               />
@@ -208,47 +208,41 @@ export function HeroSection() {
             </button>
           </div>
 
-          {/* Optional social handles */}
-          <button
-            type="button"
-            onClick={() => setShowSocials(!showSocials)}
-            className="mt-3 font-body text-sm transition-colors duration-200"
-            style={{ color: 'var(--forge-text-muted)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--forge-accent)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--forge-text-muted)'; }}
-          >
-            {showSocials ? '— Hide socials' : '+ Add your socials for a deeper scan'}
-          </button>
-
-          {showSocials && (
-            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div
-                className="flex items-center overflow-hidden rounded-lg border"
-                style={{ borderColor: 'var(--forge-border)', background: 'var(--forge-surface)' }}
-              >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center font-mono text-xs" style={{ color: 'var(--forge-text-muted)' }}>IG</span>
-                <input
-                  type="text"
-                  value={instagram}
-                  onChange={(e) => setInstagram(e.target.value)}
-                  placeholder="@handle"
-                  className="h-12 flex-1 bg-transparent pr-4 font-body text-sm placeholder:text-forge-text-muted/50 focus:outline-none"
-                  style={{ color: 'var(--forge-text)' }}
-                />
-              </div>
-              <div
-                className="flex items-center overflow-hidden rounded-lg border"
-                style={{ borderColor: 'var(--forge-border)', background: 'var(--forge-surface)' }}
-              >
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center font-mono text-xs" style={{ color: 'var(--forge-text-muted)' }}>FB</span>
-                <input
-                  type="text"
-                  value={facebook}
-                  onChange={(e) => setFacebook(e.target.value)}
-                  placeholder="facebook.com/page or @handle"
-                  className="h-12 flex-1 bg-transparent pr-4 font-body text-sm placeholder:text-forge-text-muted/50 focus:outline-none"
-                  style={{ color: 'var(--forge-text)' }}
-                />
+          {/* Social handles — auto-reveal when user starts typing URL */}
+          {url.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 font-mono text-xs uppercase tracking-widest" style={{ color: 'var(--forge-text-muted)' }}>
+                Optional — for a deeper scan
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div
+                  className="flex items-center overflow-hidden rounded-lg border"
+                  style={{ borderColor: 'var(--forge-border)', background: 'var(--forge-surface)' }}
+                >
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center font-mono text-xs" style={{ color: 'var(--forge-text-muted)' }}>IG</span>
+                  <input
+                    type="text"
+                    value={instagram}
+                    onChange={(e) => setInstagram(e.target.value)}
+                    placeholder="@handle"
+                    className="h-12 flex-1 bg-transparent pr-4 font-body text-sm placeholder:text-forge-text-muted/50 focus:outline-none"
+                    style={{ color: 'var(--forge-text)' }}
+                  />
+                </div>
+                <div
+                  className="flex items-center overflow-hidden rounded-lg border"
+                  style={{ borderColor: 'var(--forge-border)', background: 'var(--forge-surface)' }}
+                >
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center font-mono text-xs" style={{ color: 'var(--forge-text-muted)' }}>FB</span>
+                  <input
+                    type="text"
+                    value={facebook}
+                    onChange={(e) => setFacebook(e.target.value)}
+                    placeholder="facebook.com/page or @handle"
+                    className="h-12 flex-1 bg-transparent pr-4 font-body text-sm placeholder:text-forge-text-muted/50 focus:outline-none"
+                    style={{ color: 'var(--forge-text)' }}
+                  />
+                </div>
               </div>
             </div>
           )}
