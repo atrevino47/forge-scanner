@@ -409,6 +409,31 @@ The pipeline uploads screenshots one at a time in a loop (pipeline.ts:350-382). 
 ### IDEA-06: Progressive scan results (streaming initial screenshots)
 Currently the frontend waits for all screenshots to capture before analysis begins. Consider starting AI analysis on the homepage screenshot immediately while inner pages are still capturing.
 
+### IDEA-07: Comparative benchmark learning across scans
+
+**Origin:** Adrián, during fix execution review (2026-04-04).
+
+Every scan currently runs in isolation — the AI analyzes each business with zero knowledge of how other businesses score. If we accumulated anonymized benchmark data across all completed scans, the AI could make comparative statements:
+
+> "Your landing page scored 38/100. The average across 847 service businesses we've scanned is 52. Your lead capture is in the bottom 15%."
+
+This transforms the scanner from "here's what we found" to "here's how you compare to your industry" — a fundamentally stronger value prop and a moat that grows with every scan.
+
+**Implementation (two pieces):**
+
+1. **Benchmark aggregation table** — after each scan completes, write anonymized data to a `benchmarks` table: stage scores, industry vertical (auto-detected or user-provided), business size indicator, annotation type counts. Aggregate with percentile distributions by vertical.
+
+2. **Comparative context injection** — when annotating a new scan, inject benchmark data into the AI system prompt: "Average landing score for service businesses: 52/100. This business scored 38." The AI naturally produces comparative insights. Same injection for the sales agent prompt — "Your client is in the bottom 15% for lead capture" is more persuasive than a raw score.
+
+**Data requirements:** ~50+ scans per vertical before percentiles are statistically meaningful. Until then, use cross-vertical averages as a baseline.
+
+**Why this matters for Forge:** Every scan makes the product smarter. Competitors who launch a similar tool later start with zero benchmark data. This is a compounding moat.
+
+**Scope:** Product feature, not a quick fix. Needs schema design, aggregation logic, prompt injection, and a frontend display component. Worth a PLAN doc.
+
+### IDEA-08: Live scan counter replacing fake stat
+Replace the hardcoded "500+ Scans Completed" trust stat on the landing page with a live count from the `scans` table (`status = 'completed'`). Honest number that grows with outreach. Even "12" is more credible than a fabricated "500+". Aligns with brand direction's "anti-hype honesty" principle. Slated for Session 2 (copy rewrite).
+
 ---
 
 ## 6. Spec Compliance Matrix
