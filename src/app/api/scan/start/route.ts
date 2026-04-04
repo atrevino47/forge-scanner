@@ -39,6 +39,12 @@ const StartScanSchema = z.object({
   utmSource: z.string().optional(),
   utmMedium: z.string().optional(),
   utmCampaign: z.string().optional(),
+  providedSocials: z.object({
+    instagram: z.string().optional(),
+    facebook: z.string().optional(),
+    tiktok: z.string().optional(),
+    linkedin: z.string().optional(),
+  }).optional(),
 });
 
 /**
@@ -80,7 +86,7 @@ export async function POST(
       );
     }
 
-    const { url, utmSource, utmMedium, utmCampaign } = parsed.data;
+    const { url, utmSource, utmMedium, utmCampaign, providedSocials } = parsed.data;
 
     // (b) Get client IP
     const clientIp = getClientIp(request);
@@ -140,6 +146,7 @@ export async function POST(
         ...(utmSource && { utm_source: utmSource }),
         ...(utmMedium && { utm_medium: utmMedium }),
         ...(utmCampaign && { utm_campaign: utmCampaign }),
+        ...(providedSocials && { provided_socials: providedSocials }),
       })
       .select('id')
       .single();

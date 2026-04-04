@@ -10,6 +10,9 @@ import { clipReveal, fadeSlideUp } from '@/lib/gsap-presets';
 export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [url, setUrl] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [facebook, setFacebook] = useState('');
+  const [showSocials, setShowSocials] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
@@ -58,7 +61,15 @@ export function HeroSection() {
       const res = await fetch('/api/scan/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: trimmed }),
+        body: JSON.stringify({
+          url: trimmed,
+          ...(instagram.trim() || facebook.trim() ? {
+            providedSocials: {
+              ...(instagram.trim() && { instagram: instagram.trim() }),
+              ...(facebook.trim() && { facebook: facebook.trim() }),
+            },
+          } : {}),
+        }),
       });
 
       if (!res.ok) {
@@ -134,7 +145,7 @@ export function HeroSection() {
         >
           Your funnel is leaking revenue.
           <br />
-          <span style={{ color: 'var(--forge-text-secondary)' }}>Let&apos;s find where.</span>
+          <span style={{ color: 'var(--forge-accent)' }}>Let&apos;s find where.</span>
         </h1>
 
         {/* Subheadline */}
@@ -196,6 +207,52 @@ export function HeroSection() {
               {!isSubmitting && <ArrowRight className="h-4 w-4" />}
             </button>
           </div>
+
+          {/* Optional social handles */}
+          <button
+            type="button"
+            onClick={() => setShowSocials(!showSocials)}
+            className="mt-3 font-body text-sm transition-colors duration-200"
+            style={{ color: 'var(--forge-text-muted)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--forge-accent)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--forge-text-muted)'; }}
+          >
+            {showSocials ? '— Hide socials' : '+ Add your socials for a deeper scan'}
+          </button>
+
+          {showSocials && (
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div
+                className="flex items-center overflow-hidden rounded-lg border"
+                style={{ borderColor: 'var(--forge-border)', background: 'var(--forge-surface)' }}
+              >
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center font-mono text-xs" style={{ color: 'var(--forge-text-muted)' }}>IG</span>
+                <input
+                  type="text"
+                  value={instagram}
+                  onChange={(e) => setInstagram(e.target.value)}
+                  placeholder="@handle"
+                  className="h-12 flex-1 bg-transparent pr-4 font-body text-sm placeholder:text-forge-text-muted/50 focus:outline-none"
+                  style={{ color: 'var(--forge-text)' }}
+                />
+              </div>
+              <div
+                className="flex items-center overflow-hidden rounded-lg border"
+                style={{ borderColor: 'var(--forge-border)', background: 'var(--forge-surface)' }}
+              >
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center font-mono text-xs" style={{ color: 'var(--forge-text-muted)' }}>FB</span>
+                <input
+                  type="text"
+                  value={facebook}
+                  onChange={(e) => setFacebook(e.target.value)}
+                  placeholder="facebook.com/page or @handle"
+                  className="h-12 flex-1 bg-transparent pr-4 font-body text-sm placeholder:text-forge-text-muted/50 focus:outline-none"
+                  style={{ color: 'var(--forge-text)' }}
+                />
+              </div>
+            </div>
+          )}
+
           {formError && (
             <p className="font-body text-sm text-forge-critical mt-2">{formError}</p>
           )}
