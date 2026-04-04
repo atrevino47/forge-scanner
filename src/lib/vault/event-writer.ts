@@ -28,6 +28,8 @@ const VAULT_EVENTS_DIR = resolve(
 );
 
 export function writeVaultEvent(data: VaultEventData): void {
+  // Vault filesystem is only available when running locally (not on Vercel)
+  if (process.env.VERCEL) return;
   // Fire-and-forget async write — never blocks the caller
   void writeVaultEventAsync(data);
 }
