@@ -30,7 +30,7 @@ Skipping any of these causes decisions that conflict with the spec, the architec
 1.  User loads / → dark navy, FORGE. logo, URL input, GSAP animations
 2.  User enters URL (bare domain OK) → POST /api/scan/start → redirect to /scan/{scanId}
 3.  /scan/{scanId} loads → SSE connects → ProgressIndicator streams status
-4.  Pipeline: Browserless captures → Supabase Storage uploads → DB records
+4.  Pipeline: Playwright captures (Hetzner VPS Chrome) → Supabase Storage uploads → DB records
 5.  ~15s in: CapturePrompt slides in (email + phone) → POST /api/scan/capture-info
 6.  AI analysis: Sonnet annotates each screenshot → SSE pushes annotation_ready events
 7.  Results render: ScreenshotCards + annotation dots (GSAP stagger) → click → popover
@@ -55,7 +55,7 @@ Skipping any of these causes decisions that conflict with the spec, the architec
 | GSAP | Latest + `@gsap/react` | `useGSAP` hook, ScrollTrigger. NOT Framer Motion. NOT CSS transitions. |
 | Supabase | JS SDK v2 | Auth + PostgreSQL + Storage (screenshots bucket) |
 | Anthropic SDK | Latest | Sonnet 4 for analysis/chat, Haiku 3.5 for fast checks |
-| Browserless.io | CDP via `playwright-core` | Headless screenshot capture over WebSocket |
+| Playwright | CDP via `playwright-core` | Self-hosted Chrome on Hetzner VPS (`BROWSER_WS_ENDPOINT`), Browserless.io fallback |
 | Cal.com | `@calcom/embed-react` | Modal overlay — user NEVER navigates away from results |
 | Stripe | `stripe` + `@stripe/stripe-js` | Team-initiated payments only, not self-serve |
 | Resend | SDK | Transactional + AI-generated drip emails |
@@ -245,7 +245,7 @@ NEXT_PUBLIC_SUPABASE_URL         ✅
 NEXT_PUBLIC_SUPABASE_ANON_KEY    ✅
 SUPABASE_SERVICE_ROLE_KEY        ✅
 ANTHROPIC_API_KEY                ✅
-BROWSERLESS_API_KEY              ✅
+BROWSER_WS_ENDPOINT              ✅ (wss://chrome.forgewith.ai — Hetzner VPS via Cloudflare Tunnel)
 NEXT_PUBLIC_CALCOM_EMBED_URL     ✅
 CALCOM_API_KEY                   ✅
 RESEND_API_KEY                   ✅
@@ -254,6 +254,7 @@ GOOGLE_PLACES_API_KEY            ✅ (used by GBP detection)
 NEXT_PUBLIC_POSTHOG_KEY          ✅ (initialized)
 STRIPE_SECRET_KEY                ✅ (test mode)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ✅
+BROWSERLESS_API_KEY              ✅ (fallback — only used if BROWSER_WS_ENDPOINT not set)
 ```
 
 ### Needs attention
@@ -261,15 +262,18 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ✅
 NEXT_PUBLIC_APP_URL              ⚠️  Set to localhost — change for production
 STRIPE_WEBHOOK_SECRET            ⚠️  Commented out — webhooks won't verify
 CALCOM_WEBHOOK_SECRET            ⚠️  Commented out — webhooks won't verify
+CRON_SECRET                      ⚠️  Not configured — cron routes unprotected
 ```
 
-### Not yet configured (blocks follow-up system)
+### Not yet configured (blocks multi-channel follow-up)
 ```
-TWILIO_ACCOUNT_SID               ❌ Empty
+TWILIO_ACCOUNT_SID               ❌ Empty (email follow-up works without this)
 TWILIO_AUTH_TOKEN                 ❌ Empty
 TWILIO_PHONE_NUMBER              ❌ Empty
 WHATSAPP_API_TOKEN               ❌ Empty
 WHATSAPP_PHONE_NUMBER_ID         ❌ Empty
+FACEBOOK_APP_ACCESS_TOKEN        ❌ Empty (Meta Ad Library detection — graceful fallback)
+APIFY_API_TOKEN                  ❌ Empty (social data enrichment — graceful fallback)
 ```
 
 ---
@@ -286,7 +290,7 @@ These are intentional tradeoffs. Agents who don't read this list will waste time
 6. **Storage URLs, not paths** — DB stores full public Supabase URLs for screenshots, not just paths. Better for frontend.
 7. **Carousel content is a known gap** — FIX-0012 simplified CSS injection. Some slider content won't capture perfectly. Parked.
 8. **`page_discovered` events don't fire** — No DB mechanism for transient events. Progress shows screenshot captures and stage updates instead.
-9. **Copy placeholders** — All user-facing text uses `[COPY: description]` until the dedicated copy phase. Exception: loading messages can be real ("Capturing your homepage...").
+9. **Copy placeholders resolved** — All `[COPY: description]` instances in UI code have been replaced. The format still appears in AI prompt templates (`src/lib/prompts/mockup.ts`) where it's intentional — it instructs the AI to generate copy. Don't touch those.
 
 ---
 
@@ -322,11 +326,17 @@ Every fix must address the underlying cause, not the symptom. No temporary worka
 ```
 /                   → Landing page (URL input hero, Aupale-style top banner)
 /scan/[id]          → Results page (streaming → complete → blueprint + chat — all in one)
-/admin              → Admin dashboard (leads, payments, scans)
+/offer              → Sales/pricing page (tiers, ROI visualization, FAQ)
+/admin              → Admin dashboard (metric cards, recent scans)
+/admin/leads        → Leads table (filterable, searchable, paginated)
+/admin/scans        → Scans table (sortable, status badges)
+/admin/payments     → Payments view
 /admin/scan/[id]    → Team view of scan (for calls + Stripe payments)
+/admin/setup        → Environment health checks (25 checks across 6 groups)
+/admin/login        → Admin auth gate
 ```
 
-Three public pages. Two admin pages. Cal.com is always a modal overlay, never its own page.
+Three public pages + seven admin pages. Cal.com is always a modal overlay, never its own page.
 
 ---
 
@@ -348,16 +358,28 @@ bunx supabase db push  # Push migrations to remote
 **Always check the latest `docs/audits/AUDIT-{NNN}.md` for the most current state.** Below is a high-level summary that gets updated periodically.
 
 ### What works end-to-end
-- Clean TypeScript build, all 26 API routes + 4 pages compile
-- Landing page with full design system (dark mode, glass, grain, 3 fonts, GSAP)
-- URL input → scan pipeline → Browserless captures → Supabase Storage → DB records
+- Clean TypeScript build, all API routes + 10 pages compile
+- Landing page with full design system (Brand v2 light mode, glass, grain, 3 fonts, GSAP)
+- URL input → scan pipeline → self-hosted Chrome (Hetzner VPS) → Supabase Storage → DB records
+- Patient visitor screenshot capture (slow scroll + idle detection for lazy-loaded content)
 - SSE streaming for real-time scan progress
 - AI annotations via Claude Sonnet vision (5 stages, position-accurate dots)
 - Progressive capture with GSAP blur/unblur email gate
 - Social handle detection + disambiguation
+- GEO + AEO AI Search Readiness modules (6 signals each, parallel analysis)
+- Prescription offers system (12 rules, severity scoring, priority deduplication)
 - Blueprint generation (funnel map + mockup with brand color extraction)
+- Hormozi CLOSER framework + objection playbook in AI Sales Agent
 - AI Sales Agent chat with streaming + data cards + inline Cal.com embed
 - Cal.com modal overlay with pre-fill + booking source tracking
+- Meta Ad Library detection (requires FACEBOOK_APP_ACCESS_TOKEN)
+- Google Ads Transparency detection
+- Apify social data enrichment (Instagram, TikTok, Facebook, Google Maps)
+- Follow-up email system: branded HTML templates, 3-touch sequence, cron sender
+- Stale scan cleanup cron with abandoned-scan follow-up trigger
+- Stripe PaymentIntent creation + webhook handler + verify route
+- Admin panel: dashboard, leads, scans, payments, scan detail, setup, login
+- /offer sales page with tiers and ROI visualization
 - Top banner CTA (Aupale-style)
 - PostHog analytics, PageSpeed API, Google Places API
 - `after()` for serverless pipeline survival
@@ -367,16 +389,17 @@ bunx supabase db push  # Push migrations to remote
 - Google OAuth soft prompt ("Save your results")
 
 ### What's not built yet
-- **Multi-channel follow-up system** — the revenue engine (email/SMS/WhatsApp drip after exit)
-- **Stripe payments + admin panel** — team-initiated during strategy calls
-- **Hormozi Sales Agent training** — system prompt framework built, transcripts not yet processed
-- **Ad detection** — Meta Ad Library + Google Ads Transparency checks
-- **Frontend polish** — pending Phase D redesign via Stitch (`docs/stitch-w-google/`)
+- **Multi-channel follow-up beyond email** — Twilio SMS + WhatsApp (env vars not configured, code stubs exist)
+- **Contact scraping for exit recovery** — when lead leaves without email
+- **Carousel/lazy-loaded below-fold content** — known capture gap, parked
+- **Frontend polish via Stitch redesign** — PLAN-0001, deferred
+- **Video content performance analysis** — spec item, not started
+- **Resend domain verification** — operational task, blocks email sending in production
 
 ### Active plan
-See `docs/plans/PLAN-0001.md` — Frontend redesign using Stitch by Google, Phase D implementation.
+See `docs/plans/PLAN-0003.md` — Scanner issues execution (Hetzner VPS + code polish). Phases 1+3 complete, Phase 2 (Adrián ops tasks) pending.
 
-Check `docs/fixes/FIX-LOG.md` for the complete list of pending work.
+Check `../../shared/project-logs/forge-scanner.md` for latest status and `docs/fixes/FIX-LOG.md` for pending work.
 
 ---
 
