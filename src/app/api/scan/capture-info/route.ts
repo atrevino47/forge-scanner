@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import type { CaptureInfoResponse, ApiError } from '@/../contracts/api';
-import type { Lead, DetectedSocials } from '@/../contracts/types';
+import type { DetectedSocials } from '@/../contracts/types';
 import { createServiceClient } from '@/lib/db/client';
+import { dbLeadToLead } from '@/lib/db/mappers';
+import type { DbLead } from '@/lib/db/types';
 import { apiError } from '@/lib/api-utils';
 import { writeVaultEvent } from '@/lib/vault/event-writer';
 
@@ -41,40 +43,6 @@ const CaptureInfoSchema = z.object({
   (data) => data.email || data.socialConfirmation,
   { message: 'Either email or socialConfirmation must be provided' }
 );
-
-/**
- * Shape of a lead row as returned from the `leads` table (snake_case).
- */
-interface LeadRow {
-  id: string;
-  email: string | null;
-  phone: string | null;
-  full_name: string | null;
-  website_url: string;
-  business_name: string | null;
-  source: 'organic' | 'outreach' | 'ad';
-  capture_method: 'direct' | 'scraped' | 'manual' | null;
-  created_at: string;
-  updated_at: string;
-}
-
-/**
- * Convert a snake_case DB lead row to the camelCase Lead contract type.
- */
-function toContractLead(row: LeadRow): Lead {
-  return {
-    id: row.id,
-    email: row.email,
-    phone: row.phone,
-    fullName: row.full_name,
-    websiteUrl: row.website_url,
-    businessName: row.business_name,
-    source: row.source,
-    captureMethod: row.capture_method,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
-}
 
 export async function POST(
   request: NextRequest
@@ -225,10 +193,10 @@ export async function POST(
     }
 
     // (g) Convert DB row to contract Lead type and return
-    const lead = toContractLead(updatedLead as LeadRow);
+    const lead = dbLeadToLead(updatedLead as DbLead);
 
     console.log(
-      `[scan/capture-info] Captured info for scanId=${scanId}, lead=${leadId}, email=${email}`
+      `[scan/capture-info] Captured info for scanId=${scanId}, lead=${leadId}, hasEmail=${!!email}`
     );
 
     const response: CaptureInfoResponse = {

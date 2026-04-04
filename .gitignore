@@ -25,6 +25,9 @@
 *.pem
 .claude.json
 
+# vault queue files (written by followup trigger at runtime)
+/sales/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

@@ -464,7 +464,7 @@ Replace the static hero → form → results flow with a guided conversational e
 
 **Scope:** This is a PLAN-level initiative — either a new PLAN or folded into PLAN-0001 (Stitch redesign). Requires: new component architecture, GSAP sequenced animations, state machine for the conversational flow, mobile-first design. Estimated: Frontend Agent, multi-session.
 
-**Key constraint:** Must still work as a shareable URL for outreach. Someone clicking a link from an email should land on a page that works — not require a 10-step onboarding. The conversational flow should be the delightful path, with a fast-track "just paste your URL" escape hatch visible.
+**Key constraint — two entry points:** Admin-initiated outreach scans go straight to results (prospect gets a personalized link with their data already captured — no onboarding needed). Public visitors (organic, content, ads) get the conversational onboarding flow. Different entry points, same product. The scan/start API already supports this — admin scans create the lead + scan records server-side, the prospect just sees `/scan/{id}` with their results.
 
 ### IDEA-11: Live scan counter replacing fake stat
 Replace the hardcoded "500+ Scans Completed" trust stat on the landing page with a live count from the `scans` table (`status = 'completed'`). Honest number that grows with outreach. Even "12" is more credible than a fabricated "500+". Aligns with brand direction's "anti-hype honesty" principle. Slated for Session 2 (copy rewrite).
