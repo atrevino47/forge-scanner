@@ -6,7 +6,9 @@ EXPOSE 9222
 # Run Chromium with remote debugging enabled
 # --no-sandbox is required in Docker
 # --disable-gpu for headless server environments
-CMD ["chromium", \
+# Binary path from: find /ms-playwright -name 'chrome' -type f
+# If Playwright image version changes, re-run that find command.
+CMD ["/ms-playwright/chromium-1169/chrome-linux/chrome", \
      "--headless=new", \
      "--no-sandbox", \
      "--disable-gpu", \
