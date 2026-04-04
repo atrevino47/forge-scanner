@@ -42,14 +42,8 @@ const COOKIE_DISMISS_SELECTORS = [
   'button[id*="accept"]',
 ];
 
-// "Patient visitor" scroll constants — simulate a real human scrolling
-// so scroll-triggered animations (GSAP ScrollTrigger, AOS, Intersection
-// Observer) fire and play to completion before we capture.
-const SCROLL_STEP_PX = 300;
-const SCROLL_PAUSE_MS = 400;
-const SCROLL_BACK_SETTLE_MS = 2000;
-const IDLE_WAIT_MAX_MS = 3000;
-const MAX_SCROLL_TIME_MS = 30_000;
+// Chrome's maximum texture height — viewport height cap for tall viewport capture
+const MAX_VIEWPORT_HEIGHT = 16_384;
 
 // ============================================================
 // Types
@@ -488,6 +482,18 @@ export async function capturePageWithMetadata(
           el.classList.remove('lazy', 'lazyload', 'b-lazy', 'owl-lazy');
           el.classList.add('lazyloaded', 'loaded');
         });
+        // Remove native loading="lazy" — Chrome's built-in loader ignores the IO mock
+        document.querySelectorAll('img[loading="lazy"]').forEach((img) => {
+          img.removeAttribute('loading');
+          const currentSrc = img.getAttribute('src');
+          if (currentSrc) {
+            img.removeAttribute('src');
+            img.setAttribute('src', currentSrc);
+          }
+        });
+        document.querySelectorAll('iframe[loading="lazy"]').forEach((iframe) => {
+          iframe.removeAttribute('loading');
+        });
         // Iframes with data-src
         document.querySelectorAll('iframe[data-src]').forEach((iframe) => {
           const val = iframe.getAttribute('data-src');
@@ -503,74 +509,38 @@ export async function capturePageWithMetadata(
       // Non-critical — IO mock and scroll handle most cases
     }
 
-    // ── Capture mode: full (patient visitor) vs fast ──
+    // ── Capture mode: full (tall viewport) vs fast ──
     if (mode === 'full') {
-      /* PATIENT VISITOR CAPTURE SEQUENCE
-       * Simulates a real human visiting the page so scroll-triggered
-       * animations (GSAP ScrollTrigger, AOS, Intersection Observer) fire
-       * and play to completion. No CSS force-overrides — the screenshot
-       * shows exactly what a visitor sees.
+      /* TALL VIEWPORT CAPTURE
+       * Instead of scrolling (which causes Chrome tile eviction when scrolling
+       * back to top), resize the viewport to the full document height. With
+       * nothing "below the fold," lazy loaders fire immediately and Chrome
+       * composites the entire page. Screenshot with fullPage: false since the
+       * viewport IS the full page.
        *
-       * Phase 1 (0s):   Initial settle — wait for above-the-fold animations
-       * Phase 2 (~3s):  Slow scroll down — 300px steps, 400ms pause each
-       * Phase 3 (var):  Scroll back to top — 2s settle for hero replays
-       * Phase 4 (var):  Final paint wait — idle detection before capture
+       * Phase 1: Initial settle — let above-fold JS/animations run
+       * Phase 2: Measure doc height → resize viewport to match (cap 16384px)
+       * Phase 3: Re-run data-src swap for newly visible elements
+       * Phase 4: Wait for all images to decode + fonts to load
+       * Phase 5: Re-measure (lazy content may have grown the page)
+       * Phase 6: Screenshot with fullPage: false
        */
 
-      // Phase 1 — Initial settle
-      try {
-        await page.evaluate(async (maxWait: number) => {
-          await new Promise<void>((resolve) => {
-            const timeout = setTimeout(resolve, maxWait);
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                if (typeof requestIdleCallback === 'function') {
-                  requestIdleCallback(() => { clearTimeout(timeout); resolve(); });
-                } else {
-                  setTimeout(() => { clearTimeout(timeout); resolve(); }, 500);
-                }
-              });
-            });
-          });
-        }, IDLE_WAIT_MAX_MS);
-      } catch (settleError: unknown) {
-        const settleMessage =
-          settleError instanceof Error ? settleError.message : String(settleError);
-        console.warn(
-          `[screenshots/client] Initial settle failed for ${url}: ${settleMessage}. Continuing.`,
-        );
-      }
+      // Phase 1 — Initial settle for JS hydration + above-fold animations
+      await page.waitForTimeout(1500);
 
-      // Phase 2 — Slow scroll down
-      try {
-        await page.evaluate(async (opts: { stepPx: number; pauseMs: number; maxTimeMs: number }) => {
-          const startTime = Date.now();
-          let previousHeight = 0;
+      // Phase 2 — Measure document height and resize viewport
+      const docHeight = await page.evaluate(() =>
+        Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
+      );
+      const cappedHeight = Math.min(docHeight, MAX_VIEWPORT_HEIGHT);
+      await page.setViewportSize({ width: viewportSize.width, height: cappedHeight });
+      console.log(`[screenshots/client] Tall viewport: ${viewportSize.width}x${cappedHeight} (doc: ${docHeight})`);
 
-          while (Date.now() - startTime < opts.maxTimeMs) {
-            const currentHeight = document.body.scrollHeight;
-            const currentPosition = window.scrollY + window.innerHeight;
+      // Brief wait for lazy content triggered by the new viewport
+      await page.waitForTimeout(1500);
 
-            if (currentPosition >= currentHeight && currentHeight === previousHeight) {
-              break;
-            }
-
-            previousHeight = currentHeight;
-            window.scrollBy(0, opts.stepPx);
-            await new Promise((r) => setTimeout(r, opts.pauseMs));
-          }
-        }, { stepPx: SCROLL_STEP_PX, pauseMs: SCROLL_PAUSE_MS, maxTimeMs: MAX_SCROLL_TIME_MS });
-      } catch (scrollError: unknown) {
-        const scrollMessage =
-          scrollError instanceof Error ? scrollError.message : String(scrollError);
-        console.warn(
-          `[screenshots/client] Scroll routine failed for ${url}: ${scrollMessage}. Capturing without full scroll.`,
-        );
-      }
-
-      // Phase 2.5 — Re-run data-src swap for dynamically added elements
-      // Pages with infinite scroll or JS-rendered sections may have added
-      // new lazy elements during the scroll that weren't in the initial DOM.
+      // Phase 3 — Re-run data-src swap for elements now inside the viewport
       try {
         await page.evaluate(() => {
           const srcAttrs = ['data-src', 'data-lazy-src', 'data-original', 'data-lazy'];
@@ -583,80 +553,66 @@ export async function capturePageWithMetadata(
               }
             }
           });
+          // Re-remove loading="lazy" on any new elements
+          document.querySelectorAll('img[loading="lazy"]').forEach((img) => {
+            img.removeAttribute('loading');
+            const currentSrc = img.getAttribute('src');
+            if (currentSrc) {
+              img.removeAttribute('src');
+              img.setAttribute('src', currentSrc);
+            }
+          });
         });
       } catch {
         // Non-critical
       }
 
-      // Phase 2.6 — Wait for all images to actually decode + fonts to load
-      // img.decode() is more reliable than img.complete — it resolves when the
-      // image is fully decoded and ready to render. 8s total budget with 5s per image.
+      // Phase 4 — Wait for all images to decode + fonts to load
       try {
         await page.evaluate(async () => {
-          await Promise.all([
-            // Wait for every <img> to be decoded and ready to paint
-            Promise.allSettled(
-              Array.from(document.querySelectorAll('img')).map((img) => {
-                if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-                return Promise.race([
-                  img.decode().catch(() => {}),
-                  new Promise((r) => setTimeout(r, 5_000)),
-                ]);
-              }),
-            ),
-            // Wait for web fonts to finish loading
-            document.fonts.ready,
-          ]);
+          await Promise.allSettled(
+            Array.from(document.querySelectorAll('img')).map((img) => {
+              if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+              return Promise.race([
+                img.decode().catch(() => {}),
+                new Promise((r) => setTimeout(r, 5_000)),
+              ]);
+            }),
+          );
+          await document.fonts.ready;
         });
       } catch {
         console.warn(`[screenshots/client] Image decode wait failed for ${url}. Continuing.`);
       }
 
-      // Phase 3 — Scroll back to top
-      try {
-        await page.evaluate(() => window.scrollTo(0, 0));
-        await page.waitForTimeout(SCROLL_BACK_SETTLE_MS);
-      } catch (scrollBackError: unknown) {
-        const scrollBackMessage =
-          scrollBackError instanceof Error ? scrollBackError.message : String(scrollBackError);
-        console.warn(
-          `[screenshots/client] Scroll-back failed for ${url}: ${scrollBackMessage}. Capturing at current position.`,
-        );
-      }
-
-      // Phase 4 — Final paint wait
-      try {
-        await page.evaluate(async (maxWait: number) => {
-          await new Promise<void>((resolve) => {
-            const timeout = setTimeout(resolve, maxWait);
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                if (typeof requestIdleCallback === 'function') {
-                  requestIdleCallback(() => { clearTimeout(timeout); resolve(); });
-                } else {
-                  setTimeout(() => { clearTimeout(timeout); resolve(); }, 500);
-                }
-              });
-            });
-          });
-        }, IDLE_WAIT_MAX_MS);
-      } catch (finalWaitError: unknown) {
-        const finalWaitMessage =
-          finalWaitError instanceof Error ? finalWaitError.message : String(finalWaitError);
-        console.warn(
-          `[screenshots/client] Final paint wait failed for ${url}: ${finalWaitMessage}. Capturing as-is.`,
-        );
+      // Phase 5 — Re-measure in case lazy content grew the page
+      const finalHeight = await page.evaluate(() =>
+        Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
+      );
+      if (finalHeight > docHeight) {
+        const newCapped = Math.min(finalHeight, MAX_VIEWPORT_HEIGHT);
+        await page.setViewportSize({ width: viewportSize.width, height: newCapped });
+        console.log(`[screenshots/client] Page grew: resized to ${viewportSize.width}x${newCapped}`);
+        await page.waitForTimeout(1000);
       }
     } else {
       // Fast mode — just a short settle for basic JS rendering
       await page.waitForTimeout(2000);
     }
 
-    // Capture screenshot (full page for desktop, viewport-only for mobile)
+    // Phase 6 — Capture screenshot
+    // Full mode: fullPage: false because the viewport IS the full page (tall viewport)
+    // Fast mode + mobile: use standard fullPage behavior
+    const useFullPage = mode !== 'full' && viewport === 'desktop';
     const screenshotBuffer = await captureScreenshot(page, {
-      fullPage: viewport === 'desktop',
-      viewport: viewportSize,
+      fullPage: useFullPage,
+      viewport: mode === 'full' ? undefined : viewportSize,
     });
+
+    // Reset viewport to original size for any subsequent captures
+    if (mode === 'full') {
+      await page.setViewportSize(viewportSize);
+    }
 
     // Extract page content and title
     const html = await page.content();
