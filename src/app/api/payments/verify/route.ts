@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import type { ApiError } from '@/../contracts/api';
 import { getStripe } from '@/lib/stripe/client';
+import { requireAdminSession } from '@/lib/auth/admin';
 
 const querySchema = z.object({
   paymentIntentId: z.string().min(1, 'paymentIntentId is required'),
@@ -18,7 +19,8 @@ interface VerifyPaymentResponse {
 
 export async function GET(request: NextRequest): Promise<NextResponse<VerifyPaymentResponse | ApiError>> {
   try {
-    // TODO: Wire admin auth once ADMIN_EMAILS is configured
+    const authError = await requireAdminSession(request);
+    if (authError) return authError as NextResponse<ApiError>;
 
     const { searchParams } = new URL(request.url);
     const parsed = querySchema.safeParse({

@@ -17,13 +17,19 @@ export async function POST(request: NextRequest): Promise<NextResponse<StripeWeb
 
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    // Verify signature if secret is configured
+    // Verify Stripe signature — required in production, optional in dev
     let event;
     if (webhookSecret && signature) {
       const stripe = getStripe();
       event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+    } else if (process.env.NODE_ENV === 'production') {
+      console.error('[payments/webhook] STRIPE_WEBHOOK_SECRET not configured in production');
+      return NextResponse.json(
+        { error: { code: 'CONFIG_ERROR', message: 'Webhook signature verification not configured' } },
+        { status: 503 },
+      );
     } else {
-      // In dev/test mode without webhook secret, parse directly
+      // Dev/test mode only — parse without verification
       event = JSON.parse(rawBody) as { type: string; data: { object: { id: string; metadata?: Record<string, string> } } };
     }
 

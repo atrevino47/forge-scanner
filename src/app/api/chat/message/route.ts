@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { createServiceClient } from '@/lib/db/client';
 import type { SendMessageResponse, ApiError } from '@/../contracts/api';
@@ -170,8 +170,8 @@ export async function POST(
       }
     };
 
-    // Fire and forget — don't await
-    void classifyAndUpdate();
+    // Run after response is sent — keeps serverless function alive on Vercel
+    after(classifyAndUpdate());
 
     const response: SendMessageResponse = {
       messageId: userMessage.id,

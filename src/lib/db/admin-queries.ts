@@ -339,7 +339,7 @@ export async function getAdminScans(opts: {
     .from('funnel_stages')
     .select('scan_id, status')
     .in('scan_id', scanIds)
-    .eq('status', 'complete');
+    .eq('status', 'completed');
 
   const stageCountByScan = new Map<string, number>();
   for (const stage of stages ?? []) {

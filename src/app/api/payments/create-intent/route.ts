@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { CreatePaymentIntentResponse, ApiError } from '@/../contracts/api';
 import { getStripe } from '@/lib/stripe/client';
 import { createServiceClient } from '@/lib/db/client';
+import { requireAdminSession } from '@/lib/auth/admin';
 
 const createPaymentIntentSchema = z.object({
   leadId: z.string().min(1, 'leadId is required'),
@@ -18,7 +19,8 @@ const createPaymentIntentSchema = z.object({
 
 export async function POST(request: NextRequest): Promise<NextResponse<CreatePaymentIntentResponse | ApiError>> {
   try {
-    // TODO: Wire admin auth once ADMIN_EMAILS is configured
+    const authError = await requireAdminSession(request);
+    if (authError) return authError as NextResponse<ApiError>;
 
     const body: unknown = await request.json();
     const parsed = createPaymentIntentSchema.safeParse(body);

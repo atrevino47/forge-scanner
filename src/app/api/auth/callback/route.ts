@@ -13,7 +13,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<ApiError> 
   try {
     const { searchParams, origin } = new URL(request.url);
     const code = searchParams.get('code');
-    const next = searchParams.get('next') ?? '/';
+    // Validate `next` to prevent open redirect — must be a relative path
+    const rawNext = searchParams.get('next') ?? '/';
+    const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/';
 
     if (!code) {
       console.warn('[auth/callback] No authorization code in callback URL');

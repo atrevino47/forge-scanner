@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createServiceClient } from '@/lib/db/client';
 import { writeVaultEvent } from '@/lib/vault/event-writer';
 import { writeQueueEntry } from '@/lib/vault/queue-writer';
+import { verifyCsrf } from '@/lib/api-utils';
 import type { TriggerFollowupResponse, ApiError } from '@/../contracts/api';
 import type { DbScan, DbLead } from '@/lib/db/types';
 import type { FunnelStage, StageSummary } from '@/../contracts/types';
@@ -15,6 +16,14 @@ const triggerFollowupSchema = z.object({
 
 export async function POST(request: NextRequest): Promise<NextResponse<TriggerFollowupResponse | ApiError>> {
   try {
+    // Verify request originates from our app (CSRF protection)
+    if (!verifyCsrf(request)) {
+      return NextResponse.json(
+        { error: { code: 'FORBIDDEN', message: 'Invalid request origin' } },
+        { status: 403 },
+      );
+    }
+
     const body: unknown = await request.json();
     const parsed = triggerFollowupSchema.safeParse(body);
 
