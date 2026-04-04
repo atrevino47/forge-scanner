@@ -117,7 +117,7 @@ export function HeroSection() {
             style={{ background: 'var(--forge-accent)' }}
           />
           <span className="font-body text-sm font-medium" style={{ color: 'var(--forge-text-secondary)' }}>
-            AI-Powered Funnel Audit
+            AI-Powered Sales Infrastructure
           </span>
         </div>
 
@@ -132,7 +132,9 @@ export function HeroSection() {
             color: 'var(--forge-text)',
           }}
         >
-          Find what&apos;s broken in your funnel — in 60 seconds
+          Your funnel is leaking revenue.
+          <br />
+          <span style={{ color: 'var(--forge-text-secondary)' }}>Let&apos;s find where.</span>
         </h1>
 
         {/* Subheadline */}
@@ -144,7 +146,7 @@ export function HeroSection() {
             color: 'var(--forge-text-secondary)',
           }}
         >
-          Enter your URL. We capture real screenshots, AI annotates every issue, and generate an optimized blueprint — free.
+          We scan your website, socials, and ads — then AI pinpoints exactly what&apos;s costing you customers. Real screenshots. Specific fixes. No fluff.
         </p>
 
         {/* URL Input */}
@@ -207,9 +209,9 @@ export function HeroSection() {
         >
           <span>Free, no card required</span>
           <span className="hidden h-1 w-1 rounded-full sm:block" style={{ background: 'var(--forge-text-muted)', opacity: 0.3 }} />
-          <span>Results in 60 seconds</span>
+          <span>5 funnel stages analyzed</span>
           <span className="hidden h-1 w-1 rounded-full sm:block" style={{ background: 'var(--forge-text-muted)', opacity: 0.3 }} />
-          <span>AI-powered analysis</span>
+          <span>Built for $500K–$5M service businesses</span>
         </div>
       </div>
     </section>

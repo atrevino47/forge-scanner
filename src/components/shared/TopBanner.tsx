@@ -57,9 +57,10 @@ export function TopBanner() {
       <div className="absolute left-1/2 -translate-x-1/2">
         <span
           className="font-display font-black tracking-tight"
-          style={{ fontSize: '18px', letterSpacing: '-0.03em', color: 'var(--forge-text)' }}
+          style={{ fontSize: '18px', letterSpacing: '-0.03em' }}
         >
-          FORGE
+          <span style={{ color: 'var(--forge-text)' }}>FORGE</span>
+          <span style={{ color: 'var(--forge-accent)' }}>WITH.AI</span>
         </span>
       </div>
 

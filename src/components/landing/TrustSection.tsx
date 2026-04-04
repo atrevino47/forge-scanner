@@ -5,14 +5,17 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { clipReveal, scaleIn } from '@/lib/gsap-presets';
 
-const stats = [
-  { value: '500+', label: 'Scans Completed' },
-  { value: '< 60s', label: 'Average Scan Time' },
-  { value: '5', label: 'Funnel Stages Analyzed' },
-  { value: 'Free', label: 'Always' },
-];
+interface TrustSectionProps {
+  scanCount?: number;
+}
 
-export function TrustSection() {
+export function TrustSection({ scanCount }: TrustSectionProps) {
+  const stats = [
+    { value: scanCount !== undefined ? String(scanCount) : '—', label: 'Funnels Scanned' },
+    { value: '5', label: 'Stages Analyzed' },
+    { value: 'Free', label: 'No Card Required' },
+    { value: 'AI', label: 'Powered by Claude' },
+  ];
   const containerRef = useRef<HTMLDivElement>(null);
 
   /* ANIMATION SEQUENCE (scroll-triggered at top 80% viewport):
@@ -55,7 +58,7 @@ export function TrustSection() {
             color: '#1A1917',
           }}
         >
-          Built for businesses that want to grow
+          The infrastructure audit your agency never gave you
         </h2>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">

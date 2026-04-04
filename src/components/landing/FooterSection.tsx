@@ -34,6 +34,13 @@ export function FooterSection() {
           </h2>
 
           <p
+            className="mb-4 font-mono text-xs uppercase tracking-widest"
+            style={{ color: '#6B6860' }}
+          >
+            AI isn&apos;t magic. It&apos;s infrastructure.
+          </p>
+
+          <p
             className="mb-10 font-body text-base"
             style={{ color: '#9A9890', lineHeight: 1.65 }}
           >
@@ -73,9 +80,10 @@ export function FooterSection() {
             {/* Logo — FORGE in Outfit white */}
             <span
               className="font-display text-base font-black tracking-tight"
-              style={{ color: '#FAFAF7', letterSpacing: '-0.03em' }}
+              style={{ letterSpacing: '-0.03em' }}
             >
-              FORGE
+              <span style={{ color: '#FAFAF7' }}>FORGE</span>
+              <span style={{ color: 'var(--forge-accent)' }}>WITH.AI</span>
             </span>
 
             {/* Nav links */}
