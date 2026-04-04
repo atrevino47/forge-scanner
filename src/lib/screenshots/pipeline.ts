@@ -261,6 +261,24 @@ export async function runScreenshotPipeline(params: {
       console.error('[pipeline] Data enrichment step failed:', enrichError);
     }
 
+    // ── Persist enrichment data to DB so results API can return it ──
+    try {
+      const enrichmentUpdate: Record<string, unknown> = {};
+      if (socialEnrichment) enrichmentUpdate.social_enrichment = socialEnrichment;
+      if (adDetection || googleAdsDetection) {
+        enrichmentUpdate.ad_detection = {
+          meta: adDetection ?? null,
+          google: googleAdsDetection ?? null,
+        };
+      }
+      if (Object.keys(enrichmentUpdate).length > 0) {
+        await supabase.from('scans').update(enrichmentUpdate).eq('id', scanId);
+        console.log(`[pipeline] Enrichment data persisted to DB for scan ${scanId}`);
+      }
+    } catch (persistError) {
+      console.error('[pipeline] Failed to persist enrichment data:', persistError);
+    }
+
     // --------------------------------------------------------
     // Step 8: Capture social profile screenshots
     // --------------------------------------------------------

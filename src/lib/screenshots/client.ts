@@ -322,6 +322,130 @@ export async function capturePageWithMetadata(
       // Cookie dismissal is non-critical
     }
 
+    // ── CONTENT REVEAL: Force-show scroll-hidden elements ──
+    // WordPress Elementor, AOS, WOW.js, GSAP ScrollTrigger, RevSlider, and
+    // dozens of other frameworks hide below-fold elements with opacity:0 /
+    // visibility:hidden / transform, then reveal them on scroll via waypoints
+    // or IntersectionObserver. In headless capture those scroll triggers don't
+    // fire reliably. Proven fix: inject CSS that force-overrides ALL known
+    // hiding patterns, then clean up JS classes so framework CSS cooperates.
+    try {
+      // Step 1 — CSS override: nuclear !important on every known pattern
+      await page.addStyleTag({
+        content: `
+          /* Elementor entrance animations */
+          .elementor-invisible {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+          /* Elementor motion effects */
+          .elementor-widget[data-settings*="animation"],
+          .elementor-element[data-settings*="animation"] {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+          }
+          /* AOS — Animate on Scroll */
+          [data-aos] {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+            transition: none !important;
+          }
+          /* WOW.js */
+          .wow {
+            opacity: 1 !important;
+            visibility: visible !important;
+            animation-name: none !important;
+          }
+          /* Animate.css hidden-before-trigger */
+          .animate__animated {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+          /* ScrollReveal.js */
+          [data-sr-id] {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+          }
+          /* SAL — Scroll Animation Library */
+          [data-sal] {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+          }
+          /* Generic scroll-trigger patterns */
+          [data-animate], [data-animation], [data-scroll] {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+          }
+          /* GSAP ScrollTrigger hidden elements */
+          [style*="visibility: hidden"][style*="opacity: 0"],
+          [style*="visibility:hidden"][style*="opacity:0"] {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+          /* RevSlider hidden layers */
+          .tp-caption, .rs-layer {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+          /* Divi Builder */
+          .et_pb_section .et_had_animation {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+        `,
+      });
+
+      // Step 2 — JS class cleanup: remove hiding classes, add revealed classes
+      await page.evaluate(() => {
+        // Elementor: remove .elementor-invisible, let default styles show
+        document.querySelectorAll('.elementor-invisible').forEach((el) => {
+          el.classList.remove('elementor-invisible');
+        });
+        // AOS: mark all elements as already animated
+        document.querySelectorAll('[data-aos]').forEach((el) => {
+          el.classList.add('aos-animate');
+        });
+        // WOW.js: mark animated
+        document.querySelectorAll('.wow').forEach((el) => {
+          el.classList.add('animated');
+          (el as HTMLElement).style.visibility = 'visible';
+          (el as HTMLElement).style.opacity = '1';
+        });
+        // SAL
+        document.querySelectorAll('[data-sal]').forEach((el) => {
+          el.classList.add('sal-animate');
+        });
+        // Force any inline opacity:0 / visibility:hidden on common widget containers
+        document.querySelectorAll(
+          '.elementor-widget-wrap, .elementor-column-wrap, .elementor-widget, ' +
+          '.wp-block-cover, .wp-block-group, section, .rev_slider .tp-caption'
+        ).forEach((el) => {
+          const style = window.getComputedStyle(el);
+          if (style.opacity === '0') (el as HTMLElement).style.opacity = '1';
+          if (style.visibility === 'hidden') (el as HTMLElement).style.visibility = 'visible';
+        });
+        // Try triggering Elementor's frontend animation handler if it exists
+        const win = window as unknown as Record<string, unknown>;
+        if (win.elementorFrontend && typeof (win.elementorFrontend as Record<string, unknown>).waypoint === 'function') {
+          // Force all waypoints to trigger
+          document.querySelectorAll('.elementor-element').forEach((el) => {
+            el.dispatchEvent(new Event('appear'));
+          });
+        }
+        // Try triggering AOS refresh
+        if (win.AOS && typeof (win.AOS as Record<string, unknown>).refreshHard === 'function') {
+          (win.AOS as { refreshHard: () => void }).refreshHard();
+        }
+      });
+    } catch {
+      // Content reveal is non-critical — scroll may still trigger some animations
+    }
+
     // ── LAZY-LOAD LAYER 3: Force-swap data-src attributes ──
     // Many lazy-load libraries store the real URL in data-src, data-lazy-src,
     // data-original, etc. The IO mock (Layer 2) handles most cases, but some

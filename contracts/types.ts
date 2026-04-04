@@ -113,6 +113,8 @@ export interface ScanResult {
   status: ScanStatus;
   detectedSocials: DetectedSocials;
   providedSocials: ProvidedSocials | null;
+  socialEnrichment: SocialEnrichmentResult | null;
+  adDetection: { meta: AdDetectionResult | null; google: GoogleAdsDetectionResult | null } | null;
   stages: FunnelStageResult[];
   completedAt: string | null;
   createdAt: string;
@@ -216,6 +218,16 @@ export interface SocialProfileMetrics {
 export interface SocialEnrichmentResult {
   profiles: SocialProfileMetrics[];
   enrichedAt: string;
+}
+
+// ============================================================
+// GOOGLE ADS DETECTION (Traffic stage enrichment)
+// ============================================================
+
+export interface GoogleAdsDetectionResult {
+  hasActiveAds: boolean;
+  adCount: number | null;
+  transparencyUrl: string;
 }
 
 // ============================================================

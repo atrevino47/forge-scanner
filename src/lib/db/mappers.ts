@@ -9,6 +9,9 @@ import type {
   FunnelStage,
   DetectedSocials,
   ProvidedSocials,
+  SocialEnrichmentResult,
+  AdDetectionResult,
+  GoogleAdsDetectionResult,
 } from '../../../contracts/types';
 import type {
   DbScan,
@@ -78,6 +81,10 @@ export function buildScanResult(
     status: scan.status,
     detectedSocials: (scan.detected_socials ?? {}) as DetectedSocials,
     providedSocials: (scan.provided_socials as ProvidedSocials) ?? null,
+    socialEnrichment: (scan.social_enrichment as unknown as SocialEnrichmentResult) ?? null,
+    adDetection: scan.ad_detection
+      ? (scan.ad_detection as unknown as { meta: AdDetectionResult | null; google: GoogleAdsDetectionResult | null })
+      : null,
     stages: STAGE_ORDER.map((stageName) => {
       const stageRow = stages.find((s) => s.stage === stageName);
       if (stageRow) {
