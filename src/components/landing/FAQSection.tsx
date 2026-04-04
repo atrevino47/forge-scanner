@@ -9,32 +9,17 @@ const faqs = [
   {
     question: 'Is it really free?',
     answer:
-      "Yes. The full scan, AI annotations, and funnel blueprint are completely free. No credit card, no trial. We make money when you hire Forge to fix what we find.",
-  },
-  {
-    question: 'What exactly do you scan?',
-    answer:
-      "We capture real screenshots of your website, Google Business Profile, social media pages (Instagram, Facebook, TikTok), and any active ads. Our AI analyzes each one against proven funnel principles.",
-  },
-  {
-    question: 'How does the analysis work?',
-    answer:
-      "We capture real screenshots of every page, then visually analyze each one for specific issues — missing CTAs, weak headlines, broken trust signals — and mark them directly on the screenshots with numbered annotations. No generic checklists. Every finding references something on your actual site.",
+      "Yes. The full scan, annotations, and funnel blueprint are completely free. No credit card, no trial. We make money when you hire Forge to fix what we find.",
   },
   {
     question: 'Do I need to create an account?',
     answer:
-      "No account needed to start. We'll ask for your email mid-scan so we can send you the full results and blueprint. That's it.",
+      "No account needed. We'll ask for your email mid-scan so we can send you the results. That's it.",
   },
   {
     question: 'What happens after the scan?',
     answer:
-      "You get a complete audit of your funnel with a prioritized fix list and an optimized blueprint mockup. Our AI Sales Agent will walk you through the findings and help you decide if a strategy call makes sense.",
-  },
-  {
-    question: 'How long does the scan take?',
-    answer:
-      "Most scans complete in under 60 seconds. Complex sites with multiple social profiles may take up to 90 seconds.",
+      "You get a complete audit with a prioritized fix list and an optimized blueprint. From there you can book a free strategy call to walk through the findings — or just take the report and run with it.",
   },
 ];
 
