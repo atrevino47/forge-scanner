@@ -434,7 +434,10 @@ This transforms the scanner from "here's what we found" to "here's how you compa
 ### IDEA-08: Post-agent-session copy revisit
 After the Offer Architect, Leads Agent, and Money Model Agent complete their next session, revisit all scanner copy (landing page, results page, sales agent prompts, follow-up emails). These agents may refine the offer positioning, value props, or pricing language in ways that should flow downstream into the scanner's customer-facing copy. The copy rewrite in Session 2 is a first pass aligned with current locked decisions — treat it as a living document that gets a second pass once the business agents produce updated outputs.
 
-### IDEA-09: Live scan counter replacing fake stat
+### IDEA-09: Custom Cal.com booking page HTML
+The Cal.com embed currently uses the default Cal.com booking UI. Build a custom-styled booking page that matches the Forge brand (Outfit font, warm white background, Forge Orange accents, glassmorphism). The current embed works but visually breaks the $100K feel — it looks like a third-party widget dropped into a premium product. Custom HTML for the booking flow would maintain brand continuity from scan results → chat → booking.
+
+### IDEA-10: Live scan counter replacing fake stat
 Replace the hardcoded "500+ Scans Completed" trust stat on the landing page with a live count from the `scans` table (`status = 'completed'`). Honest number that grows with outreach. Even "12" is more credible than a fabricated "500+". Aligns with brand direction's "anti-hype honesty" principle. Slated for Session 2 (copy rewrite).
 
 ---

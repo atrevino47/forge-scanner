@@ -146,7 +146,7 @@ export function HeroSection() {
             color: 'var(--forge-text-secondary)',
           }}
         >
-          We scan your website, socials, and ads — then AI pinpoints exactly what&apos;s costing you customers. Real screenshots. Specific fixes. No fluff.
+          We scan your website, socials, and ads — and show you exactly what&apos;s costing you customers. Real screenshots. Specific fixes. No fluff.
         </p>
 
         {/* URL Input */}
