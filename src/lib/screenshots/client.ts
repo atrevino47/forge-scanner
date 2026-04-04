@@ -199,13 +199,51 @@ export async function capturePageWithMetadata(
     // First call creates the context with a real user-agent; subsequent
     // calls reuse it.
     const contexts = browser.contexts();
-    const context = contexts.length > 0
-      ? contexts[0]
-      : await browser.newContext({
-          userAgent: CHROME_USER_AGENT,
-          locale: 'en-US',
-          javaScriptEnabled: true,
-        });
+    let context = contexts.length > 0 ? contexts[0] : null;
+
+    if (!context) {
+      context = await browser.newContext({
+        userAgent: CHROME_USER_AGENT,
+        locale: 'en-US',
+        javaScriptEnabled: true,
+      });
+
+      // ── LAZY-LOAD LAYER 2: Mock IntersectionObserver ──
+      // Runs before ANY page JS executes. Tells every JS-based lazy loader
+      // (React, Vue, vanilla-lazyload, lozad, lazysizes, Shopify, Squarespace)
+      // that all observed elements are already fully visible. The libraries
+      // then eagerly load everything instead of waiting for scroll.
+      await context.addInitScript(() => {
+        window.IntersectionObserver = class MockIntersectionObserver {
+          private cb: IntersectionObserverCallback;
+          constructor(cb: IntersectionObserverCallback) { this.cb = cb; }
+          observe(target: Element) {
+            // Fire callback on next frame so the element is attached to DOM
+            requestAnimationFrame(() => {
+              this.cb(
+                [{
+                  target,
+                  isIntersecting: true,
+                  intersectionRatio: 1.0,
+                  boundingClientRect: target.getBoundingClientRect(),
+                  intersectionRect: target.getBoundingClientRect(),
+                  rootBounds: null,
+                  time: performance.now(),
+                } as IntersectionObserverEntry],
+                this as unknown as IntersectionObserver,
+              );
+            });
+          }
+          unobserve() {}
+          disconnect() {}
+          takeRecords(): IntersectionObserverEntry[] { return []; }
+          get root() { return null; }
+          get rootMargin() { return '0px'; }
+          get thresholds() { return [0]; }
+        } as unknown as typeof IntersectionObserver;
+      });
+    }
+
     page = await context.newPage();
 
     await page.setViewportSize(viewportSize);
@@ -284,17 +322,61 @@ export async function capturePageWithMetadata(
       // Cookie dismissal is non-critical
     }
 
-    // ── Force lazy images to eager ──
-    // Override loading="lazy" on all images so they load immediately
-    // instead of waiting for viewport intersection during scroll.
+    // ── LAZY-LOAD LAYER 3: Force-swap data-src attributes ──
+    // Many lazy-load libraries store the real URL in data-src, data-lazy-src,
+    // data-original, etc. The IO mock (Layer 2) handles most cases, but some
+    // libraries initialize before the mock or use non-IO triggers. This sweep
+    // catches stragglers by copying data attributes to their real counterparts.
     try {
       await page.evaluate(() => {
-        document.querySelectorAll('img[loading="lazy"]').forEach((img) => {
-          img.setAttribute('loading', 'eager');
+        // img: data-src variants → src
+        const srcAttrs = ['data-src', 'data-lazy-src', 'data-original', 'data-lazy'];
+        const srcsetAttrs = ['data-srcset', 'data-lazy-srcset'];
+        document.querySelectorAll('img').forEach((img) => {
+          for (const attr of srcAttrs) {
+            const val = img.getAttribute(attr);
+            if (val && (!img.src || img.src.includes('data:') || img.src.includes('placeholder') || img.src.includes('blank'))) {
+              img.src = val;
+              break;
+            }
+          }
+          for (const attr of srcsetAttrs) {
+            const val = img.getAttribute(attr);
+            if (val) img.srcset = val;
+          }
+          // Shopify: data-widths + data-sizes="auto"
+          if (img.getAttribute('data-sizes') === 'auto') {
+            img.sizes = `${img.getBoundingClientRect().width}px`;
+          }
         });
+        // picture > source: data-srcset → srcset
+        document.querySelectorAll('source[data-srcset]').forEach((source) => {
+          const val = source.getAttribute('data-srcset');
+          if (val) source.setAttribute('srcset', val);
+        });
+        // Background images: data-bg, data-background-image
+        document.querySelectorAll('[data-bg], [data-background-image], [data-bg-image]').forEach((el) => {
+          const bgUrl = el.getAttribute('data-bg') || el.getAttribute('data-background-image') || el.getAttribute('data-bg-image');
+          if (bgUrl) (el as HTMLElement).style.backgroundImage = `url('${bgUrl}')`;
+        });
+        // CSS class swap: lazy → lazyloaded (triggers CSS visibility rules)
+        document.querySelectorAll('.lazy, .lazyload, .b-lazy, .owl-lazy').forEach((el) => {
+          el.classList.remove('lazy', 'lazyload', 'b-lazy', 'owl-lazy');
+          el.classList.add('lazyloaded', 'loaded');
+        });
+        // Iframes with data-src
+        document.querySelectorAll('iframe[data-src]').forEach((iframe) => {
+          const val = iframe.getAttribute('data-src');
+          if (val) iframe.setAttribute('src', val);
+        });
+        // Trigger library-specific loadAll APIs
+        const win = window as unknown as Record<string, unknown>;
+        if (win.lazyLoadInstance && typeof (win.lazyLoadInstance as { loadAll?: () => void }).loadAll === 'function') {
+          (win.lazyLoadInstance as { loadAll: () => void }).loadAll();
+        }
       });
     } catch {
-      // Non-critical
+      // Non-critical — IO mock and scroll handle most cases
     }
 
     // ── Capture mode: full (patient visitor) vs fast ──
@@ -362,14 +444,48 @@ export async function capturePageWithMetadata(
         );
       }
 
-      // Phase 2.5 — Wait for lazy-loaded images to finish downloading
-      // After scrolling triggered all lazy images (loading="lazy", Intersection Observer),
-      // wait for network to settle so images actually load before we capture.
+      // Phase 2.5 — Re-run data-src swap for dynamically added elements
+      // Pages with infinite scroll or JS-rendered sections may have added
+      // new lazy elements during the scroll that weren't in the initial DOM.
       try {
-        await page.waitForLoadState('networkidle', { timeout: 10_000 });
+        await page.evaluate(() => {
+          const srcAttrs = ['data-src', 'data-lazy-src', 'data-original', 'data-lazy'];
+          document.querySelectorAll('img').forEach((img) => {
+            for (const attr of srcAttrs) {
+              const val = img.getAttribute(attr);
+              if (val && (!img.src || img.src.includes('data:') || img.src.includes('placeholder') || img.src.includes('blank'))) {
+                img.src = val;
+                break;
+              }
+            }
+          });
+        });
       } catch {
-        // networkidle may not fire on pages with persistent connections (analytics, chat widgets)
-        console.warn(`[screenshots/client] Network idle timeout for ${url}. Continuing.`);
+        // Non-critical
+      }
+
+      // Phase 2.6 — Wait for all images to actually decode + fonts to load
+      // img.decode() is more reliable than img.complete — it resolves when the
+      // image is fully decoded and ready to render. 8s total budget with 5s per image.
+      try {
+        await page.evaluate(async () => {
+          await Promise.all([
+            // Wait for every <img> to be decoded and ready to paint
+            Promise.allSettled(
+              Array.from(document.querySelectorAll('img')).map((img) => {
+                if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+                return Promise.race([
+                  img.decode().catch(() => {}),
+                  new Promise((r) => setTimeout(r, 5_000)),
+                ]);
+              }),
+            ),
+            // Wait for web fonts to finish loading
+            document.fonts.ready,
+          ]);
+        });
+      } catch {
+        console.warn(`[screenshots/client] Image decode wait failed for ${url}. Continuing.`);
       }
 
       // Phase 3 — Scroll back to top
