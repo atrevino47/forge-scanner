@@ -363,7 +363,6 @@ export async function capturePageWithMetadata(
         userAgent: CHROME_USER_AGENT,
         locale: 'en-US',
         javaScriptEnabled: true,
-        reducedMotion: 'reduce',
       });
 
       // ── LAZY-LOAD LAYER 2: Mock IntersectionObserver ──
@@ -480,12 +479,22 @@ export async function capturePageWithMetadata(
       // Cookie dismissal is non-critical
     }
 
-    // ── CONTENT REVEAL: JS class cleanup for scroll-hidden elements ──
-    // Animation framework CSS overrides are now handled by the `style`
-    // parameter on page.screenshot() (SCREENSHOT_STYLE constant), which
-    // injects CSS only during capture — not permanently on the page.
-    // This JS cleanup remains necessary for libraries that check class
-    // presence rather than computed styles.
+    // ── CONTENT REVEAL: Force-show scroll-hidden elements ──
+    // Two-layer approach:
+    // Layer A: addStyleTag() — makes elements visible DURING rendering so the
+    //          browser actually loads images, computes layouts, renders children.
+    //          Without this, elements hidden by animation frameworks are empty
+    //          white boxes even when the screenshot `style` param forces opacity:1.
+    // Layer B: screenshot({ style }) — reinforces visibility AT capture time as
+    //          a safety net (handles elements added after addStyleTag ran).
+    try {
+      await page.addStyleTag({ content: SCREENSHOT_STYLE });
+    } catch {
+      // Non-critical — screenshot `style` parameter is the backup
+    }
+
+    // JS class cleanup — necessary for libraries that check class presence
+    // rather than computed styles.
     try {
       await page.evaluate(() => {
         // Elementor: remove .elementor-invisible, let default styles show
