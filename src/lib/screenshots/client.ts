@@ -694,7 +694,7 @@ export async function capturePageWithMetadata(
       await waitForIdle(page);
     }
 
-    // Phase 6 — Capture screenshot
+    // Capture screenshot
     // Full mode: fullPage: false because the viewport IS the full page (tall viewport)
     // Fast mode + mobile: use standard fullPage behavior
     const useFullPage = mode !== 'full' && viewport === 'desktop';
