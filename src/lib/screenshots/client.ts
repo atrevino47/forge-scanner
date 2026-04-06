@@ -207,6 +207,9 @@ export async function captureScreenshot(
     const screenshot = await page.screenshot({
       fullPage: options?.fullPage ?? true,
       type: 'png',
+      animations: 'disabled',
+      caret: 'hide',
+      style: SCREENSHOT_STYLE,
     });
 
     return Buffer.from(screenshot);
