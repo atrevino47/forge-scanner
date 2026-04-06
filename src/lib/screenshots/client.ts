@@ -223,6 +223,97 @@ export async function captureScreenshot(
 }
 
 // ============================================================
+// waitForIdle
+// ============================================================
+
+/**
+ * Waits for the browser to reach an idle state using a rAF chain +
+ * requestIdleCallback pattern. More reliable than blind waitForTimeout()
+ * because it detects when the browser has finished painting.
+ *
+ * Falls back to a short timeout if requestIdleCallback isn't available
+ * (shouldn't happen in Chrome, but defensive).
+ */
+async function waitForIdle(page: Page, maxMs: number = IDLE_WAIT_MAX_MS): Promise<void> {
+  try {
+    await page.waitForFunction(
+      (timeoutMs: number) => {
+        return new Promise<boolean>((resolve) => {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => resolve(true), { timeout: timeoutMs });
+              } else {
+                setTimeout(() => resolve(true), 100);
+              }
+            });
+          });
+        });
+      },
+      maxMs,
+      { timeout: maxMs + 2000 },
+    );
+  } catch {
+    // Non-critical — if idle detection times out, proceed anyway
+    console.warn('[screenshots/client] Idle detection timed out, proceeding with capture');
+  }
+}
+
+// ============================================================
+// slowScroll
+// ============================================================
+
+/**
+ * Patient Visitor scroll: scrolls the page in small increments with pauses
+ * between each step. This fires scroll-triggered JS animations (GSAP
+ * ScrollTrigger, AOS, WOW.js, vanilla IntersectionObserver handlers)
+ * naturally, just like a real visitor scrolling through the page.
+ *
+ * After reaching the bottom, scrolls back to top and settles — hero
+ * sections often have entrance animations that replay on return.
+ *
+ * Safety cap: MAX_SCROLL_TIME_MS prevents infinite loops on infinite-scroll pages.
+ */
+async function slowScroll(page: Page): Promise<void> {
+  const startTime = Date.now();
+
+  try {
+    // Scroll down in increments
+    let previousHeight = 0;
+    let currentPosition = 0;
+
+    while (Date.now() - startTime < MAX_SCROLL_TIME_MS) {
+      const docHeight = await page.evaluate(() =>
+        Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
+      );
+
+      if (currentPosition >= docHeight) {
+        // Reached the bottom — check if page grew (lazy-loaded content)
+        if (docHeight <= previousHeight) break;
+        previousHeight = docHeight;
+      }
+
+      await page.evaluate((step) => window.scrollBy(0, step), SCROLL_STEP_PX);
+      currentPosition += SCROLL_STEP_PX;
+      await page.waitForTimeout(SCROLL_PAUSE_MS);
+    }
+
+    if (Date.now() - startTime >= MAX_SCROLL_TIME_MS) {
+      console.warn(
+        `[screenshots/client] Slow scroll hit ${MAX_SCROLL_TIME_MS}ms cap. Captured ${currentPosition}px of content.`,
+      );
+    }
+
+    // Scroll back to top
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(SCROLL_BACK_SETTLE_MS);
+  } catch {
+    // Non-critical — if scroll fails, proceed with whatever was visible
+    console.warn('[screenshots/client] Slow scroll failed, proceeding with capture');
+  }
+}
+
+// ============================================================
 // capturePageWithMetadata
 // ============================================================
 
