@@ -480,85 +480,13 @@ export async function capturePageWithMetadata(
       // Cookie dismissal is non-critical
     }
 
-    // ── CONTENT REVEAL: Force-show scroll-hidden elements ──
-    // WordPress Elementor, AOS, WOW.js, GSAP ScrollTrigger, RevSlider, and
-    // dozens of other frameworks hide below-fold elements with opacity:0 /
-    // visibility:hidden / transform, then reveal them on scroll via waypoints
-    // or IntersectionObserver. In headless capture those scroll triggers don't
-    // fire reliably. Proven fix: inject CSS that force-overrides ALL known
-    // hiding patterns, then clean up JS classes so framework CSS cooperates.
+    // ── CONTENT REVEAL: JS class cleanup for scroll-hidden elements ──
+    // Animation framework CSS overrides are now handled by the `style`
+    // parameter on page.screenshot() (SCREENSHOT_STYLE constant), which
+    // injects CSS only during capture — not permanently on the page.
+    // This JS cleanup remains necessary for libraries that check class
+    // presence rather than computed styles.
     try {
-      // Step 1 — CSS override: nuclear !important on every known pattern
-      await page.addStyleTag({
-        content: `
-          /* Elementor entrance animations */
-          .elementor-invisible {
-            opacity: 1 !important;
-            visibility: visible !important;
-          }
-          /* Elementor motion effects */
-          .elementor-widget[data-settings*="animation"],
-          .elementor-element[data-settings*="animation"] {
-            opacity: 1 !important;
-            visibility: visible !important;
-            transform: none !important;
-          }
-          /* AOS — Animate on Scroll */
-          [data-aos] {
-            opacity: 1 !important;
-            visibility: visible !important;
-            transform: none !important;
-            transition: none !important;
-          }
-          /* WOW.js */
-          .wow {
-            opacity: 1 !important;
-            visibility: visible !important;
-            animation-name: none !important;
-          }
-          /* Animate.css hidden-before-trigger */
-          .animate__animated {
-            opacity: 1 !important;
-            visibility: visible !important;
-          }
-          /* ScrollReveal.js */
-          [data-sr-id] {
-            opacity: 1 !important;
-            visibility: visible !important;
-            transform: none !important;
-          }
-          /* SAL — Scroll Animation Library */
-          [data-sal] {
-            opacity: 1 !important;
-            visibility: visible !important;
-            transform: none !important;
-          }
-          /* Generic scroll-trigger patterns */
-          [data-animate], [data-animation], [data-scroll] {
-            opacity: 1 !important;
-            visibility: visible !important;
-            transform: none !important;
-          }
-          /* GSAP ScrollTrigger hidden elements */
-          [style*="visibility: hidden"][style*="opacity: 0"],
-          [style*="visibility:hidden"][style*="opacity:0"] {
-            opacity: 1 !important;
-            visibility: visible !important;
-          }
-          /* RevSlider hidden layers */
-          .tp-caption, .rs-layer {
-            opacity: 1 !important;
-            visibility: visible !important;
-          }
-          /* Divi Builder */
-          .et_pb_section .et_had_animation {
-            opacity: 1 !important;
-            visibility: visible !important;
-          }
-        `,
-      });
-
-      // Step 2 — JS class cleanup: remove hiding classes, add revealed classes
       await page.evaluate(() => {
         // Elementor: remove .elementor-invisible, let default styles show
         document.querySelectorAll('.elementor-invisible').forEach((el) => {
@@ -590,7 +518,6 @@ export async function capturePageWithMetadata(
         // Try triggering Elementor's frontend animation handler if it exists
         const win = window as unknown as Record<string, unknown>;
         if (win.elementorFrontend && typeof (win.elementorFrontend as Record<string, unknown>).waypoint === 'function') {
-          // Force all waypoints to trigger
           document.querySelectorAll('.elementor-element').forEach((el) => {
             el.dispatchEvent(new Event('appear'));
           });
@@ -601,7 +528,7 @@ export async function capturePageWithMetadata(
         }
       });
     } catch {
-      // Content reveal is non-critical — scroll may still trigger some animations
+      // Content reveal is non-critical — scroll + animations:'disabled' handle most cases
     }
 
     // ── LAZY-LOAD LAYER 3: Force-swap data-src attributes ──
