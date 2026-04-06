@@ -272,6 +272,7 @@ export async function capturePageWithMetadata(
         userAgent: CHROME_USER_AGENT,
         locale: 'en-US',
         javaScriptEnabled: true,
+        reducedMotion: 'reduce',
       });
 
       // ── LAZY-LOAD LAYER 2: Mock IntersectionObserver ──
