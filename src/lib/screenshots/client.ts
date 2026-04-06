@@ -602,25 +602,28 @@ export async function capturePageWithMetadata(
 
     // ── Capture mode: full (tall viewport) vs fast ──
     if (mode === 'full') {
-      /* TALL VIEWPORT CAPTURE
-       * Instead of scrolling (which causes Chrome tile eviction when scrolling
-       * back to top), resize the viewport to the full document height. With
-       * nothing "below the fold," lazy loaders fire immediately and Chrome
-       * composites the entire page. Screenshot with fullPage: false since the
-       * viewport IS the full page.
+      /* PATIENT VISITOR + TALL VIEWPORT CAPTURE
        *
-       * Phase 1: Initial settle — let above-fold JS/animations run
-       * Phase 2: Measure doc height → resize viewport to match (cap 16384px)
-       * Phase 3: Re-run data-src swap for newly visible elements
-       * Phase 4: Wait for all images to decode + fonts to load
-       * Phase 5: Re-measure (lazy content may have grown the page)
-       * Phase 6: Screenshot with fullPage: false
+       * 1. Idle detection  — let above-fold JS/animations settle
+       * 2. Slow scroll     — fire scroll-triggered animations (GSAP, AOS, etc.)
+       * 3. Idle detection  — let animations triggered by scroll complete
+       * 4. Tall viewport   — resize to full doc height (avoids Chrome tile eviction)
+       * 5. Re-swap data-src — catch lazy content now inside viewport
+       * 6. Image decode     — wait for all images + fonts
+       * 7. Re-measure      — resize if page grew from lazy content
+       * 8. Screenshot       — with animations:'disabled' + style override
        */
 
-      // Phase 1 — Initial settle for JS hydration + above-fold animations
-      await page.waitForTimeout(1500);
+      // Phase 1 — Initial idle: let above-fold JS hydration + animations settle
+      await waitForIdle(page);
 
-      // Phase 2 — Measure document height and resize viewport
+      // Phase 2 — Slow scroll: fire scroll-triggered JS animations
+      await slowScroll(page);
+
+      // Phase 3 — Post-scroll idle: let animations complete after scroll-back
+      await waitForIdle(page);
+
+      // Phase 4 — Tall viewport: resize to full document height
       const docHeight = await page.evaluate(() =>
         Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
       );
@@ -631,7 +634,7 @@ export async function capturePageWithMetadata(
       // Brief wait for lazy content triggered by the new viewport
       await page.waitForTimeout(1500);
 
-      // Phase 3 — Re-run data-src swap for elements now inside the viewport
+      // Phase 5 — Re-run data-src swap for elements now inside the viewport
       try {
         await page.evaluate(() => {
           const srcAttrs = ['data-src', 'data-lazy-src', 'data-original', 'data-lazy'];
@@ -658,7 +661,7 @@ export async function capturePageWithMetadata(
         // Non-critical
       }
 
-      // Phase 4 — Wait for all images to decode + fonts to load
+      // Phase 6 — Wait for all images to decode + fonts to load
       try {
         await page.evaluate(async () => {
           await Promise.allSettled(
@@ -676,7 +679,7 @@ export async function capturePageWithMetadata(
         console.warn(`[screenshots/client] Image decode wait failed for ${url}. Continuing.`);
       }
 
-      // Phase 5 — Re-measure in case lazy content grew the page
+      // Phase 7 — Re-measure in case lazy content grew the page
       const finalHeight = await page.evaluate(() =>
         Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
       );
@@ -687,8 +690,8 @@ export async function capturePageWithMetadata(
         await page.waitForTimeout(1000);
       }
     } else {
-      // Fast mode — just a short settle for basic JS rendering
-      await page.waitForTimeout(2000);
+      // Fast mode — idle detection for basic JS rendering (replaces blind 2000ms wait)
+      await waitForIdle(page);
     }
 
     // Phase 6 — Capture screenshot
