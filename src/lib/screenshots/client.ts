@@ -13,6 +13,13 @@ const MOBILE_VIEWPORT = { width: 375, height: 812 } as const;
 
 const NAVIGATION_TIMEOUT_MS = 30_000;
 
+// ── Patient Visitor scroll constants ──
+const SCROLL_STEP_PX = 300;
+const SCROLL_PAUSE_MS = 400;
+const SCROLL_BACK_SETTLE_MS = 2000;
+const IDLE_WAIT_MAX_MS = 3000;
+const MAX_SCROLL_TIME_MS = 30_000;
+
 // Realistic user-agent — avoids "HeadlessChrome" detection that causes
 // sites to serve blank pages, CAPTCHAs, or bot-block redirects.
 const CHROME_USER_AGENT =
@@ -44,6 +51,68 @@ const COOKIE_DISMISS_SELECTORS = [
 
 // Chrome's maximum texture height — viewport height cap for tall viewport capture
 const MAX_VIEWPORT_HEIGHT = 16_384;
+
+// CSS overrides applied ONLY during screenshot capture via Playwright's `style`
+// parameter. Unlike addStyleTag(), this does NOT persist on the page, so it
+// cannot break carousel JS or layout calculations.
+const SCREENSHOT_STYLE = `
+  /* Elementor entrance animations */
+  .elementor-invisible {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  .elementor-widget[data-settings*="animation"],
+  .elementor-element[data-settings*="animation"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  /* AOS — Animate on Scroll */
+  [data-aos] {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  /* WOW.js */
+  .wow {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  /* Animate.css */
+  .animate__animated {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  /* ScrollReveal.js */
+  [data-sr-id] {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  /* SAL — Scroll Animation Library */
+  [data-sal] {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  /* Generic scroll-trigger patterns */
+  [data-animate], [data-animation], [data-scroll] {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  /* GSAP ScrollTrigger hidden elements */
+  [style*="visibility: hidden"][style*="opacity: 0"],
+  [style*="visibility:hidden"][style*="opacity:0"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  /* RevSlider hidden layers */
+  .tp-caption, .rs-layer {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  /* Divi Builder */
+  .et_pb_section .et_had_animation {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+`;
 
 // ============================================================
 // Types
