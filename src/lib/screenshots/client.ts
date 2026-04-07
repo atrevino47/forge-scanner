@@ -3,6 +3,7 @@
 // Supports self-hosted Chrome (BROWSER_WS_ENDPOINT) with Browserless.io fallback.
 
 import { chromium, type Browser, type Page } from 'playwright-core';
+import sharp from 'sharp';
 
 // ============================================================
 // Viewport presets
@@ -12,13 +13,6 @@ const DESKTOP_VIEWPORT = { width: 1440, height: 900 } as const;
 const MOBILE_VIEWPORT = { width: 375, height: 812 } as const;
 
 const NAVIGATION_TIMEOUT_MS = 30_000;
-
-// ── Patient Visitor scroll constants ──
-const SCROLL_STEP_PX = 300;
-const SCROLL_PAUSE_MS = 400;
-const SCROLL_BACK_SETTLE_MS = 2000;
-const IDLE_WAIT_MAX_MS = 3000;
-const MAX_SCROLL_TIME_MS = 30_000;
 
 // Realistic user-agent — avoids "HeadlessChrome" detection that causes
 // sites to serve blank pages, CAPTCHAs, or bot-block redirects.
@@ -52,11 +46,11 @@ const COOKIE_DISMISS_SELECTORS = [
 // Chrome's maximum texture height — viewport height cap for tall viewport capture
 const MAX_VIEWPORT_HEIGHT = 16_384;
 
-// CSS overrides applied ONLY during screenshot capture via Playwright's `style`
-// parameter. Unlike addStyleTag(), this does NOT persist on the page, so it
-// cannot break carousel JS or layout calculations.
+// Scroll-and-stitch constants
+const STITCH_OVERLAP_PX = 50;
+const MAX_SCROLL_SEGMENTS = 30;
+
 const SCREENSHOT_STYLE = `
-  /* Elementor entrance animations */
   .elementor-invisible {
     opacity: 1 !important;
     visibility: visible !important;
@@ -66,48 +60,39 @@ const SCREENSHOT_STYLE = `
     opacity: 1 !important;
     visibility: visible !important;
   }
-  /* AOS — Animate on Scroll */
   [data-aos] {
     opacity: 1 !important;
     visibility: visible !important;
   }
-  /* WOW.js */
   .wow {
     opacity: 1 !important;
     visibility: visible !important;
   }
-  /* Animate.css */
   .animate__animated {
     opacity: 1 !important;
     visibility: visible !important;
   }
-  /* ScrollReveal.js */
   [data-sr-id] {
     opacity: 1 !important;
     visibility: visible !important;
   }
-  /* SAL — Scroll Animation Library */
   [data-sal] {
     opacity: 1 !important;
     visibility: visible !important;
   }
-  /* Generic scroll-trigger patterns */
   [data-animate], [data-animation], [data-scroll] {
     opacity: 1 !important;
     visibility: visible !important;
   }
-  /* GSAP ScrollTrigger hidden elements */
   [style*="visibility: hidden"][style*="opacity: 0"],
   [style*="visibility:hidden"][style*="opacity:0"] {
     opacity: 1 !important;
     visibility: visible !important;
   }
-  /* RevSlider hidden layers */
   .tp-caption, .rs-layer {
     opacity: 1 !important;
     visibility: visible !important;
   }
-  /* Divi Builder */
   .et_pb_section .et_had_animation {
     opacity: 1 !important;
     visibility: visible !important;
@@ -223,94 +208,191 @@ export async function captureScreenshot(
 }
 
 // ============================================================
-// waitForIdle
+// Scroll-and-stitch helpers
 // ============================================================
 
 /**
- * Waits for the browser to reach an idle state using a rAF chain +
- * requestIdleCallback pattern. More reliable than blind waitForTimeout()
- * because it detects when the browser has finished painting.
- *
- * Falls back to a short timeout if requestIdleCallback isn't available
- * (shouldn't happen in Chrome, but defensive).
+ * Scrolls page in viewport-height steps to trigger scroll-based lazy loaders,
+ * then returns to top. Replaces the tall viewport resize as the lazy-load
+ * trigger mechanism.
  */
-async function waitForIdle(page: Page, maxMs: number = IDLE_WAIT_MAX_MS): Promise<void> {
+async function triggerLazyLoadViaScroll(
+  page: Page,
+  viewportSize: { width: number; height: number },
+): Promise<void> {
   try {
-    await page.waitForFunction(
-      (timeoutMs: number) => {
-        return new Promise<boolean>((resolve) => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              if ('requestIdleCallback' in window) {
-                requestIdleCallback(() => resolve(true), { timeout: timeoutMs });
-              } else {
-                setTimeout(() => resolve(true), 100);
-              }
-            });
-          });
-        });
-      },
-      maxMs,
-      { timeout: maxMs + 2000 },
+    const docHeight = await page.evaluate(() =>
+      Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
     );
+    const steps = Math.min(Math.ceil(docHeight / viewportSize.height), MAX_SCROLL_SEGMENTS);
+
+    for (let i = 1; i <= steps; i++) {
+      await page.evaluate((y) => window.scrollTo(0, y), i * viewportSize.height);
+      await page.waitForTimeout(200);
+    }
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(300);
   } catch {
-    // Non-critical — if idle detection times out, proceed anyway
-    console.warn('[screenshots/client] Idle detection timed out, proceeding with capture');
+    console.warn('[screenshots/client] Lazy-load scroll pass failed, proceeding');
   }
 }
 
-// ============================================================
-// slowScroll
-// ============================================================
+/**
+ * Detects elements with position:fixed or position:sticky and marks them
+ * with a data attribute. Returns the count of marked elements.
+ */
+async function detectFixedElements(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    let count = 0;
+    const all = document.querySelectorAll('*');
+    for (const el of all) {
+      const style = window.getComputedStyle(el);
+      if (style.position === 'fixed' || style.position === 'sticky') {
+        el.setAttribute('data-stitch-hide', 'true');
+        count++;
+      }
+    }
+    return count;
+  });
+}
 
 /**
- * Patient Visitor scroll: scrolls the page in small increments with pauses
- * between each step. This fires scroll-triggered JS animations (GSAP
- * ScrollTrigger, AOS, WOW.js, vanilla IntersectionObserver handlers)
- * naturally, just like a real visitor scrolling through the page.
+ * Scroll-and-stitch capture: scrolls through the page one viewport at a time,
+ * captures each segment, and stitches them vertically with Sharp.
  *
- * After reaching the bottom, scrolls back to top and settles — hero
- * sections often have entrance animations that replay on return.
- *
- * Safety cap: MAX_SCROLL_TIME_MS prevents infinite loops on infinite-scroll pages.
+ * Avoids Chrome's GPU tile eviction at extreme viewport heights. Fixed/sticky
+ * elements are hidden after the first segment to prevent duplication.
  */
-async function slowScroll(page: Page): Promise<void> {
-  const startTime = Date.now();
+async function scrollAndStitch(
+  page: Page,
+  viewportSize: { width: number; height: number },
+): Promise<Buffer> {
+  const docHeight = await page.evaluate(() =>
+    Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
+  );
 
-  try {
-    // Scroll down in increments
-    let previousHeight = 0;
-    let currentPosition = 0;
-
-    while (Date.now() - startTime < MAX_SCROLL_TIME_MS) {
-      const docHeight = await page.evaluate(() =>
-        Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
-      );
-
-      if (currentPosition >= docHeight) {
-        // Reached the bottom — check if page grew (lazy-loaded content)
-        if (docHeight <= previousHeight) break;
-        previousHeight = docHeight;
-      }
-
-      await page.evaluate((step) => window.scrollBy(0, step), SCROLL_STEP_PX);
-      currentPosition += SCROLL_STEP_PX;
-      await page.waitForTimeout(SCROLL_PAUSE_MS);
-    }
-
-    if (Date.now() - startTime >= MAX_SCROLL_TIME_MS) {
-      console.warn(
-        `[screenshots/client] Slow scroll hit ${MAX_SCROLL_TIME_MS}ms cap. Captured ${currentPosition}px of content.`,
-      );
-    }
-
-    // Scroll back to top
-    await page.evaluate(() => window.scrollTo(0, 0));
-    await page.waitForTimeout(SCROLL_BACK_SETTLE_MS);
-  } catch {
-    // Non-critical — if scroll fails, proceed with whatever was visible
-    console.warn('[screenshots/client] Slow scroll failed, proceeding with capture');
+  // Short page — single capture, no stitching needed
+  if (docHeight <= viewportSize.height) {
+    const single = await page.screenshot({
+      type: 'png',
+      fullPage: false,
+      animations: 'disabled',
+      caret: 'hide',
+      style: SCREENSHOT_STYLE,
+    });
+    return Buffer.from(single);
   }
+
+  const segmentCount = Math.min(
+    Math.ceil(docHeight / viewportSize.height),
+    MAX_SCROLL_SEGMENTS,
+  );
+
+  // Detect fixed/sticky elements for hiding in segments 2+
+  const fixedCount = await detectFixedElements(page);
+  const hideFixedCSS = fixedCount > 0
+    ? `[data-stitch-hide] { visibility: hidden !important; }`
+    : '';
+  console.log(`[screenshots/client] Scroll-and-stitch: ${segmentCount} segments, ${fixedCount} fixed elements`);
+
+  const segments: Buffer[] = [];
+
+  // Capture first segment (fixed elements visible — shows header/nav)
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(100);
+  const firstShot = await page.screenshot({
+    type: 'png',
+    fullPage: false,
+    animations: 'disabled',
+    caret: 'hide',
+    style: SCREENSHOT_STYLE,
+  });
+  segments.push(Buffer.from(firstShot));
+
+  // Capture remaining segments (fixed elements hidden)
+  for (let i = 1; i < segmentCount; i++) {
+    const scrollY = i * viewportSize.height - STITCH_OVERLAP_PX;
+    await page.evaluate((y) => window.scrollTo(0, y), scrollY);
+    await page.waitForTimeout(150);
+
+    const segmentStyle = hideFixedCSS
+      ? `${SCREENSHOT_STYLE}\n${hideFixedCSS}`
+      : SCREENSHOT_STYLE;
+
+    const shot = await page.screenshot({
+      type: 'png',
+      fullPage: false,
+      animations: 'disabled',
+      caret: 'hide',
+      style: segmentStyle,
+    });
+    segments.push(Buffer.from(shot));
+  }
+
+  // Clean up data attributes
+  if (fixedCount > 0) {
+    await page.evaluate(() => {
+      document.querySelectorAll('[data-stitch-hide]').forEach((el) => {
+        el.removeAttribute('data-stitch-hide');
+      });
+    });
+  }
+
+  // Stitch segments with Sharp
+  // First segment: full height
+  // Middle segments: crop STITCH_OVERLAP_PX from top
+  // Last segment: crop overlap from top + whitespace from bottom
+  const vw = viewportSize.width;
+  const vh = viewportSize.height;
+
+  // Calculate last segment visible height
+  const lastScrollY = (segmentCount - 1) * vh - STITCH_OVERLAP_PX;
+  const lastVisibleHeight = Math.min(vh, docHeight - lastScrollY);
+
+  const firstHeight = vh;
+  const middleHeight = vh - STITCH_OVERLAP_PX;
+  const lastCroppedHeight = lastVisibleHeight - STITCH_OVERLAP_PX;
+
+  const totalHeight = segments.length === 2
+    ? firstHeight + lastCroppedHeight
+    : firstHeight + middleHeight * (segments.length - 2) + lastCroppedHeight;
+
+  // Build composite inputs
+  const compositeInputs: { input: Buffer; top: number; left: number }[] = [];
+  let currentTop = 0;
+
+  for (let i = 0; i < segments.length; i++) {
+    if (i === 0) {
+      compositeInputs.push({ input: segments[i], top: 0, left: 0 });
+      currentTop = firstHeight;
+    } else {
+      const cropTop = STITCH_OVERLAP_PX;
+      const cropHeight = i === segments.length - 1 ? lastCroppedHeight : middleHeight;
+
+      const cropped = await sharp(segments[i])
+        .extract({ left: 0, top: cropTop, width: vw, height: cropHeight })
+        .toBuffer();
+
+      compositeInputs.push({ input: cropped, top: currentTop, left: 0 });
+      currentTop += cropHeight;
+    }
+  }
+
+  const stitched = await sharp({
+    create: {
+      width: vw,
+      height: totalHeight,
+      channels: 4,
+      background: { r: 255, g: 255, b: 255, alpha: 1 },
+    },
+  })
+    .composite(compositeInputs)
+    .png()
+    .toBuffer();
+
+  console.log(`[screenshots/client] Stitched: ${vw}x${totalHeight} from ${segments.length} segments`);
+  return stitched;
 }
 
 // ============================================================
@@ -480,22 +562,84 @@ export async function capturePageWithMetadata(
     }
 
     // ── CONTENT REVEAL: Force-show scroll-hidden elements ──
-    // Two-layer approach:
-    // Layer A: addStyleTag() — makes elements visible DURING rendering so the
-    //          browser actually loads images, computes layouts, renders children.
-    //          Without this, elements hidden by animation frameworks are empty
-    //          white boxes even when the screenshot `style` param forces opacity:1.
-    // Layer B: screenshot({ style }) — reinforces visibility AT capture time as
-    //          a safety net (handles elements added after addStyleTag ran).
+    // WordPress Elementor, AOS, WOW.js, GSAP ScrollTrigger, RevSlider, and
+    // dozens of other frameworks hide below-fold elements with opacity:0 /
+    // visibility:hidden / transform, then reveal them on scroll via waypoints
+    // or IntersectionObserver. In headless capture those scroll triggers don't
+    // fire reliably. Proven fix: inject CSS that force-overrides ALL known
+    // hiding patterns, then clean up JS classes so framework CSS cooperates.
     try {
-      await page.addStyleTag({ content: SCREENSHOT_STYLE });
-    } catch {
-      // Non-critical — screenshot `style` parameter is the backup
-    }
+      // Step 1 — CSS override: nuclear !important on every known pattern
+      await page.addStyleTag({
+        content: `
+          /* Elementor entrance animations */
+          .elementor-invisible {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+          /* Elementor motion effects */
+          .elementor-widget[data-settings*="animation"],
+          .elementor-element[data-settings*="animation"] {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+          }
+          /* AOS — Animate on Scroll */
+          [data-aos] {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+            transition: none !important;
+          }
+          /* WOW.js */
+          .wow {
+            opacity: 1 !important;
+            visibility: visible !important;
+            animation-name: none !important;
+          }
+          /* Animate.css hidden-before-trigger */
+          .animate__animated {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+          /* ScrollReveal.js */
+          [data-sr-id] {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+          }
+          /* SAL — Scroll Animation Library */
+          [data-sal] {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+          }
+          /* Generic scroll-trigger patterns */
+          [data-animate], [data-animation], [data-scroll] {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: none !important;
+          }
+          /* GSAP ScrollTrigger hidden elements */
+          [style*="visibility: hidden"][style*="opacity: 0"],
+          [style*="visibility:hidden"][style*="opacity:0"] {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+          /* RevSlider hidden layers */
+          .tp-caption, .rs-layer {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+          /* Divi Builder */
+          .et_pb_section .et_had_animation {
+            opacity: 1 !important;
+            visibility: visible !important;
+          }
+        `,
+      });
 
-    // JS class cleanup — necessary for libraries that check class presence
-    // rather than computed styles.
-    try {
+      // Step 2 — JS class cleanup: remove hiding classes, add revealed classes
       await page.evaluate(() => {
         // Elementor: remove .elementor-invisible, let default styles show
         document.querySelectorAll('.elementor-invisible').forEach((el) => {
@@ -527,6 +671,7 @@ export async function capturePageWithMetadata(
         // Try triggering Elementor's frontend animation handler if it exists
         const win = window as unknown as Record<string, unknown>;
         if (win.elementorFrontend && typeof (win.elementorFrontend as Record<string, unknown>).waypoint === 'function') {
+          // Force all waypoints to trigger
           document.querySelectorAll('.elementor-element').forEach((el) => {
             el.dispatchEvent(new Event('appear'));
           });
@@ -537,7 +682,7 @@ export async function capturePageWithMetadata(
         }
       });
     } catch {
-      // Content reveal is non-critical — scroll + animations:'disabled' handle most cases
+      // Content reveal is non-critical — scroll may still trigger some animations
     }
 
     // ── LAZY-LOAD LAYER 3: Force-swap data-src attributes ──
@@ -609,41 +754,28 @@ export async function capturePageWithMetadata(
       // Non-critical — IO mock and scroll handle most cases
     }
 
-    // ── Capture mode: full (tall viewport) vs fast ──
+    // ── Capture mode: full (scroll-and-stitch) vs fast ──
+    let screenshotBuffer: Buffer;
+
     if (mode === 'full') {
-      /* PATIENT VISITOR + TALL VIEWPORT CAPTURE
+      /* SCROLL-AND-STITCH CAPTURE
        *
-       * 1. Idle detection  — let above-fold JS/animations settle
-       * 2. Slow scroll     — fire scroll-triggered animations (GSAP, AOS, etc.)
-       * 3. Idle detection  — let animations triggered by scroll complete
-       * 4. Tall viewport   — resize to full doc height (avoids Chrome tile eviction)
-       * 5. Re-swap data-src — catch lazy content now inside viewport
-       * 6. Image decode     — wait for all images + fonts
-       * 7. Re-measure      — resize if page grew from lazy content
-       * 8. Screenshot       — with animations:'disabled' + style override
+       * Instead of resizing to a tall viewport (which causes Chrome tile
+       * eviction — blank areas in the middle of long pages), we:
+       * 1. Scroll through the page to trigger lazy loaders
+       * 2. Re-swap data-src for newly loaded elements
+       * 3. Wait for images to decode
+       * 4. Capture one viewport-sized segment at a time
+       * 5. Stitch all segments vertically with Sharp
        */
 
-      // Phase 1 — Initial idle: let above-fold JS hydration + animations settle
-      await waitForIdle(page);
-
-      // Phase 2 — Slow scroll: fire scroll-triggered JS animations
-      await slowScroll(page);
-
-      // Phase 3 — Post-scroll idle: let animations complete after scroll-back
-      await waitForIdle(page);
-
-      // Phase 4 — Tall viewport: resize to full document height
-      const docHeight = await page.evaluate(() =>
-        Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
-      );
-      const cappedHeight = Math.min(docHeight, MAX_VIEWPORT_HEIGHT);
-      await page.setViewportSize({ width: viewportSize.width, height: cappedHeight });
-      console.log(`[screenshots/client] Tall viewport: ${viewportSize.width}x${cappedHeight} (doc: ${docHeight})`);
-
-      // Brief wait for lazy content triggered by the new viewport
+      // Phase 1 — Initial settle for JS hydration + above-fold animations
       await page.waitForTimeout(1500);
 
-      // Phase 5 — Re-run data-src swap for elements now inside the viewport
+      // Phase 2 — Scroll to trigger lazy loaders, then return to top
+      await triggerLazyLoadViaScroll(page, viewportSize);
+
+      // Phase 3 — Re-run data-src swap for elements now loaded
       try {
         await page.evaluate(() => {
           const srcAttrs = ['data-src', 'data-lazy-src', 'data-original', 'data-lazy'];
@@ -656,7 +788,6 @@ export async function capturePageWithMetadata(
               }
             }
           });
-          // Re-remove loading="lazy" on any new elements
           document.querySelectorAll('img[loading="lazy"]').forEach((img) => {
             img.removeAttribute('loading');
             const currentSrc = img.getAttribute('src');
@@ -670,7 +801,7 @@ export async function capturePageWithMetadata(
         // Non-critical
       }
 
-      // Phase 6 — Wait for all images to decode + fonts to load
+      // Phase 4 — Wait for all images to decode + fonts to load
       try {
         await page.evaluate(async () => {
           await Promise.allSettled(
@@ -688,33 +819,15 @@ export async function capturePageWithMetadata(
         console.warn(`[screenshots/client] Image decode wait failed for ${url}. Continuing.`);
       }
 
-      // Phase 7 — Re-measure in case lazy content grew the page
-      const finalHeight = await page.evaluate(() =>
-        Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
-      );
-      if (finalHeight > docHeight) {
-        const newCapped = Math.min(finalHeight, MAX_VIEWPORT_HEIGHT);
-        await page.setViewportSize({ width: viewportSize.width, height: newCapped });
-        console.log(`[screenshots/client] Page grew: resized to ${viewportSize.width}x${newCapped}`);
-        await page.waitForTimeout(1000);
-      }
+      // Phase 5 — Scroll-and-stitch capture
+      screenshotBuffer = await scrollAndStitch(page, viewportSize);
     } else {
-      // Fast mode — idle detection for basic JS rendering (replaces blind 2000ms wait)
-      await waitForIdle(page);
-    }
-
-    // Capture screenshot
-    // Full mode: fullPage: false because the viewport IS the full page (tall viewport)
-    // Fast mode + mobile: use standard fullPage behavior
-    const useFullPage = mode !== 'full' && viewport === 'desktop';
-    const screenshotBuffer = await captureScreenshot(page, {
-      fullPage: useFullPage,
-      viewport: mode === 'full' ? undefined : viewportSize,
-    });
-
-    // Reset viewport to original size for any subsequent captures
-    if (mode === 'full') {
-      await page.setViewportSize(viewportSize);
+      // Fast mode — short settle for basic JS rendering
+      await page.waitForTimeout(2000);
+      screenshotBuffer = await captureScreenshot(page, {
+        fullPage: viewport === 'desktop',
+        viewport: viewportSize,
+      });
     }
 
     // Extract page content and title
