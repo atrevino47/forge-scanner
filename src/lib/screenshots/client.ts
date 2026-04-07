@@ -292,9 +292,11 @@ async function scrollAndStitch(
   const docHeight = await page.evaluate(() =>
     Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
   );
+  const vh = viewportSize.height;
+  const vw = viewportSize.width;
 
   // Short page — single capture, no stitching needed
-  if (docHeight <= viewportSize.height) {
+  if (docHeight <= vh) {
     const single = await page.screenshot({
       type: 'png',
       fullPage: false,
@@ -305,41 +307,45 @@ async function scrollAndStitch(
     return Buffer.from(single);
   }
 
-  const segmentCount = Math.min(
-    Math.ceil(docHeight / viewportSize.height),
-    MAX_SCROLL_SEGMENTS,
-  );
-
   // Detect fixed/sticky elements for hiding in segments 2+
   const fixedCount = await detectFixedElements(page);
   const hideFixedCSS = fixedCount > 0
     ? `[data-stitch-hide] { visibility: hidden !important; }`
     : '';
-  console.log(`[screenshots/client] Scroll-and-stitch: ${segmentCount} segments, ${fixedCount} fixed elements`);
 
-  const segments: Buffer[] = [];
+  // Build scroll positions — cap at max scrollable and actual segment limit
+  const maxScroll = docHeight - vh;
+  const scrollPositions: number[] = [0];
+  for (let i = 1; i < MAX_SCROLL_SEGMENTS; i++) {
+    const target = i * vh - STITCH_OVERLAP_PX;
+    if (target >= maxScroll) {
+      scrollPositions.push(maxScroll); // Final position — always land exactly at bottom
+      break;
+    }
+    scrollPositions.push(target);
+  }
+  // Ensure we always capture the bottom of the page
+  if (scrollPositions[scrollPositions.length - 1] < maxScroll) {
+    scrollPositions.push(maxScroll);
+  }
 
-  // Capture first segment (fixed elements visible — shows header/nav)
-  await smartScrollTo(page, 0);
-  await page.waitForTimeout(100);
-  const firstShot = await page.screenshot({
-    type: 'png',
-    fullPage: false,
-    animations: 'disabled',
-    caret: 'hide',
-    style: SCREENSHOT_STYLE,
-  });
-  segments.push(Buffer.from(firstShot));
+  console.log(`[screenshots/client] Scroll-and-stitch: ${scrollPositions.length} segments, ${fixedCount} fixed, doc=${docHeight}`);
 
-  // Capture remaining segments (fixed elements hidden)
-  for (let i = 1; i < segmentCount; i++) {
-    const scrollY = i * viewportSize.height - STITCH_OVERLAP_PX;
-    await smartScrollTo(page, scrollY);
-    await page.waitForTimeout(150);
+  // Capture each segment, recording actual scroll positions
+  const captured: { buffer: Buffer; actualY: number }[] = [];
 
-    const segmentStyle = hideFixedCSS
-      ? `${SCREENSHOT_STYLE}\n${hideFixedCSS}`
-      : SCREENSHOT_STYLE;
+  for (let i = 0; i < scrollPositions.length; i++) {
+    await smartScrollTo(page, scrollPositions[i]);
+    await page.waitForTimeout(i === 0 ? 100 : 150);
+
+    // Get actual scroll position (browser may clamp)
+    const actualY = await page.evaluate(() =>
+      Math.max(window.scrollY, document.documentElement.scrollTop, document.body.scrollTop),
+    );
+
+    const segmentStyle = i === 0
+      ? SCREENSHOT_STYLE  // First segment: fixed elements visible (header/nav)
+      : (hideFixedCSS ? `${SCREENSHOT_STYLE}\n${hideFixedCSS}` : SCREENSHOT_STYLE);
 
     const shot = await page.screenshot({
       type: 'png',
@@ -348,7 +354,7 @@ async function scrollAndStitch(
       caret: 'hide',
       style: segmentStyle,
     });
-    segments.push(Buffer.from(shot));
+    captured.push({ buffer: Buffer.from(shot), actualY });
   }
 
   // Clean up data attributes
@@ -360,50 +366,42 @@ async function scrollAndStitch(
     });
   }
 
-  // Stitch segments with Sharp
-  // First segment: full height
-  // Middle segments: crop STITCH_OVERLAP_PX from top
-  // Last segment: crop overlap from top + whitespace from bottom
-  const vw = viewportSize.width;
-  const vh = viewportSize.height;
-
-  // Calculate last segment visible height
-  const lastScrollY = (segmentCount - 1) * vh - STITCH_OVERLAP_PX;
-  const lastVisibleHeight = Math.min(vh, docHeight - lastScrollY);
-
-  const firstHeight = vh;
-  const middleHeight = vh - STITCH_OVERLAP_PX;
-  const lastCroppedHeight = lastVisibleHeight - STITCH_OVERLAP_PX;
-
-  const totalHeight = segments.length === 2
-    ? firstHeight + lastCroppedHeight
-    : firstHeight + middleHeight * (segments.length - 2) + lastCroppedHeight;
-
-  // Build composite inputs
+  // Stitch segments using ACTUAL scroll positions to calculate overlap
   const compositeInputs: { input: Buffer; top: number; left: number }[] = [];
-  let currentTop = 0;
+  let stitchY = 0;
 
-  for (let i = 0; i < segments.length; i++) {
+  for (let i = 0; i < captured.length; i++) {
     if (i === 0) {
-      compositeInputs.push({ input: segments[i], top: 0, left: 0 });
-      currentTop = firstHeight;
+      // First segment: use full viewport height
+      compositeInputs.push({ input: captured[i].buffer, top: 0, left: 0 });
+      stitchY = vh;
     } else {
-      const cropTop = STITCH_OVERLAP_PX;
-      const cropHeight = i === segments.length - 1 ? lastCroppedHeight : middleHeight;
+      const prevY = captured[i - 1].actualY;
+      const currY = captured[i].actualY;
 
-      const cropped = await sharp(segments[i])
-        .extract({ left: 0, top: cropTop, width: vw, height: cropHeight })
+      // Overlap = how much of this segment was already in the previous segment
+      const overlap = Math.max(0, (prevY + vh) - currY);
+
+      // For last segment: visible content may be less than viewport
+      const isLast = i === captured.length - 1;
+      const contentInViewport = isLast ? Math.min(vh, docHeight - currY) : vh;
+      const usableHeight = contentInViewport - overlap;
+
+      if (usableHeight <= 0) continue; // Skip if fully overlapping
+
+      const cropped = await sharp(captured[i].buffer)
+        .extract({ left: 0, top: overlap, width: vw, height: usableHeight })
         .toBuffer();
 
-      compositeInputs.push({ input: cropped, top: currentTop, left: 0 });
-      currentTop += cropHeight;
+      compositeInputs.push({ input: cropped, top: stitchY, left: 0 });
+      stitchY += usableHeight;
     }
   }
 
   const stitched = await sharp({
     create: {
       width: vw,
-      height: totalHeight,
+      height: stitchY,
       channels: 4,
       background: { r: 255, g: 255, b: 255, alpha: 1 },
     },
@@ -412,7 +410,7 @@ async function scrollAndStitch(
     .png()
     .toBuffer();
 
-  console.log(`[screenshots/client] Stitched: ${vw}x${totalHeight} from ${segments.length} segments`);
+  console.log(`[screenshots/client] Stitched: ${vw}x${stitchY} from ${captured.length} segments`);
   return stitched;
 }
 
