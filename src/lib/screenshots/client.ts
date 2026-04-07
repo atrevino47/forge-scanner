@@ -221,15 +221,13 @@ export async function captureScreenshot(
  */
 async function smartScrollTo(page: Page, y: number): Promise<void> {
   await page.evaluate((targetY) => {
-    // Try window first (standard)
+    // Set ALL scroll targets — some sites use body as the scroll container
+    // (WordPress + Elementor with height:100% on html+body), others use
+    // the standard window/documentElement. Setting all three is safe and
+    // avoids false-positive short-circuiting when checking window.scrollY
+    // (which reads 0 on body-scroll sites even when body.scrollTop !== 0).
     window.scrollTo({ top: targetY, behavior: 'instant' });
-    if (Math.abs(window.scrollY - targetY) < 10) return;
-
-    // Try documentElement (some quirks-mode pages)
     document.documentElement.scrollTop = targetY;
-    if (Math.abs(document.documentElement.scrollTop - targetY) < 10) return;
-
-    // Try body (WordPress/Elementor with height:100% on html+body)
     document.body.scrollTop = targetY;
   }, y);
 }
