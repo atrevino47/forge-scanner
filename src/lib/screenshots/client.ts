@@ -327,22 +327,14 @@ async function scrollAndStitch(
     return Buffer.from(single);
   }
 
-  // Detect fixed/sticky elements for differentiated handling in segments 2+
-  const { fixed: fixedCount, sticky: stickyCount } = await detectFixedElements(page);
-
-  // CSS for segments 2+:
-  // - fixed elements: hide completely (they have no natural flow position)
-  // - sticky elements: force to relative (keeps natural position, stops viewport sticking)
-  // - cookie/consent overlays: hide by selector as safety net
-  const hideOverlayCSS = [
-    fixedCount > 0 ? '[data-stitch-fixed] { visibility: hidden !important; }' : '',
-    stickyCount > 0 ? '[data-stitch-sticky] { position: relative !important; }' : '',
-    `[id*="cookie" i], [class*="cookie" i], [id*="consent" i], [class*="consent" i],
+  // CSS for segments 2+ — cookie/consent overlays hidden by selector.
+  // Fixed/sticky elements are handled per-segment via inline style injection
+  // (catches JS-toggled headers that change position on scroll).
+  const hideOverlayCSS = `[id*="cookie" i], [class*="cookie" i], [id*="consent" i], [class*="consent" i],
      [id*="CybotCookiebot"], .cc-window, .cc-banner, #onetrust-banner-sdk,
      .otFlat, [class*="gdpr" i], [id*="gdpr" i] {
        display: none !important;
-     }`,
-  ].filter(Boolean).join('\n');
+     }`;
 
   // Build scroll positions — cap at max scrollable and actual segment limit
   const maxScroll = docHeight - vh;
@@ -360,7 +352,7 @@ async function scrollAndStitch(
     scrollPositions.push(maxScroll);
   }
 
-  console.log(`[screenshots/client] Scroll-and-stitch: ${scrollPositions.length} segments, ${fixedCount} fixed, ${stickyCount} sticky, doc=${docHeight}`);
+  console.log(`[screenshots/client] Scroll-and-stitch: ${scrollPositions.length} segments, doc=${docHeight}`);
 
   // Capture each segment, recording actual scroll positions
   const captured: { buffer: Buffer; actualY: number }[] = [];
@@ -374,9 +366,27 @@ async function scrollAndStitch(
       Math.max(window.scrollY, document.documentElement.scrollTop, document.body.scrollTop),
     );
 
+    // For segments 2+: force-hide ALL currently fixed/sticky elements via inline styles.
+    // This catches JS-toggled headers that weren't fixed/sticky at detection time.
+    // The inline styles are restored after each capture to avoid layout disruption.
+    if (i > 0) {
+      await page.evaluate(() => {
+        document.querySelectorAll('*').forEach((el) => {
+          const pos = window.getComputedStyle(el).position;
+          if (pos === 'fixed') {
+            el.setAttribute('data-stitch-restore', (el as HTMLElement).style.cssText);
+            (el as HTMLElement).style.setProperty('visibility', 'hidden', 'important');
+          } else if (pos === 'sticky') {
+            el.setAttribute('data-stitch-restore', (el as HTMLElement).style.cssText);
+            (el as HTMLElement).style.setProperty('position', 'relative', 'important');
+          }
+        });
+      });
+    }
+
     const segmentStyle = i === 0
-      ? SCREENSHOT_STYLE  // First segment: fixed elements visible (header/nav)
-      : (hideOverlayCSS ? `${SCREENSHOT_STYLE}\n${hideOverlayCSS}` : SCREENSHOT_STYLE);
+      ? SCREENSHOT_STYLE
+      : `${SCREENSHOT_STYLE}\n${hideOverlayCSS}`;
 
     const shot = await page.screenshot({
       type: 'png',
@@ -386,16 +396,16 @@ async function scrollAndStitch(
       style: segmentStyle,
     });
     captured.push({ buffer: Buffer.from(shot), actualY });
-  }
 
-  // Clean up data attributes
-  if (fixedCount > 0 || stickyCount > 0) {
-    await page.evaluate(() => {
-      document.querySelectorAll('[data-stitch-fixed], [data-stitch-sticky]').forEach((el) => {
-        el.removeAttribute('data-stitch-fixed');
-        el.removeAttribute('data-stitch-sticky');
+    // Restore inline styles after capture
+    if (i > 0) {
+      await page.evaluate(() => {
+        document.querySelectorAll('[data-stitch-restore]').forEach((el) => {
+          (el as HTMLElement).style.cssText = el.getAttribute('data-stitch-restore') || '';
+          el.removeAttribute('data-stitch-restore');
+        });
       });
-    });
+    }
   }
 
   // Stitch segments using ACTUAL scroll positions to calculate overlap
