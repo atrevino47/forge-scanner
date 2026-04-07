@@ -212,6 +212,29 @@ export async function captureScreenshot(
 // ============================================================
 
 /**
+ * Smart scroll that works on sites where `window.scrollTo()` doesn't work.
+ * Some sites (WordPress + Elementor, RevSlider) set `html, body { height: 100% }`
+ * which constrains them to viewport height. The actual content overflows the body,
+ * making document.body the scroll container instead of the window.
+ *
+ * Detects which scroll target works on first call and reuses it.
+ */
+async function smartScrollTo(page: Page, y: number): Promise<void> {
+  await page.evaluate((targetY) => {
+    // Try window first (standard)
+    window.scrollTo({ top: targetY, behavior: 'instant' });
+    if (Math.abs(window.scrollY - targetY) < 10) return;
+
+    // Try documentElement (some quirks-mode pages)
+    document.documentElement.scrollTop = targetY;
+    if (Math.abs(document.documentElement.scrollTop - targetY) < 10) return;
+
+    // Try body (WordPress/Elementor with height:100% on html+body)
+    document.body.scrollTop = targetY;
+  }, y);
+}
+
+/**
  * Scrolls page in viewport-height steps to trigger scroll-based lazy loaders,
  * then returns to top. Replaces the tall viewport resize as the lazy-load
  * trigger mechanism.
@@ -227,11 +250,11 @@ async function triggerLazyLoadViaScroll(
     const steps = Math.min(Math.ceil(docHeight / viewportSize.height), MAX_SCROLL_SEGMENTS);
 
     for (let i = 1; i <= steps; i++) {
-      await page.evaluate((y) => window.scrollTo(0, y), i * viewportSize.height);
+      await smartScrollTo(page, i * viewportSize.height);
       await page.waitForTimeout(200);
     }
 
-    await page.evaluate(() => window.scrollTo(0, 0));
+    await smartScrollTo(page, 0);
     await page.waitForTimeout(300);
   } catch {
     console.warn('[screenshots/client] Lazy-load scroll pass failed, proceeding');
@@ -299,7 +322,7 @@ async function scrollAndStitch(
   const segments: Buffer[] = [];
 
   // Capture first segment (fixed elements visible — shows header/nav)
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await smartScrollTo(page, 0);
   await page.waitForTimeout(100);
   const firstShot = await page.screenshot({
     type: 'png',
@@ -313,7 +336,7 @@ async function scrollAndStitch(
   // Capture remaining segments (fixed elements hidden)
   for (let i = 1; i < segmentCount; i++) {
     const scrollY = i * viewportSize.height - STITCH_OVERLAP_PX;
-    await page.evaluate((y) => window.scrollTo(0, y), scrollY);
+    await smartScrollTo(page, scrollY);
     await page.waitForTimeout(150);
 
     const segmentStyle = hideFixedCSS
