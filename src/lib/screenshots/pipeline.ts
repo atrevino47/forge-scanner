@@ -160,8 +160,7 @@ export async function runScreenshotPipeline(params: {
 
         for (const pageInfo of pagesToCapture) {
           try {
-            // Fast mode for inner pages — AI analysis matters more than pixel-perfect screenshots
-            const result = await capturePageWithMetadata(browser, pageInfo.url, 'desktop');
+            const result = await capturePageWithMetadata(browser, pageInfo.url, 'desktop', 'full');
 
             pendingScreenshots.push({
               id: generateScreenshotId(),
@@ -296,7 +295,7 @@ export async function runScreenshotPipeline(params: {
 
         try {
           const sourceType = platformToSourceType(platform);
-          const result = await capturePageWithMetadata(browser, socialData.url, 'desktop');
+          const result = await capturePageWithMetadata(browser, socialData.url, 'desktop', 'full');
 
           pendingScreenshots.push({
             id: generateScreenshotId(),
@@ -324,7 +323,7 @@ export async function runScreenshotPipeline(params: {
 
       if (gbpUrl) {
         try {
-          const result = await capturePageWithMetadata(browser, gbpUrl, 'desktop');
+          const result = await capturePageWithMetadata(browser, gbpUrl, 'desktop', 'full');
 
           pendingScreenshots.push({
             id: generateScreenshotId(),
