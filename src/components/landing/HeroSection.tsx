@@ -180,7 +180,7 @@ export function HeroSection() {
               <input
                 type="text"
                 value={url}
-                onChange={(e) => { setUrl(e.target.value); if (formError) setFormError(null); }}
+                onChange={(e) => { setUrl(e.target.value.trim()); if (formError) setFormError(null); }}
                 placeholder="yourwebsite.com"
                 required
                 autoFocus

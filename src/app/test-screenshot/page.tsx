@@ -59,7 +59,7 @@ export default function TestScreenshot() {
           type="text"
           placeholder="https://example.com"
           value={url}
-          onChange={(e) => setUrl(e.target.value)}
+          onChange={(e) => setUrl(e.target.value.trim())}
           onKeyDown={(e) => e.key === 'Enter' && capture()}
           style={{
             flex: 1, minWidth: 300, padding: '8px 12px',
