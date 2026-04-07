@@ -25,22 +25,36 @@ const COOKIE_DISMISS_SELECTORS = [
   // Generic patterns (most cookie banners)
   '[id*="cookie"] button[class*="accept"]',
   '[id*="cookie"] button[class*="agree"]',
+  '[id*="cookie"] button[class*="allow"]',
   '[id*="cookie"] button[class*="close"]',
   '[class*="cookie"] button[class*="accept"]',
   '[class*="cookie"] button[class*="agree"]',
+  '[class*="cookie"] button[class*="allow"]',
   '[class*="cookie"] button[class*="close"]',
+  '[id*="consent"] button[class*="allow"]',
+  '[id*="consent"] button[class*="accept"]',
+  '[class*="consent"] button[class*="allow"]',
+  '[class*="consent"] button[class*="accept"]',
   // CookieBot
   '#CybotCookiebotDialogBodyLevelButtonLevelOptinAllowAll',
+  '#CybotCookiebotDialogBodyButtonAccept',
+  'button[id*="CybotCookiebot"][id*="Allow"]',
   // OneTrust
   '#onetrust-accept-btn-handler',
   // Complianz
   '.cmplz-accept',
   // Cookie Notice plugin
   '.cookie-notice-container .cn-set-cookie',
-  // Generic "Accept" / "Accept All" buttons in common banner positions
+  // Generic "Accept" / "Accept All" / "Allow" buttons in common banner positions
   '[aria-label*="cookie" i] button',
   '[aria-label*="consent" i] button',
   'button[id*="accept"]',
+  'button[id*="allow"]',
+  // Catch-all: any button inside a dialog/banner that says "Allow" or "Accept"
+  '[role="dialog"] button[class*="allow"]',
+  '[role="dialog"] button[class*="accept"]',
+  '[role="banner"] button[class*="allow"]',
+  '[role="banner"] button[class*="accept"]',
 ];
 
 // Chrome's maximum texture height — viewport height cap for tall viewport capture
@@ -309,9 +323,18 @@ async function scrollAndStitch(
 
   // Detect fixed/sticky elements for hiding in segments 2+
   const fixedCount = await detectFixedElements(page);
-  const hideFixedCSS = fixedCount > 0
-    ? `[data-stitch-hide] { visibility: hidden !important; }`
-    : '';
+
+  // CSS to hide fixed elements + common cookie/consent overlays in segments 2+
+  // Cookie banners are position:fixed but may inject AFTER detection runs,
+  // so we target them by selector as a safety net.
+  const hideFixedCSS = [
+    fixedCount > 0 ? '[data-stitch-hide] { visibility: hidden !important; }' : '',
+    `[id*="cookie" i], [class*="cookie" i], [id*="consent" i], [class*="consent" i],
+     [id*="CybotCookiebot"], .cc-window, .cc-banner, #onetrust-banner-sdk,
+     .otFlat, [class*="gdpr" i], [id*="gdpr" i] {
+       display: none !important;
+     }`,
+  ].filter(Boolean).join('\n');
 
   // Build scroll positions — cap at max scrollable and actual segment limit
   const maxScroll = docHeight - vh;
