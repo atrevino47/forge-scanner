@@ -275,20 +275,26 @@ async function triggerLazyLoadViaScroll(
 
 /**
  * Detects elements with position:fixed or position:sticky and marks them
- * with a data attribute. Returns the count of marked elements.
+ * with data attributes for differentiated handling in segments 2+:
+ * - fixed → visibility:hidden (no natural flow position)
+ * - sticky → position:relative (keeps natural position, stops sticking)
  */
-async function detectFixedElements(page: Page): Promise<number> {
+async function detectFixedElements(page: Page): Promise<{ fixed: number; sticky: number }> {
   return page.evaluate(() => {
-    let count = 0;
+    let fixed = 0;
+    let sticky = 0;
     const all = document.querySelectorAll('*');
     for (const el of all) {
       const style = window.getComputedStyle(el);
-      if (style.position === 'fixed' || style.position === 'sticky') {
-        el.setAttribute('data-stitch-hide', 'true');
-        count++;
+      if (style.position === 'fixed') {
+        el.setAttribute('data-stitch-fixed', 'true');
+        fixed++;
+      } else if (style.position === 'sticky') {
+        el.setAttribute('data-stitch-sticky', 'true');
+        sticky++;
       }
     }
-    return count;
+    return { fixed, sticky };
   });
 }
 
@@ -321,14 +327,16 @@ async function scrollAndStitch(
     return Buffer.from(single);
   }
 
-  // Detect fixed/sticky elements for hiding in segments 2+
-  const fixedCount = await detectFixedElements(page);
+  // Detect fixed/sticky elements for differentiated handling in segments 2+
+  const { fixed: fixedCount, sticky: stickyCount } = await detectFixedElements(page);
 
-  // CSS to hide fixed elements + common cookie/consent overlays in segments 2+
-  // Cookie banners are position:fixed but may inject AFTER detection runs,
-  // so we target them by selector as a safety net.
-  const hideFixedCSS = [
-    fixedCount > 0 ? '[data-stitch-hide] { visibility: hidden !important; }' : '',
+  // CSS for segments 2+:
+  // - fixed elements: hide completely (they have no natural flow position)
+  // - sticky elements: force to relative (keeps natural position, stops viewport sticking)
+  // - cookie/consent overlays: hide by selector as safety net
+  const hideOverlayCSS = [
+    fixedCount > 0 ? '[data-stitch-fixed] { visibility: hidden !important; }' : '',
+    stickyCount > 0 ? '[data-stitch-sticky] { position: relative !important; }' : '',
     `[id*="cookie" i], [class*="cookie" i], [id*="consent" i], [class*="consent" i],
      [id*="CybotCookiebot"], .cc-window, .cc-banner, #onetrust-banner-sdk,
      .otFlat, [class*="gdpr" i], [id*="gdpr" i] {
@@ -352,7 +360,7 @@ async function scrollAndStitch(
     scrollPositions.push(maxScroll);
   }
 
-  console.log(`[screenshots/client] Scroll-and-stitch: ${scrollPositions.length} segments, ${fixedCount} fixed, doc=${docHeight}`);
+  console.log(`[screenshots/client] Scroll-and-stitch: ${scrollPositions.length} segments, ${fixedCount} fixed, ${stickyCount} sticky, doc=${docHeight}`);
 
   // Capture each segment, recording actual scroll positions
   const captured: { buffer: Buffer; actualY: number }[] = [];
@@ -368,7 +376,7 @@ async function scrollAndStitch(
 
     const segmentStyle = i === 0
       ? SCREENSHOT_STYLE  // First segment: fixed elements visible (header/nav)
-      : (hideFixedCSS ? `${SCREENSHOT_STYLE}\n${hideFixedCSS}` : SCREENSHOT_STYLE);
+      : (hideOverlayCSS ? `${SCREENSHOT_STYLE}\n${hideOverlayCSS}` : SCREENSHOT_STYLE);
 
     const shot = await page.screenshot({
       type: 'png',
@@ -381,10 +389,11 @@ async function scrollAndStitch(
   }
 
   // Clean up data attributes
-  if (fixedCount > 0) {
+  if (fixedCount > 0 || stickyCount > 0) {
     await page.evaluate(() => {
-      document.querySelectorAll('[data-stitch-hide]').forEach((el) => {
-        el.removeAttribute('data-stitch-hide');
+      document.querySelectorAll('[data-stitch-fixed], [data-stitch-sticky]').forEach((el) => {
+        el.removeAttribute('data-stitch-fixed');
+        el.removeAttribute('data-stitch-sticky');
       });
     });
   }
