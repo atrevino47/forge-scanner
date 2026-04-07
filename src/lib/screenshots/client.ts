@@ -57,8 +57,7 @@ const COOKIE_DISMISS_SELECTORS = [
   '[role="banner"] button[class*="accept"]',
 ];
 
-// Chrome's maximum texture height — viewport height cap for tall viewport capture
-const MAX_VIEWPORT_HEIGHT = 16_384;
+
 
 // Scroll-and-stitch constants
 const STITCH_OVERLAP_PX = 50;
@@ -274,31 +273,6 @@ async function triggerLazyLoadViaScroll(
 }
 
 /**
- * Detects elements with position:fixed or position:sticky and marks them
- * with data attributes for differentiated handling in segments 2+:
- * - fixed → visibility:hidden (no natural flow position)
- * - sticky → position:relative (keeps natural position, stops sticking)
- */
-async function detectFixedElements(page: Page): Promise<{ fixed: number; sticky: number }> {
-  return page.evaluate(() => {
-    let fixed = 0;
-    let sticky = 0;
-    const all = document.querySelectorAll('*');
-    for (const el of all) {
-      const style = window.getComputedStyle(el);
-      if (style.position === 'fixed') {
-        el.setAttribute('data-stitch-fixed', 'true');
-        fixed++;
-      } else if (style.position === 'sticky') {
-        el.setAttribute('data-stitch-sticky', 'true');
-        sticky++;
-      }
-    }
-    return { fixed, sticky };
-  });
-}
-
-/**
  * Scroll-and-stitch capture: scrolls through the page one viewport at a time,
  * captures each segment, and stitches them vertically with Sharp.
  *
@@ -429,7 +403,10 @@ async function scrollAndStitch(
       const contentInViewport = isLast ? Math.min(vh, docHeight - currY) : vh;
       const usableHeight = contentInViewport - overlap;
 
-      if (usableHeight <= 0) continue; // Skip if fully overlapping
+      if (usableHeight <= 0) {
+        console.warn(`[screenshots/client] Segment ${i} fully overlaps previous (overlap=${overlap}px), skipping`);
+        continue;
+      }
 
       const cropped = await sharp(captured[i].buffer)
         .extract({ left: 0, top: overlap, width: vw, height: usableHeight })
@@ -883,12 +860,9 @@ export async function capturePageWithMetadata(
       // Phase 5 — Scroll-and-stitch capture
       screenshotBuffer = await scrollAndStitch(page, viewportSize);
     } else {
-      // Fast mode — short settle for basic JS rendering
+      // Fast mode fallback (no current callers — all use 'full')
       await page.waitForTimeout(2000);
-      screenshotBuffer = await captureScreenshot(page, {
-        fullPage: viewport === 'desktop',
-        viewport: viewportSize,
-      });
+      screenshotBuffer = await scrollAndStitch(page, viewportSize);
     }
 
     // Extract page content and title
