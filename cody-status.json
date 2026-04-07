@@ -1,0 +1,24 @@
+{
+  "agent": "cody",
+  "project": "forge-scanner",
+  "timestamp": "2026-03-31T10:00:00Z",
+  "branch": "dev",
+  "lastCommit": "c5baccb",
+  "task": "OG Image + Follow-up Email System",
+  "status": "complete",
+  "summary": "Generated OG image (1200x630, Forge branding, funnel score visualization). Built branded HTML email template for 3-touch follow-up sequence with dark Forge styling, responsive layout, position-specific CTAs. Updated cron sender to use HTML+text fallback via Resend. Added vercel.json with cron schedules (followup-sender every 1min, stale-scans every 15min). The full follow-up pipeline is now end-to-end: trigger → DB insert → cron pick-up → AI-generate → HTML wrap → Resend → status update.",
+  "filesChanged": [
+    "public/og-image.png",
+    "public/og-image.svg",
+    "src/lib/followup/email-template.ts",
+    "src/app/api/cron/followup-sender/route.ts",
+    "vercel.json"
+  ],
+  "tscErrors": 0,
+  "nextSteps": [
+    "Test follow-up sequence with a real scan + exit",
+    "Set CRON_SECRET in Vercel env vars",
+    "Configure Resend domain verification",
+    "Hormozi Sales Agent training"
+  ]
+}

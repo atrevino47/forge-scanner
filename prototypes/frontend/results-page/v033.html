@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — Results v033</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* v007: Typography scale bump + label weight increase
+   Based on: v006 (score: 85/140) */
+:root{--base:#0B1120;--surface:#0F172A;--surface-low:#131B2E;--surface-mid:#1A2340;--surface-high:#1E293B;--accent:#D4A537;--accent-gradient:linear-gradient(135deg,#F2C050,#D4A537);--accent-glow:rgba(212,165,55,0.15);--text-primary:#E8E6E3;--text-secondary:#94A3B8;--text-muted:#64748B;--critical:#EF4444;--critical-bg:rgba(239,68,68,0.08);--warning:#EAB308;--warning-bg:rgba(234,179,8,0.08);--positive:#22C55E;--positive-bg:rgba(34,197,94,0.08);--glass:rgba(26,35,64,0.4);--glass-border:rgba(78,70,54,0.1);--r:12px}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--base);color:var(--text-primary);font-family:'Plus Jakarta Sans',sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+body::before{content:'';position:fixed;inset:0;opacity:0.035;background-image:radial-gradient(circle at 1px 1px,rgba(148,163,184,0.3) 1px,transparent 0);background-size:40px 40px;pointer-events:none;z-index:-1}
+a.skip{position:absolute;top:-100px;left:16px;background:var(--accent);color:var(--base);padding:8px 16px;border-radius:8px;font-weight:600;z-index:10000;transition:top .2s;text-decoration:none}a.skip:focus{top:8px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@keyframes scoreIn{from{opacity:0;transform:scale(.85) translateY(16px)}to{opacity:1;transform:none}}
+@keyframes barGrow{from{width:0}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{box-shadow:0 2px 8px rgba(212,165,55,.15)}50%{box-shadow:0 4px 24px rgba(212,165,55,.3)}}
+@keyframes ping{0%{transform:scale(1);opacity:1}75%,100%{transform:scale(1.8);opacity:0}}
+.fd{font-family:'Instrument Serif',serif;letter-spacing:-.02em;line-height:1.08}
+.fm{font-family:'JetBrains Mono',monospace}
+/* v007 change: bumped display sizes */
+.d-lg{font-size:clamp(2.75rem,5.5vw+1rem,4.25rem)}.d-md{font-size:clamp(2rem,3.5vw+.5rem,3rem)}
+.t-lg{font-size:1.25rem;font-weight:600}.t-md{font-size:1.0625rem;font-weight:600}
+/* v007 change: label weight 500->600 */
+.l-md{font-size:.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-muted)}
+.b-lg{font-size:1.0625rem;line-height:1.7;color:var(--text-secondary)}.b-md{font-size:.9375rem;line-height:1.65}.b-sm{font-size:.8125rem;line-height:1.5;color:#A3B1C6}
+.page{max-width:1100px;margin:0 auto;padding:0 28px}.narrow{max-width:720px;margin:0 auto}
+.sec{padding:88px 0;position:relative}.sec+.sec{border-top:1px solid rgba(78,70,54,.06)}
+.sec-hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:80px 0}
+.grid2{display:grid;grid-template-columns:1.15fr 1fr;gap:48px;align-items:start}
+@media(max-width:768px){.grid2{grid-template-columns:1fr;gap:32px}.sec{padding:48px 0}.sec-hero{min-height:auto}.nav-r{display:none}.hero-flex{flex-direction:column!important;gap:32px!important}.stat-g{grid-template-columns:1fr!important}.funnel-chart{flex-direction:column!important}}
+.bar-top{position:fixed;top:0;left:0;right:0;z-index:1000;padding:0 24px;height:48px;display:flex;align-items:center;justify-content:space-between;background:rgba(11,17,32,.92);border-bottom:1px solid var(--glass-border);backdrop-filter:blur(24px)}
+.logo{font-family:'Instrument Serif',serif;font-size:1.125rem;color:var(--text-primary)}.logo b{color:var(--accent);font-weight:400}
+.cta-link{font-size:.6875rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);text-decoration:none;padding:5px 14px;border-radius:999px;border:1px solid rgba(212,165,55,.2);transition:all .2s}.cta-link:hover{background:rgba(212,165,55,.08);border-color:rgba(212,165,55,.4)}
+.nav-r{position:fixed;right:28px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:20px;z-index:100}.nav-r::before{content:'';position:absolute;top:4px;bottom:4px;right:3.5px;width:1px;background:var(--glass-border);z-index:-1}
+.nav-r a{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nd{width:8px;height:8px;border-radius:50%;background:var(--surface-high);transition:all .3s;flex-shrink:0}
+.nl{font-size:.625rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);opacity:0;transform:translateX(4px);transition:all .25s;white-space:nowrap}
+.nav-r a:hover .nl{opacity:1;transform:none}
+.nav-r a.on .nd{background:var(--accent);box-shadow:0 0 12px var(--accent-glow);width:10px;height:10px}
+.nav-r a[data-c] .nd{background:var(--critical)}.nav-r a[data-w] .nd{background:var(--warning)}
+.hero-flex{display:flex;align-items:center;gap:56px}
+.score-wrap{position:relative;flex-shrink:0}
+.score-wrap::before{content:'';position:absolute;width:250%;height:250%;top:-75%;left:-75%;background:radial-gradient(circle,rgba(239,68,68,.06) 0%,transparent 55%);pointer-events:none}
+.score-big{font-size:clamp(6rem,12vw,9rem);font-weight:400;line-height:.85;color:var(--critical);position:relative;animation:scoreIn .8s cubic-bezier(.22,1,.36,1) both;text-shadow:0 0 80px rgba(239,68,68,.15)}
+.score-suf{font-family:'JetBrains Mono',monospace;font-size:clamp(1rem,2vw,1.5rem);color:var(--text-muted);margin-left:4px;opacity:.5}
+.funnel-chart{display:flex;align-items:flex-end;gap:12px;max-width:680px;padding:24px 0}
+.funnel-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;text-decoration:none;color:inherit;cursor:pointer;padding:8px;border-radius:8px;transition:background .2s}
+.funnel-col:hover{background:rgba(255,255,255,.02)}
+.funnel-col-bar{width:100%;border-radius:6px 6px 0 0;background:var(--surface-mid);position:relative;min-height:120px;overflow:hidden}
+.funnel-col-fill{position:absolute;bottom:0;left:0;right:0;border-radius:6px 6px 0 0;animation:barGrow 1s cubic-bezier(.22,1,.36,1) both}
+.funnel-col:nth-child(1) .funnel-col-fill{animation-delay:.15s}.funnel-col:nth-child(2) .funnel-col-fill{animation-delay:.3s}.funnel-col:nth-child(3) .funnel-col-fill{animation-delay:.45s}.funnel-col:nth-child(4) .funnel-col-fill{animation-delay:.6s}.funnel-col:nth-child(5) .funnel-col-fill{animation-delay:.75s}
+.funnel-col-name{font-size:.625rem;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted)}
+.funnel-col-score{font-family:'JetBrains Mono',monospace;font-size:1.5rem;font-weight:500}
+.narrative{max-width:520px;padding:24px 0;margin:0 auto;text-align:center}
+.narrative p{font-family:'Instrument Serif',serif;font-size:1.25rem;line-height:1.5;color:var(--text-muted);font-style:italic;opacity:.7;transition:opacity .3s}.narrative:hover p{opacity:1}
+.rev-callout{background:var(--critical-bg);border:1px solid rgba(239,68,68,.12);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:12px;max-width:460px}
+.rev-icon{width:38px;height:38px;border-radius:50%;background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.audit-card{background:var(--surface-mid);border:1px solid var(--glass-border);border-left:3px solid var(--accent);border-radius:var(--r);padding:24px 28px;transition:all .3s cubic-bezier(.22,1,.36,1)}.audit-card:hover{background:var(--surface-high);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.device-laptop{background:var(--surface-mid);border-radius:var(--r);padding:12px 12px 0;box-shadow:0 12px 48px rgba(0,0,0,.25),0 2px 8px rgba(0,0,0,.1)}
+.dt{height:28px;background:var(--surface-high);border-radius:8px 8px 0 0;margin:-12px -12px 12px;display:flex;align-items:center;padding:0 12px;gap:6px}
+.dd{width:7px;height:7px;border-radius:50%}
+.device-laptop .scr{border-radius:4px 4px 0 0;overflow:hidden;aspect-ratio:16/10;background:#0d1322;position:relative}
+.dot{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;position:relative}
+.dot-c{background:var(--critical);color:white}.dot-w{background:var(--warning);color:var(--base)}.dot-p{background:var(--positive);color:white}
+.dot-ring::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid;opacity:0;animation:ping 2s cubic-bezier(0,0,.2,1) infinite}
+.dot-c.dot-ring::after{border-color:var(--critical)}.dot-w.dot-ring::after{border-color:var(--warning)}
+.fi{display:flex;gap:12px;padding:10px 14px;border-radius:8px;transition:background .2s}.fi:hover{background:rgba(255,255,255,.03);transform:translateX(4px)}.fi+.fi{margin-top:4px}
+.stat-g{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.sc{background:var(--surface-low);border-radius:var(--r);padding:24px;text-align:center;border:1px solid transparent;transition:all .25s}.sc:hover{border-color:var(--glass-border);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.15)}
+.sn{font-family:'JetBrains Mono',monospace;font-size:2rem;font-weight:500;line-height:1}
+.sl{font-size:.6875rem;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:999px;font-size:.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.cc{background:var(--critical-bg);color:var(--critical)}.cw{background:var(--warning-bg);color:var(--warning)}.cp{background:var(--positive-bg);color:var(--positive)}
+.btn{background:var(--accent-gradient);color:var(--base);border:none;padding:18px 52px;border-radius:10px;font-family:'Plus Jakarta Sans',sans-serif;font-size:1rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s;animation:pulse 3s ease-in-out infinite}
+.btn:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(212,165,55,.3);animation:none}.btn:active{transform:none}
+.empty{background:var(--surface-low);border:1px solid var(--glass-border);border-radius:16px;padding:56px 40px;text-align:center;position:relative;overflow:hidden}.empty::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(239,68,68,.03) 0%,transparent 50%);pointer-events:none}
+.ei{width:48px;height:48px;border-radius:50%;background:var(--critical-bg);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+.ei svg{width:20px;height:20px;color:var(--critical)}
+.chat{width:380px;max-width:100%;background:var(--glass);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.2)}
+.ch{padding:14px 20px;background:var(--surface-low);display:flex;align-items:center;gap:10px}
+.ca{width:30px;height:30px;border-radius:8px;background:var(--accent-gradient);display:flex;align-items:center;justify-content:center;font-family:'Instrument Serif',serif;font-size:14px;color:var(--base);font-weight:700}
+.cm{padding:20px;display:flex;flex-direction:column;gap:12px;max-height:360px}.cm .m{animation:fadeUp .4s cubic-bezier(.22,1,.36,1) both}.cm .m:nth-child(1){animation-delay:.1s}.cm .m:nth-child(2){animation-delay:.3s}.cm .m:nth-child(3){animation-delay:.5s}.cm .m:nth-child(4){animation-delay:.7s}
+.m{max-width:85%;padding:10px 14px;border-radius:8px;font-size:.8125rem;line-height:1.5}
+.ma{background:var(--surface-low);align-self:flex-start;border-bottom-left-radius:2px}
+.mu{background:var(--surface-high);align-self:flex-end;border-bottom-right-radius:2px}
+.ci-bar{padding:10px 14px;background:var(--surface-low);display:flex;gap:8px;align-items:center}
+.ci{flex:1;background:var(--surface);border:1px solid var(--glass-border);border-radius:8px;padding:8px 14px;color:var(--text-primary);font-family:'Plus Jakarta Sans',sans-serif;font-size:.8125rem;outline:none;transition:border-color .2s,box-shadow .2s}
+.ci:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.cs{width:32px;height:32px;border-radius:50%;background:var(--accent-gradient);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s}.cs:hover{transform:scale(1.08)}
+.sh{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:44px}
+.ta{color:var(--accent)}.tm{color:var(--text-muted)}.ts{color:var(--text-secondary)}
+.tcr{color:var(--critical)}.tw{color:var(--warning)}.tp{color:var(--positive)}.tc{text-align:center}
+.mt2{margin-top:8px}.mt3{margin-top:12px}.mt4{margin-top:16px}.mt6{margin-top:24px}.mt8{margin-top:32px}.mt10{margin-top:40px}
+</style>
+</head>
+<body>
+<a href="#main" class="skip">Skip to results</a>
+<header class="bar-top" role="banner"><div class="logo">FORGE<b>.</b></div><span class="l-md fm" style="color:var(--text-muted);letter-spacing:.04em">blotato.com</span><a href="#bp" class="cta-link">Book strategy call</a></header>
+<nav class="nav-r" aria-label="Stages"><a class="on" href="#hero"><span class="nd"></span><span class="nl">Overview</span></a><a data-c href="#traffic"><span class="nd"></span><span class="nl">Traffic</span></a><a data-w href="#landing"><span class="nd"></span><span class="nl">Landing</span></a><a data-w href="#capture"><span class="nd"></span><span class="nl">Capture</span></a><a data-c href="#offer"><span class="nd"></span><span class="nl">Offer</span></a><a data-c href="#followup"><span class="nd"></span><span class="nl">Follow-up</span></a><a href="#bp"><span class="nd"></span><span class="nl">Blueprint</span></a></nav>
+<main id="main" class="page" style="padding-top:48px">
+  <section id="hero" class="sec-hero">
+    <div>
+      <span class="l-md" style="animation:fadeUp .6s cubic-bezier(.22,1,.36,1) both">Funnel Audit Complete</span>
+      <div class="hero-flex mt10">
+        <div class="score-wrap"><div class="score-big fd">19<span class="score-suf">/100</span></div></div>
+        <div style="flex:1">
+          <h1 class="fd d-lg" style="max-width:520px;animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .1s both">Your funnel is losing customers at every stage.</h1>
+          <p class="b-lg mt6" style="max-width:420px;animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .2s both">We scanned blotato.com across 5 conversion stages.</p>
+          <div class="rev-callout mt8" style="animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .3s both">
+            <div class="rev-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--critical)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div><div style="font-size:.8125rem;font-weight:600;color:var(--critical)">Revenue Leak</div><div style="font-size:.75rem;color:var(--text-secondary);margin-top:2px">3 missing stages = ~60-80% of leads lost.</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="funnel-chart mt10" style="animation:fadeUp .6s cubic-bezier(.22,1,.36,1) .4s both">
+        <a href="#traffic" class="funnel-col"><div class="funnel-col-bar" style="height:100px"><div class="funnel-col-fill" style="height:2%;background:var(--critical);min-height:2px"></div></div><div class="funnel-col-score tcr">0</div><div class="funnel-col-name">Traffic</div></a>
+        <a href="#landing" class="funnel-col"><div class="funnel-col-bar" style="height:100px"><div class="funnel-col-fill" style="height:35%;background:var(--warning)"></div></div><div class="funnel-col-score tw">35</div><div class="funnel-col-name">Landing</div></a>
+        <a href="#capture" class="funnel-col"><div class="funnel-col-bar" style="height:100px"><div class="funnel-col-fill" style="height:45%;background:var(--warning)"></div></div><div class="funnel-col-score tw">45</div><div class="funnel-col-name">Capture</div></a>
+        <a href="#offer" class="funnel-col"><div class="funnel-col-bar" style="height:100px"><div class="funnel-col-fill" style="height:15%;background:var(--critical)"></div></div><div class="funnel-col-score tcr">15</div><div class="funnel-col-name">Offer</div></a>
+        <a href="#followup" class="funnel-col"><div class="funnel-col-bar" style="height:100px"><div class="funnel-col-fill" style="height:2%;background:var(--critical);min-height:2px"></div></div><div class="funnel-col-score tcr">0</div><div class="funnel-col-name">Follow-up</div></a>
+      </div>
+    </div>
+  </section>
+  <div class="narrative"><p>"Without traffic sources, even a perfect funnel has no one to convert."</p></div>
+  <section id="traffic" class="sec" aria-labelledby="th"><div class="sh"><div><span class="l-md">Stage 1 of 5</span><h2 id="th" class="fd d-md mt3">Traffic Sources</h2></div><div style="display:flex;gap:8px"><span class="chip cc fm">0 / 100</span><span class="chip cc">Critical</span></div></div><div class="empty" style="max-width:640px"><div class="ei"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h3 class="t-lg">No Traffic Sources Detected</h3><p class="b-md mt4 ts" style="max-width:440px;margin:16px auto 0">No social media profiles found. You're invisible to every discovery channel.</p></div></section>
+  <div class="narrative"><p>"The landing page has potential — but critical first-impression issues drive visitors away."</p></div>
+  <section id="landing" class="sec" aria-labelledby="lh"><div class="sh"><div><span class="l-md">Stage 2 of 5</span><h2 id="lh" class="fd d-md mt3">Landing Experience</h2></div><div style="display:flex;gap:8px"><span class="chip cw fm">35 / 100</span><span class="chip cw">Weak</span></div></div>
+    <div class="grid2"><div><div class="device-laptop"><div class="dt"><div class="dd" style="background:#EF4444"></div><div class="dd" style="background:#EAB308"></div><div class="dd" style="background:#22C55E"></div><span style="margin-left:8px;font-size:10px;color:var(--text-muted);font-family:'JetBrains Mono',monospace">blotato.com</span></div><div class="scr" style="background:linear-gradient(135deg,#1a1030,#2d1050,#1a1030);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px"><div style="font-size:10px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.1);padding:3px 10px;border-radius:999px;margin-bottom:12px">10,387+ Business Owners</div><div style="font-size:22px;color:white;font-weight:700;text-align:center;line-height:1.2">Make <span style="color:#FF6B9D">1 week</span> of content<br>in <span style="color:#FF6B9D">1 minute</span></div><div style="background:#FF6B9D;color:white;padding:6px 18px;border-radius:8px;margin-top:12px;font-size:11px;font-weight:600">Start FREE Week</div><div class="dot dot-c dot-ring" style="position:absolute;top:18%;left:52%">1</div><div class="dot dot-w dot-ring" style="position:absolute;top:44%;left:46%">2</div><div class="dot dot-p" style="position:absolute;top:70%;left:44%">3</div></div></div></div>
+      <div><span class="l-md" style="display:block;margin-bottom:16px">Key Findings</span><div class="fi"><div class="dot dot-c">1</div><div><div class="t-md">Generic Headline</div><p class="b-sm mt2">Visitors can't tell what Blotato does in 5 seconds.</p></div></div><div class="fi"><div class="dot dot-w">2</div><div><div class="t-md">Dual CTAs</div><p class="b-sm mt2">"Login" and "Start FREE Week" compete.</p></div></div><div class="fi"><div class="dot dot-w">3</div><div><div class="t-md">No Trust Signals</div><p class="b-sm mt2">No logos or testimonials alongside social proof.</p></div></div><div class="fi"><div class="dot dot-p">4</div><div><div class="t-md">Strong Trial CTA</div><p class="b-sm mt2">"Start FREE Week" creates urgency.</p></div></div><div class="audit-card mt8"><p class="b-md">Homepage fails to communicate what Blotato does in 5 seconds.</p><div style="display:flex;align-items:center;gap:8px;margin-top:12px"><span class="chip cw fm">35/100</span><span class="b-sm">4 findings</span></div></div></div>
+    </div>
+  </section>
+  <div class="narrative"><p>"The few visitors who stay have no easy way to give you their information."</p></div>
+  <section id="capture" class="sec" aria-labelledby="ch2"><div class="sh"><div><span class="l-md">Stage 3 of 5</span><h2 id="ch2" class="fd d-md mt3">Lead Capture</h2></div><div style="display:flex;gap:8px"><span class="chip cw fm">45 / 100</span><span class="chip cw">Weak</span></div></div>
+    <div class="grid2" style="grid-template-columns:1fr 1fr"><div><div class="fi"><div class="dot dot-c">1</div><div><div class="t-md">No Email Above Fold</div><p class="b-sm mt2">Email field would capture leads faster.</p></div></div><div class="fi"><div class="dot dot-w">2</div><div><div class="t-md">No Lead Magnet</div><p class="b-sm mt2">No resource to exchange for contact info.</p></div></div><div class="fi"><div class="dot dot-p">3</div><div><div class="t-md">Free Trial Entry</div><p class="b-sm mt2">Free week reduces friction.</p></div></div></div>
+      <div><div class="audit-card"><p class="b-md">Lead capture relies on free trial only. No email-first approach.</p><div style="display:flex;align-items:center;gap:8px;margin-top:12px"><span class="chip cw fm">45/100</span><span class="b-sm">3 findings</span></div></div></div>
+    </div>
+  </section>
+  <div class="narrative"><p>"Even captured leads can't understand what they're buying."</p></div>
+  <section id="offer" class="sec" aria-labelledby="oh"><div class="sh"><div><span class="l-md">Stage 4 of 5</span><h2 id="oh" class="fd d-md mt3">Offer Clarity</h2></div><div style="display:flex;gap:8px"><span class="chip cc fm">15 / 100</span><span class="chip cc">Critical</span></div></div>
+    <div class="empty" style="max-width:640px"><div class="ei"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h3 class="t-lg">Offer Is Unclear</h3><p class="b-md mt4 ts" style="max-width:440px;margin:16px auto 0">Visitors can't determine pricing, inclusions, or post-trial experience.</p></div>
+    <div class="stat-g mt10" style="max-width:640px"><div class="sc"><div class="sn tcr">0</div><div class="sl">Pricing visible</div></div><div class="sc"><div class="sn tcr">0</div><div class="sl">Feature comparison</div></div><div class="sc"><div class="sn tw">1</div><div class="sl">Free trial mention</div></div></div>
+  </section>
+  <div class="narrative"><p>"And when they leave, nothing brings them back."</p></div>
+  <section id="followup" class="sec" aria-labelledby="fh"><div class="sh"><div><span class="l-md">Stage 5 of 5</span><h2 id="fh" class="fd d-md mt3">Follow-Up Systems</h2></div><div style="display:flex;gap:8px"><span class="chip cc fm">0 / 100</span><span class="chip cc">Critical</span></div></div>
+    <div class="empty" style="max-width:640px"><div class="ei"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><h3 class="t-lg">No Follow-Up</h3><p class="b-md mt4 ts" style="max-width:440px;margin:16px auto 0">No retargeting, sequences, or reengagement. Every leaving visitor is lost.</p></div>
+  </section>
+  <section id="bp" class="sec" style="border-top:none;padding-top:40px;background:radial-gradient(ellipse at center,rgba(212,165,55,.04) 0%,transparent 60%)"><div class="tc"><span class="l-md ta">What's Next</span><h2 class="fd d-lg mt3">Get Your Custom Blueprint</h2><p class="b-lg mt6 narrow">We've found the problems. Let us build your step-by-step fix plan.</p><div class="mt10"><button class="btn">Generate Your Blueprint <span style="margin-left:4px">&rarr;</span></button><p class="b-sm mt4">Free, no signup. About 30 seconds.</p></div></div></section>
+  <section class="sec" aria-labelledby="cht"><div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap"><div style="flex:1;min-width:260px"><span class="l-md">AI Consultant</span><h2 id="cht" class="fd d-md mt3" style="margin-bottom:24px">Talk to Your Results</h2><p class="b-lg" style="max-width:420px">Our AI reviews your specific data and opens a conversation.</p><p class="b-sm mt4" style="max-width:420px">Not a chatbot. A consultant referencing YOUR data.</p></div>
+    <div class="chat"><div class="ch"><div class="ca">F</div><div><div style="font-size:.875rem;font-weight:600">Forge Consultant</div><div style="display:flex;align-items:center;gap:5px;margin-top:2px"><div style="width:5px;height:5px;border-radius:50%;background:var(--positive)"></div><span style="font-size:.625rem;color:var(--text-muted)">Online</span></div></div></div><div class="cm"><div class="m ma">Hey — I reviewed blotato's scan.</div><div class="m ma">Score is 19/100. Biggest gap: zero traffic sources.</div><div class="m ma">Want me to walk through fixes?</div><div class="m mu">Yes, what's most impactful?</div></div><div class="ci-bar"><input class="ci" placeholder="Ask about your results..." aria-label="Chat"/><button class="cs" aria-label="Send"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--base)" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div></div>
+  </div></section>
+</main>
+</body>
+</html>

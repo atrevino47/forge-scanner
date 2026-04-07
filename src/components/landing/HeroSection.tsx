@@ -10,7 +10,10 @@ import { clipReveal, fadeSlideUp } from '@/lib/gsap-presets';
 export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [url, setUrl] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [facebook, setFacebook] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
 
   /* ANIMATION SEQUENCE:
@@ -45,21 +48,44 @@ export function HeroSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = url.trim();
-    if (!trimmed) return;
 
+    if (!trimmed) {
+      setFormError('Please enter your website URL.');
+      return;
+    }
+
+    setFormError(null);
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/scan/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: trimmed }),
+        body: JSON.stringify({
+          url: trimmed,
+          ...(instagram.trim() || facebook.trim() ? {
+            providedSocials: {
+              ...(instagram.trim() && { instagram: instagram.trim() }),
+              ...(facebook.trim() && { facebook: facebook.trim() }),
+            },
+          } : {}),
+        }),
       });
 
-      if (!res.ok) throw new Error('Failed to start scan');
+      if (!res.ok) {
+        let message = 'Something went wrong. Please try again.';
+        try {
+          const errData = (await res.json()) as { error?: { message?: string } };
+          if (errData.error?.message) message = errData.error.message;
+        } catch {}
+        setFormError(message);
+        setIsSubmitting(false);
+        return;
+      }
+
       const data = (await res.json()) as { scanId: string };
       router.push(`/scan/${data.scanId}`);
     } catch {
-      // TODO: Error toast (Phase 2)
+      setFormError('Something went wrong. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -67,78 +93,176 @@ export function HeroSection() {
   return (
     <section
       ref={containerRef}
-      className="relative flex min-h-screen items-center justify-center px-6 pt-20"
+      className="relative flex min-h-screen items-center justify-center px-4 pt-20 sm:px-6"
+      id="hero"
     >
-      {/* Subtle radial gradient accent glow */}
+      {/* Orange radial gradient glow */}
       <div
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute -right-[200px] -top-[200px] h-[700px] w-[700px]"
         style={{
-          background:
-            'radial-gradient(ellipse at 50% 40%, rgba(212, 165, 55, 0.04) 0%, transparent 60%)',
+          background: 'radial-gradient(circle, rgba(232,83,14,0.07) 0%, transparent 70%)',
         }}
       />
+
+      {/* Decorative "F" watermark */}
+      <div
+        className="pointer-events-none absolute -right-[30px] -top-[50px] select-none font-display text-[380px] font-black leading-none"
+        style={{ color: 'rgba(26,25,23,0.03)' }}
+      >
+        F
+      </div>
 
       <div className="relative z-10 mx-auto max-w-[960px] text-center">
         {/* Badge */}
         <div
           data-hero="badge"
-          className="mb-6 inline-flex items-center gap-2 rounded-full border border-forge-border bg-forge-surface px-4 py-1.5"
+          className="mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1.5"
+          style={{
+            borderColor: 'var(--forge-border)',
+            background: 'var(--forge-surface)',
+          }}
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-forge-accent" />
-          <span className="font-body text-sm font-medium text-forge-text-muted">
-            [COPY: eyebrow badge text]
+          <span
+            className="h-1.5 w-1.5 rounded-full"
+            style={{ background: 'var(--forge-accent)' }}
+          />
+          <span className="font-body text-sm font-medium" style={{ color: 'var(--forge-text-secondary)' }}>
+            AI-Powered Sales Infrastructure
           </span>
         </div>
 
         {/* Headline */}
         <h1
           data-hero="headline"
-          className="font-display mx-auto mb-6 tracking-display leading-display"
-          style={{ fontSize: 'clamp(2.5rem, 5vw + 1rem, 4.5rem)' }}
+          className="mx-auto mb-6 max-w-[600px] font-display font-black"
+          style={{
+            fontSize: 'clamp(2.5rem, 5vw + 1rem, 4rem)',
+            letterSpacing: '-0.02em',
+            lineHeight: 1.08,
+            color: 'var(--forge-text)',
+          }}
         >
-          [COPY: benefit-driven headline about scanning their funnel]
+          Your funnel is leaking revenue.
+          <br />
+          <span style={{ color: 'var(--forge-accent)' }}>Let&apos;s find where.</span>
         </h1>
 
         {/* Subheadline */}
         <p
           data-hero="subheadline"
-          className="font-body mx-auto mb-10 max-w-lg text-lg leading-body text-forge-text-muted"
+          className="mx-auto mb-10 max-w-lg font-body text-lg"
+          style={{
+            lineHeight: 1.65,
+            color: 'var(--forge-text-secondary)',
+          }}
         >
-          [COPY: what happens when they enter their URL]
+          We scan your website, socials, and ads — and show you exactly what&apos;s costing you customers. Real screenshots. Specific fixes. No fluff.
         </p>
 
         {/* URL Input */}
         <form data-hero="input" onSubmit={handleSubmit} className="mx-auto mb-8 max-w-xl">
-          <div className="group relative flex items-center rounded-xl border border-forge-border bg-forge-surface/80 backdrop-blur-sm transition-colors duration-200 hover:border-forge-accent/30 focus-within:border-forge-accent/40 focus-within:shadow-[0_0_30px_rgba(212,165,55,0.08)]">
-            <input
-              type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="yourwebsite.com"
-              required
-              className="h-14 flex-1 bg-transparent px-5 font-body text-base text-forge-text placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
-            />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div
+              className="group relative flex flex-1 items-center overflow-hidden rounded-xl border transition-all duration-300"
+              style={{
+                borderColor: 'var(--forge-border)',
+                background: 'var(--forge-surface)',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(232, 83, 14, 0.3)';
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(232, 83, 14, 0.06)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--forge-border)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              <input
+                type="text"
+                value={url}
+                onChange={(e) => { setUrl(e.target.value.trim()); if (formError) setFormError(null); }}
+                placeholder="yourwebsite.com"
+                required
+                autoFocus
+                className="h-14 flex-1 bg-transparent px-5 font-body text-base placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
+                style={{ color: 'var(--forge-text)' }}
+              />
+            </div>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="mr-2 flex h-10 shrink-0 items-center gap-2 rounded-lg bg-forge-accent px-5 font-body text-sm font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50 sm:h-12 sm:px-6 sm:text-base"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-xl px-5 font-body text-sm font-semibold transition-all duration-200 disabled:opacity-50 sm:h-16 sm:w-auto sm:shrink-0 sm:px-6 sm:text-base"
+              style={{
+                background: 'var(--forge-accent)',
+                color: '#FAFAF7',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'var(--forge-accent-bright)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'var(--forge-accent)';
+              }}
             >
-              {isSubmitting ? 'Scanning...' : '[COPY: scan CTA]'}
+              {isSubmitting ? 'Scanning...' : 'Scan My Funnel'}
               {!isSubmitting && <ArrowRight className="h-4 w-4" />}
             </button>
           </div>
+
+          {/* Social handles — auto-reveal when user starts typing URL */}
+          {url.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 font-mono text-xs uppercase tracking-widest" style={{ color: 'var(--forge-text-muted)' }}>
+                Optional — for a deeper scan
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div
+                  className="flex items-center overflow-hidden rounded-lg border"
+                  style={{ borderColor: 'var(--forge-border)', background: 'var(--forge-surface)' }}
+                >
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center font-mono text-xs" style={{ color: 'var(--forge-text-muted)' }}>IG</span>
+                  <input
+                    type="text"
+                    value={instagram}
+                    onChange={(e) => setInstagram(e.target.value)}
+                    placeholder="@handle"
+                    className="h-12 flex-1 bg-transparent pr-4 font-body text-sm placeholder:text-forge-text-muted/50 focus:outline-none"
+                    style={{ color: 'var(--forge-text)' }}
+                  />
+                </div>
+                <div
+                  className="flex items-center overflow-hidden rounded-lg border"
+                  style={{ borderColor: 'var(--forge-border)', background: 'var(--forge-surface)' }}
+                >
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center font-mono text-xs" style={{ color: 'var(--forge-text-muted)' }}>FB</span>
+                  <input
+                    type="text"
+                    value={facebook}
+                    onChange={(e) => setFacebook(e.target.value)}
+                    placeholder="facebook.com/page or @handle"
+                    className="h-12 flex-1 bg-transparent pr-4 font-body text-sm placeholder:text-forge-text-muted/50 focus:outline-none"
+                    style={{ color: 'var(--forge-text)' }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {formError && (
+            <p className="font-body text-sm text-forge-critical mt-2">{formError}</p>
+          )}
         </form>
 
         {/* Trust indicators */}
         <div
           data-hero="trust"
-          className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-forge-text-muted"
+          className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-mono text-xs uppercase tracking-widest"
+          style={{ color: 'var(--forge-text-muted)' }}
         >
-          <span>[COPY: trust indicator 1]</span>
-          <span className="hidden h-1 w-1 rounded-full bg-forge-text-muted/30 sm:block" />
-          <span>[COPY: trust indicator 2]</span>
-          <span className="hidden h-1 w-1 rounded-full bg-forge-text-muted/30 sm:block" />
-          <span>[COPY: trust indicator 3]</span>
+          <span>Free, no card required</span>
+          <span className="hidden h-1 w-1 rounded-full sm:block" style={{ background: 'var(--forge-text-muted)', opacity: 0.3 }} />
+          <span>5 funnel stages analyzed</span>
+          <span className="hidden h-1 w-1 rounded-full sm:block" style={{ background: 'var(--forge-text-muted)', opacity: 0.3 }} />
+          <span>Built for $500K–$5M service businesses</span>
         </div>
       </div>
     </section>

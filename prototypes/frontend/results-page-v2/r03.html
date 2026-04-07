@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r03 Card Grid Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r03: Card Grid Dashboard
+   Notion/Linear style — all 5 stages visible as cards.
+   Overall health as a hero card. Blueprint as action card.
+   Dense, scannable, information-rich. */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+  --r: 12px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.3) 1px, transparent 0);
+  background-size: 32px 32px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── TOP BAR ── */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 17, 32, 0.92);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  padding: 0 32px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo { font-family: 'Instrument Serif', serif; font-size: 1.125rem; }
+.logo b { color: var(--accent); font-weight: 400; }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.topbar-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+.cta-link {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 165, 55, 0.15);
+  transition: all 0.2s;
+}
+.cta-link:hover {
+  background: rgba(212, 165, 55, 0.08);
+  border-color: rgba(212, 165, 55, 0.4);
+}
+
+/* ── GRID CONTAINER ── */
+.dashboard {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+/* ── HERO CARD (spans full width) ── */
+.hero-card {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 40px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -20%;
+  width: 60%; height: 200%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hero-left h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.75rem, 3vw + 0.5rem, 2.5rem);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  max-width: 400px;
+}
+
+.hero-left p {
+  font-size: 0.9375rem;
+  color: var(--secondary);
+  margin-top: 12px;
+  max-width: 380px;
+}
+
+.hero-score-block {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.hero-score-num {
+  font-family: 'Instrument Serif', serif;
+  font-size: 5rem;
+  line-height: 0.85;
+  color: var(--critical);
+}
+
+.hero-score-suffix {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.125rem;
+  color: var(--muted);
+}
+
+.hero-score-meta {
+  text-align: left;
+}
+
+.hero-score-meta div:first-child {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--critical);
+}
+
+.hero-score-meta div:last-child {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* Mini score bars in hero */
+.mini-bars {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.mini-bar-item {
+  flex: 1;
+  text-align: center;
+}
+
+.mini-bar-track {
+  height: 4px;
+  background: var(--card);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.mini-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.mini-bar-label {
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+/* ── CARD GRID ── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+/* Stage card */
+.stage-card {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 28px;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+
+.stage-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.stage-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.stage-card-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.stage-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.stage-card-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.75rem;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.stage-card-bar {
+  height: 4px;
+  background: var(--card);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.stage-card-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.chip-crit { background: rgba(239, 68, 68, 0.08); color: var(--critical); }
+.chip-warn { background: rgba(234, 179, 8, 0.08); color: var(--warning); }
+
+/* Top finding preview */
+.stage-card-finding {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.stage-card-finding-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.finding-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.stage-card-finding-desc {
+  font-size: 0.75rem;
+  color: var(--secondary);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* Expandable detail (using CSS :target) */
+.stage-card-detail {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.stage-card:target .stage-card-detail {
+  max-height: 600px;
+}
+
+.stage-card-detail-inner {
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  margin-top: 16px;
+}
+
+.detail-finding {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+}
+.detail-finding + .detail-finding {
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.detail-finding-num {
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; flex-shrink: 0;
+}
+.dfn-crit { background: var(--critical); color: white; }
+.dfn-warn { background: var(--warning); color: var(--base); }
+.dfn-pos { background: var(--positive); color: white; }
+
+.detail-finding h4 { font-size: 0.8125rem; font-weight: 600; }
+.detail-finding p { font-size: 0.75rem; color: var(--secondary); margin-top: 2px; }
+
+/* ── ACTION CARD (Blueprint CTA) ── */
+.action-card {
+  background: rgba(212, 165, 55, 0.04);
+  border: 1px solid rgba(212, 165, 55, 0.12);
+  border-radius: 14px;
+  padding: 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+.action-card:hover {
+  background: rgba(212, 165, 55, 0.06);
+  border-color: rgba(212, 165, 55, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(212, 165, 55, 0.08);
+}
+
+.action-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.action-card h3 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.action-card p {
+  font-size: 0.8125rem;
+  color: var(--secondary);
+  margin-top: 8px;
+  max-width: 240px;
+}
+
+.action-card-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.action-card-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(212, 165, 55, 0.3);
+}
+
+/* ── REVENUE BAR ── */
+.revenue-bar {
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.08);
+  border-radius: 12px;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.revenue-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.revenue-bar strong { color: var(--critical); font-weight: 600; }
+.revenue-bar span { font-size: 0.8125rem; color: var(--secondary); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+  .card-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .card-grid { grid-template-columns: 1fr; }
+  .hero-card { flex-direction: column; padding: 28px; }
+  .hero-score-num { font-size: 3.5rem; }
+  .dashboard { padding: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="logo">FORGE<b>.</b></div>
+  <div class="topbar-right">
+    <span class="topbar-url fm">blotato.com</span>
+    <a href="#action" class="cta-link">Book Strategy Call</a>
+  </div>
+</header>
+
+<div class="dashboard">
+
+  <!-- HERO CARD -->
+  <div class="hero-card">
+    <div class="hero-left">
+      <h1 class="fd">Funnel Audit Complete</h1>
+      <p>We scanned blotato.com across 5 conversion stages. Three critical failures detected.</p>
+      <div class="mini-bars">
+        <div class="mini-bar-item">
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:2%;background:var(--critical);min-width:2px"></div></div>
+          <div class="mini-bar-label">Traffic</div>
+        </div>
+        <div class="mini-bar-item">
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:35%;background:var(--warning)"></div></div>
+          <div class="mini-bar-label">Landing</div>
+        </div>
+        <div class="mini-bar-item">
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:45%;background:var(--warning)"></div></div>
+          <div class="mini-bar-label">Capture</div>
+        </div>
+        <div class="mini-bar-item">
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:15%;background:var(--critical)"></div></div>
+          <div class="mini-bar-label">Offer</div>
+        </div>
+        <div class="mini-bar-item">
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:2%;background:var(--critical);min-width:2px"></div></div>
+          <div class="mini-bar-label">Follow-up</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-score-block">
+      <div>
+        <div class="hero-score-num fd">19</div>
+      </div>
+      <div class="hero-score-meta">
+        <div class="hero-score-suffix fm">/100</div>
+        <div style="font-size:0.75rem;color:var(--critical);margin-top:4px;font-weight:600">60-80% revenue leak</div>
+        <div style="font-size:0.6875rem;color:var(--muted);margin-top:2px">Industry avg: 52</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARD GRID -->
+  <div class="card-grid">
+
+    <!-- Traffic Card -->
+    <div class="stage-card" id="traffic">
+      <div class="stage-card-header">
+        <div>
+          <div class="stage-card-num">01 / STAGE 1</div>
+          <div class="stage-card-title">Traffic Sources</div>
+        </div>
+        <div class="stage-card-score" style="color:var(--critical)">0</div>
+      </div>
+      <div class="stage-card-bar">
+        <div class="stage-card-fill" style="width:2%;background:var(--critical);min-width:2px"></div>
+      </div>
+      <span class="chip chip-crit">Critical</span>
+      <div class="stage-card-finding">
+        <div class="stage-card-finding-title">
+          <div class="finding-dot" style="background:var(--critical)"></div>
+          No Traffic Sources
+        </div>
+        <p class="stage-card-finding-desc">No social profiles found. 100% reliance on direct/search traffic.</p>
+      </div>
+    </div>
+
+    <!-- Landing Card -->
+    <div class="stage-card" id="landing">
+      <div class="stage-card-header">
+        <div>
+          <div class="stage-card-num">02 / STAGE 2</div>
+          <div class="stage-card-title">Landing Experience</div>
+        </div>
+        <div class="stage-card-score" style="color:var(--warning)">35</div>
+      </div>
+      <div class="stage-card-bar">
+        <div class="stage-card-fill" style="width:35%;background:var(--warning)"></div>
+      </div>
+      <span class="chip chip-warn">Weak</span>
+      <div class="stage-card-finding">
+        <div class="stage-card-finding-title">
+          <div class="finding-dot" style="background:var(--critical)"></div>
+          Generic Headline
+        </div>
+        <p class="stage-card-finding-desc">Visitors can't tell what Blotato does in 5 seconds.</p>
+      </div>
+      <div class="stage-card-detail" id="landing-detail">
+        <div class="stage-card-detail-inner">
+          <div class="detail-finding">
+            <div class="detail-finding-num dfn-warn">2</div>
+            <div><h4>Dual CTAs</h4><p>"Login" and "Start FREE Week" compete.</p></div>
+          </div>
+          <div class="detail-finding">
+            <div class="detail-finding-num dfn-warn">3</div>
+            <div><h4>No Trust Signals</h4><p>No logos or testimonials alongside social proof.</p></div>
+          </div>
+          <div class="detail-finding">
+            <div class="detail-finding-num dfn-pos">4</div>
+            <div><h4>Strong Trial CTA</h4><p>"Start FREE Week" creates urgency.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Capture Card -->
+    <div class="stage-card" id="capture">
+      <div class="stage-card-header">
+        <div>
+          <div class="stage-card-num">03 / STAGE 3</div>
+          <div class="stage-card-title">Lead Capture</div>
+        </div>
+        <div class="stage-card-score" style="color:var(--warning)">45</div>
+      </div>
+      <div class="stage-card-bar">
+        <div class="stage-card-fill" style="width:45%;background:var(--warning)"></div>
+      </div>
+      <span class="chip chip-warn">Weak</span>
+      <div class="stage-card-finding">
+        <div class="stage-card-finding-title">
+          <div class="finding-dot" style="background:var(--critical)"></div>
+          No Email Above Fold
+        </div>
+        <p class="stage-card-finding-desc">Email field would capture leads faster.</p>
+      </div>
+    </div>
+
+    <!-- Offer Card -->
+    <div class="stage-card" id="offer">
+      <div class="stage-card-header">
+        <div>
+          <div class="stage-card-num">04 / STAGE 4</div>
+          <div class="stage-card-title">Offer Clarity</div>
+        </div>
+        <div class="stage-card-score" style="color:var(--critical)">15</div>
+      </div>
+      <div class="stage-card-bar">
+        <div class="stage-card-fill" style="width:15%;background:var(--critical)"></div>
+      </div>
+      <span class="chip chip-crit">Critical</span>
+      <div class="stage-card-finding">
+        <div class="stage-card-finding-title">
+          <div class="finding-dot" style="background:var(--critical)"></div>
+          Offer Is Unclear
+        </div>
+        <p class="stage-card-finding-desc">No pricing, no feature comparison, no FAQ.</p>
+      </div>
+    </div>
+
+    <!-- Follow-up Card -->
+    <div class="stage-card" id="followup">
+      <div class="stage-card-header">
+        <div>
+          <div class="stage-card-num">05 / STAGE 5</div>
+          <div class="stage-card-title">Follow-Up Systems</div>
+        </div>
+        <div class="stage-card-score" style="color:var(--critical)">0</div>
+      </div>
+      <div class="stage-card-bar">
+        <div class="stage-card-fill" style="width:2%;background:var(--critical);min-width:2px"></div>
+      </div>
+      <span class="chip chip-crit">Critical</span>
+      <div class="stage-card-finding">
+        <div class="stage-card-finding-title">
+          <div class="finding-dot" style="background:var(--critical)"></div>
+          No Follow-Up
+        </div>
+        <p class="stage-card-finding-desc">No pixel, no tags, no email sequences.</p>
+      </div>
+    </div>
+
+    <!-- ACTION CARD -->
+    <div class="action-card" id="action">
+      <div class="action-card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--base)" stroke-width="2.5"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <h3 class="fd">Get Your Fix Plan</h3>
+      <p>AI-generated priority fixes based on your specific results.</p>
+      <button class="action-card-btn">Generate Plan &rarr;</button>
+    </div>
+
+  </div>
+
+  <!-- REVENUE BAR -->
+  <div class="revenue-bar">
+    <div class="revenue-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--critical)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    </div>
+    <div>
+      <strong>60-80% Revenue Leak</strong>
+      <span> &mdash; 3 of 5 stages missing or critical. Industry average is 52/100.</span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

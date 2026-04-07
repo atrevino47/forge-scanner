@@ -1,27 +1,30 @@
 @import "tailwindcss";
 
 @theme inline {
-  /* ── Forge Brand Colors ── */
-  --color-forge-base: #0B1120;
-  --color-forge-surface: #0F172A;
-  --color-forge-card: #1E293B;
-  --color-forge-accent: #D4A537;
-  --color-forge-accent-hover: #E5B84A;
-  --color-forge-text: #F8FAFC;
-  --color-forge-text-muted: #94A3B8;
-  --color-forge-border: rgba(212, 165, 55, 0.12);
-  --color-forge-glass: rgba(30, 41, 59, 0.5);
-  --color-forge-glass-border: rgba(212, 165, 55, 0.12);
-  --color-forge-critical: #EF4444;
-  --color-forge-warning: #F59E0B;
-  --color-forge-opportunity: #3B82F6;
-  --color-forge-positive: #22C55E;
+  /* ── Forge Brand v2 — Light Mode Primary ── */
+  --color-forge-base: #FAFAF7;
+  --color-forge-surface: #F5F4F0;
+  --color-forge-card: #ECEAE4;
+  --color-forge-elevated: #E2E0DA;
+  --color-forge-accent: #E8530E;
+  --color-forge-accent-bright: #FF6B2B;
+  --color-forge-accent-hover: #FF6B2B;
+  --color-forge-text: #1A1917;
+  --color-forge-text-secondary: #6B6860;
+  --color-forge-text-muted: #B8B5AD;
+  --color-forge-border: #ECEAE4;
+  --color-forge-glass: rgba(250, 250, 247, 0.92);
+  --color-forge-glass-border: #ECEAE4;
+  --color-forge-critical: #D93636;
+  --color-forge-warning: #D4890A;
+  --color-forge-opportunity: #2B7BD4;
+  --color-forge-positive: #2D8C4E;
 
   /* ── Typography ── */
-  --font-sans: var(--font-plus-jakarta-sans), sans-serif;
-  --font-display: var(--font-instrument-serif), serif;
-  --font-body: var(--font-plus-jakarta-sans), sans-serif;
-  --font-mono: var(--font-jetbrains-mono), monospace;
+  --font-sans: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  --font-display: var(--font-outfit), 'Outfit', sans-serif;
+  --font-body: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', monospace;
 
   /* ── Custom Tracking & Leading ── */
   --tracking-display: -0.02em;
@@ -29,71 +32,96 @@
   --leading-body: 1.65;
 }
 
-/* ── CSS Custom Properties (for glass-card, GSAP, non-Tailwind usage) ── */
+/* ── CSS Custom Properties (for GSAP, non-Tailwind usage) ── */
 :root {
-  --forge-base: #0B1120;
-  --forge-surface: #0F172A;
-  --forge-card: #1E293B;
-  --forge-accent: #D4A537;
-  --forge-accent-hover: #E5B84A;
-  --forge-text: #F8FAFC;
-  --forge-text-muted: #94A3B8;
-  --forge-border: rgba(212, 165, 55, 0.12);
-  --forge-glass: rgba(30, 41, 59, 0.5);
-  --forge-glass-border: rgba(212, 165, 55, 0.12);
+  --forge-base: #FAFAF7;
+  --forge-surface: #F5F4F0;
+  --forge-container: #F5F4F0;
+  --forge-card: #ECEAE4;
+  --forge-elevated: #E2E0DA;
+  --forge-accent: #E8530E;
+  --forge-accent-bright: #FF6B2B;
+  --forge-accent-hover: #FF6B2B;
+  --forge-accent-glow: rgba(232, 83, 14, 0.1);
+  --forge-text: #1A1917;
+  --forge-text-secondary: #6B6860;
+  --forge-text-muted: #B8B5AD;
+  --forge-border: #ECEAE4;
+  --forge-border-warm: rgba(232, 83, 14, 0.04);
+  --forge-glass: rgba(250, 250, 247, 0.92);
+  --forge-glass-border: #ECEAE4;
+  --forge-critical: #D93636;
+  --forge-critical-bg: rgba(217, 54, 54, 0.06);
+  --forge-warning: #D4890A;
+  --forge-warning-bg: rgba(212, 137, 10, 0.06);
+  --forge-positive: #2D8C4E;
+  --forge-positive-bg: rgba(45, 140, 78, 0.06);
+  --forge-opportunity: #2B7BD4;
+  --forge-opportunity-bg: rgba(43, 123, 212, 0.06);
+  --forge-r: 12px;
 }
 
 /* ══════════════════════════════════════════════════════════
- * DARK MODE: Hardcoded backgrounds on html+body override
- * Tailwind Preflight's transparent/Canvas defaults.
- * Unlayered rules = maximum cascade priority.
+ * LIGHT MODE: Brand v2 — warm white base, Forge Orange accent
  * ══════════════════════════════════════════════════════════ */
 html {
-  color-scheme: dark;
-  background-color: #0B1120;
+  color-scheme: light;
+  background-color: #FAFAF7;
+  scroll-behavior: smooth;
 }
 
 body {
-  background-color: #0B1120;
-  color: #F8FAFC;
-  font-family: var(--font-plus-jakarta-sans), sans-serif;
+  background-color: #FAFAF7;
+  color: #1A1917;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── Grain overlay (present on every page) ── */
-body::after {
+/* ── Subtle dot grid (replaces grain — "whitespace is the design") ── */
+body::before {
   content: '';
   position: fixed;
   inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 128px;
-}
-
-/* ── Dot grid background utility ── */
-.dot-grid {
+  opacity: 0.03;
   background-image: radial-gradient(
-    circle,
-    rgba(212, 165, 55, 0.06) 1px,
-    transparent 1px
+    circle at 1px 1px,
+    rgba(26, 25, 23, 0.04) 1px,
+    transparent 0
   );
-  background-size: 24px 24px;
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: -1;
 }
 
-/* ── Glassmorphism card utility ── */
+/* ── Glassmorphism card utility (light mode) ── */
 .glass-card {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   background: var(--forge-glass);
-  border: 0.5px solid var(--forge-glass-border);
+  border: 1px solid var(--forge-border);
 }
 
 /* ── Selection ── */
 ::selection {
-  background-color: rgba(212, 165, 55, 0.25);
-  color: #F8FAFC;
+  background-color: rgba(232, 83, 14, 0.15);
+  color: #1A1917;
+}
+
+/* ── Focus styles (WCAG AA) ── */
+:focus-visible {
+  outline: 2px solid var(--forge-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-snap-type: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ── Scrollbar (webkit) ── */
@@ -102,23 +130,87 @@ body::after {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B1120;
+  background: var(--forge-base);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E293B;
+  background: var(--forge-card);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: var(--forge-text-muted);
 }
 
-/* ── Keyframes (loading states only — not decorative) ── */
+/* ── Keyframes ── */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
 @keyframes shimmer {
+  from { transform: translateX(-100%); }
   to { transform: translateX(100%); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ── Semantic background utilities ── */
+.bg-critical-soft { background: var(--forge-critical-bg); }
+.bg-warning-soft { background: var(--forge-warning-bg); }
+.bg-positive-soft { background: var(--forge-positive-bg); }
+.bg-opportunity-soft { background: var(--forge-opportunity-bg); }
+
+/* ── Material Symbols baseline ── */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ── Forge gradient utilities ── */
+.forge-gradient-primary {
+  background: linear-gradient(135deg, #E8530E 0%, #ff7a3d 100%);
+}
+
+.forge-glow {
+  box-shadow: 0 0 25px -5px rgba(232, 83, 14, 0.3);
+}
+
+/* ── Inner grid pattern (for CTA cards) ── */
+.inner-grid-pattern {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+/* ── Skeleton shimmer — replaces animate-pulse on loading skeletons ── */
+@keyframes skeleton-sweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-dark {
+  background-image: linear-gradient(
+    90deg,
+    #282826 0%,
+    #282826 30%,
+    #383836 50%,
+    #282826 70%,
+    #282826 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.8s ease-in-out infinite;
+}
+
+.skeleton-dark-deep {
+  background-image: linear-gradient(
+    90deg,
+    #1E1E1C 0%,
+    #1E1E1C 30%,
+    #2A2A28 50%,
+    #1E1E1C 70%,
+    #1E1E1C 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.8s ease-in-out infinite;
 }

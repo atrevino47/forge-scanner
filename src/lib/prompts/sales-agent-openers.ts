@@ -168,7 +168,7 @@ function generateVoiceOpener(ctx: OpenerContext): string {
 
   return `VOICE CALL SCRIPT — ${ctx.businessName}
 
-GREETING: "${ctx.leadName ? `Hi ${ctx.leadName}` : 'Hi there'}, this is [Agent Name] from Forge Digital. You recently ran a funnel scan on ${ctx.businessName} — I wanted to personally walk you through what we found."
+GREETING: "${ctx.leadName ? `Hi ${ctx.leadName}` : 'Hi there'}, this is [Agent Name] from Forge. You recently ran a funnel scan on ${ctx.businessName} — I wanted to personally walk you through what we found."
 
 KEY DATA POINTS:
 - Overall score: ${ctx.overallHealth}/100

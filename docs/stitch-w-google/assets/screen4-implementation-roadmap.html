@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Forge Audit - What to Fix First</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@900&amp;family=Space+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;family=Epilogue:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "forge-orange": "#E8530E",
+              "surface-dim": "#dadad7",
+              "on-secondary-fixed": "#380d00",
+              "on-background": "#1a1c1b",
+              "tertiary-container": "#0075d4",
+              "surface-container-lowest": "#ffffff",
+              "surface-bright": "#f9f9f6",
+              "secondary-container": "#fe956f",
+              "on-tertiary-fixed": "#001c3a",
+              "outline": "#8e7066",
+              "inverse-primary": "#ffb59b",
+              "surface-container": "#eeeeeb",
+              "surface-container-high": "#e8e8e5",
+              "on-tertiary-fixed-variant": "#004785",
+              "surface-container-highest": "#e2e3e0",
+              "on-primary-fixed-variant": "#812800",
+              "surface": "#f9f9f6",
+              "error-container": "#ffdad6",
+              "error": "#ba1a1a",
+              "on-secondary-fixed-variant": "#7a2f11",
+              "primary": "#E8530E",
+              "tertiary-fixed": "#d4e3ff",
+              "inverse-on-surface": "#f1f1ee",
+              "primary-container": "#E8530E",
+              "outline-variant": "#e3bfb3",
+              "on-primary-fixed": "#380d00",
+              "on-primary": "#ffffff",
+              "tertiary-fixed-dim": "#a5c8ff",
+              "surface-tint": "#E8530E",
+              "on-tertiary": "#ffffff",
+              "on-primary-container": "#fffbff",
+              "background": "#f9f9f6",
+              "secondary": "#994626",
+              "on-surface": "#1a1c1b",
+              "on-secondary": "#ffffff",
+              "on-surface-variant": "#5a4138",
+              "surface-container-low": "#f4f4f1",
+              "secondary-fixed-dim": "#ffb59b",
+              "secondary-fixed": "#ffdbcf",
+              "on-error-container": "#93000a",
+              "on-secondary-container": "#762c0e",
+              "primary-fixed-dim": "#ffb59b",
+              "on-error": "#ffffff",
+              "tertiary": "#005daa",
+              "surface-variant": "#e2e3e0",
+              "primary-fixed": "#ffdbcf",
+              "inverse-surface": "#2f312f",
+              "on-tertiary-container": "#fefcff"
+            },
+            fontFamily: {
+              "headline": ["Epilogue"],
+              "body": ["Space Grotesk"],
+              "label": ["Space Grotesk"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .forge-gradient-primary {
+            background: linear-gradient(135deg, #E8530E 0%, #ff6e24 100%);
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-forge-orange selection:text-white">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-[#f9f9f6]/80 backdrop-blur-md dark:bg-[#1a1c1b]/80">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-forge-orange" data-icon="precision_manufacturing">precision_manufacturing</span>
+<h1 class="font-['Outfit'] font-black uppercase tracking-tighter text-2xl text-forge-orange">FORGE AUDIT</h1>
+</div>
+<button class="bg-forge-orange text-white px-4 py-1.5 rounded-lg font-['JetBrains_Mono'] text-xs font-bold tracking-tight active:scale-[0.98] transition-transform duration-200 shadow-sm">
+        BOOK CALL
+    </button>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-md mx-auto">
+<!-- Section Header -->
+<header class="mb-12">
+<div class="flex items-center gap-2 mb-2">
+<span class="w-12 h-1 bg-forge-orange"></span>
+<span class="font-['JetBrains_Mono'] text-[10px] font-bold tracking-[0.2em] text-forge-orange uppercase">Implementation Roadmap</span>
+</div>
+<h2 class="font-['Outfit'] text-5xl font-black uppercase tracking-tighter leading-[0.9] text-forge-orange">What to Fix First</h2>
+<p class="mt-4 text-on-surface-variant leading-relaxed">Prioritized engineering backlog based on structural integrity and growth potential.</p>
+</header>
+<!-- Category: Critical (Active/Start Here) -->
+<section class="mb-10 relative">
+<div class="flex justify-between items-end mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-forge-orange" data-icon="report" style="font-variation-settings: 'FILL' 1;">report</span>
+<h3 class="font-['JetBrains_Mono'] font-bold text-sm tracking-widest uppercase text-forge-orange">Critical</h3>
+</div>
+<div class="bg-forge-orange text-white px-3 py-1 rounded-sm flex items-center gap-2 shadow-md">
+<span class="material-symbols-outlined text-xs" data-icon="arrow_downward">arrow_downward</span>
+<span class="font-['JetBrains_Mono'] text-[10px] font-bold">START HERE</span>
+</div>
+</div>
+<div class="space-y-4">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-5 border-l-4 border-forge-orange relative overflow-hidden shadow-sm ring-1 ring-forge-orange/10">
+<div class="flex justify-between items-start mb-3">
+<span class="font-['JetBrains_Mono'] text-[10px] text-on-surface-variant tracking-tighter uppercase font-bold">Stage: Infrastructure</span>
+<span class="bg-error-container text-on-error-container px-2 py-0.5 rounded-sm font-['JetBrains_Mono'] text-[9px] font-bold uppercase">High Effort</span>
+</div>
+<h4 class="font-bold text-lg leading-tight mb-2">Database Connection Pooling Failure</h4>
+<p class="text-sm text-on-surface-variant mb-4">Current configuration causes 40ms overhead per request under peak load.</p>
+<div class="flex items-center gap-2 text-forge-orange">
+<span class="material-symbols-outlined text-sm" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="font-['JetBrains_Mono'] text-[10px] font-bold tracking-widest uppercase">Immediate Fix Required</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest p-5 border-l-4 border-forge-orange shadow-sm ring-1 ring-forge-orange/10">
+<div class="flex justify-between items-start mb-3">
+<span class="font-['JetBrains_Mono'] text-[10px] text-on-surface-variant tracking-tighter uppercase font-bold">Stage: Security</span>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-sm font-['JetBrains_Mono'] text-[9px] font-bold uppercase">Quick Win</span>
+</div>
+<h4 class="font-bold text-lg leading-tight mb-2">Insecure JWT Storage</h4>
+<p class="text-sm text-on-surface-variant mb-4">Tokens are stored in localStorage; migrate to HttpOnly cookies to prevent XSS.</p>
+</div>
+</div>
+</section>
+<!-- Category: Warning -->
+<section class="mb-10">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="warning" style="font-variation-settings: 'FILL' 1;">warning</span>
+<h3 class="font-['JetBrains_Mono'] font-bold text-sm tracking-widest uppercase">Warning</h3>
+</div>
+<div class="space-y-4">
+<div class="bg-surface-container-low p-5">
+<div class="flex justify-between items-start mb-3">
+<span class="font-['JetBrains_Mono'] text-[10px] text-on-surface-variant tracking-tighter uppercase">Stage: Frontend</span>
+<span class="bg-surface-container-highest text-on-surface px-2 py-0.5 rounded-sm font-['JetBrains_Mono'] text-[9px] font-bold uppercase">Medium Effort</span>
+</div>
+<h4 class="font-bold text-lg leading-tight mb-2">Lighthouse Score: 64/100</h4>
+<p class="text-sm text-on-surface-variant mb-4">Unused JS bundles increasing initial load time by 1.2s on mobile devices.</p>
+</div>
+</div>
+</section>
+<!-- Category: Working Well -->
+<section>
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-tertiary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<h3 class="font-['JetBrains_Mono'] font-bold text-sm tracking-widest uppercase">Working Well</h3>
+</div>
+<div class="space-y-4">
+<div class="bg-surface-container-low/50 p-5 opacity-70">
+<div class="flex justify-between items-start mb-3">
+<span class="font-['JetBrains_Mono'] text-[10px] text-on-surface-variant tracking-tighter uppercase">Stage: CI/CD</span>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-2 py-0.5 rounded-sm font-['JetBrains_Mono'] text-[9px] font-bold uppercase">Optimized</span>
+</div>
+<h4 class="font-bold text-lg leading-tight mb-2">Automated Test Coverage</h4>
+<p class="text-sm text-on-surface-variant mb-4">92% unit test coverage on core business logic services.</p>
+</div>
+</div>
+</section>
+<!-- Action Area -->
+<div class="mt-12 p-6 bg-inverse-surface text-inverse-on-surface rounded-xl shadow-2xl ring-1 ring-white/10">
+<h5 class="font-['JetBrains_Mono'] text-xs font-bold uppercase tracking-[0.2em] mb-4 opacity-70">The Forge Summary</h5>
+<div class="flex items-baseline gap-2 mb-6">
+<span class="font-['Outfit'] text-6xl font-black text-forge-orange leading-none drop-shadow-[0_0_15px_rgba(232,83,14,0.6)]">03</span>
+<div class="font-['JetBrains_Mono'] text-[10px] leading-tight uppercase font-bold">
+                Critical Blocks<br/>To Resolve
+            </div>
+</div>
+<button class="w-full forge-gradient-primary py-4 rounded-lg font-['JetBrains_Mono'] font-bold text-sm tracking-widest uppercase text-white shadow-[0_10px_20px_-5px_rgba(232,83,14,0.4)] active:scale-[0.98] transition-transform">FORGE THE SOLUTION</button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-stretch h-18 bg-[#f9f9f6] dark:bg-[#1a1c1b] border-t border-surface-container-high">
+<a class="flex flex-col items-center justify-center text-on-surface opacity-50 px-4 py-2 hover:opacity-100 hover:bg-[#f0f0ed] dark:hover:bg-[#2a2c2b] active:scale-[0.98] transition-all duration-150 flex-1" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span class="font-['JetBrains_Mono'] text-[9px] uppercase font-bold tracking-widest">Overview</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface opacity-50 px-4 py-2 hover:opacity-100 hover:bg-[#f0f0ed] dark:hover:bg-[#2a2c2b] active:scale-[0.98] transition-all duration-150 flex-1" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="architecture">architecture</span>
+<span class="font-['JetBrains_Mono'] text-[9px] uppercase font-bold tracking-widest">Stages</span>
+</a>
+<!-- ACTIVE TAB: Roadmap -->
+<a class="flex flex-col items-center justify-center text-forge-orange bg-[#f0f0ed]/50 dark:bg-white/5 border-t-4 border-forge-orange px-4 py-2 active:scale-[0.98] transition-all duration-150 flex-1" href="#">
+<span class="material-symbols-outlined mb-1" data-icon="analytics" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span class="font-['JetBrains_Mono'] text-[9px] uppercase font-bold tracking-widest">Roadmap</span>
+</a>
+</nav>
+</body></html>

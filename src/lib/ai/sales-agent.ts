@@ -15,22 +15,26 @@ import { getWhatsAppFollowupPrompt, type WhatsAppSequencePosition } from '../pro
 // Signature matches what Backend already calls
 // ============================================================
 
-export function buildSalesAgentSystemPrompt(params: {
+export async function buildSalesAgentSystemPrompt(params: {
   scanResult: ScanResult;
   businessName?: string | null;
   leadName?: string | null;
   blueprint?: BlueprintData | null;
   channel?: Channel;
-}): string {
+  activeObjectionContext?: string | null;
+  messageCount?: number;
+}): Promise<string> {
   const biz = params.businessName || extractDomain(params.scanResult.websiteUrl);
 
-  return buildFullSalesAgentPrompt({
+  return await buildFullSalesAgentPrompt({
     scanResult: params.scanResult,
     blueprint: params.blueprint,
     channel: params.channel ?? 'web',
     businessName: biz,
     leadName: params.leadName,
     calcomUrl: process.env.NEXT_PUBLIC_CALCOM_EMBED_URL,
+    activeObjectionContext: params.activeObjectionContext,
+    messageCount: params.messageCount,
   });
 }
 
@@ -202,9 +206,9 @@ function buildFallbackEmail(
   };
 
   const bodies: Record<SequencePosition, string> = {
-    1: `${greeting},\n\nYour funnel scan for ${businessName} is ready. Overall score: ${overallHealth}/100.\n\nThe biggest opportunity is your ${weakLabel} (${weakScore}/100). I'd love to walk you through the full findings in a free 30-minute strategy call.${calLine}\n\nBest,\nForge Digital`,
-    2: `${greeting},\n\nQuick thought — your ${weakLabel} scored ${weakScore}/100. That's the #1 area where ${businessName} is likely losing potential customers.\n\nI have a few strategy call slots this week if you want to go through the details.${calLine}\n\nBest,\nForge Digital`,
-    3: `${greeting},\n\nJust a heads up — your ${businessName} scan results (including annotated screenshots and your blueprint) will expire in a few days.\n\nIf you'd like to discuss the findings before they're gone, grab a free strategy call.${calLine}\n\nEither way, hope the scan was useful.\n\nBest,\nForge Digital`,
+    1: `${greeting},\n\nYour funnel scan for ${businessName} is ready. Overall score: ${overallHealth}/100.\n\nThe biggest opportunity is your ${weakLabel} (${weakScore}/100). I'd love to walk you through the full findings in a free 30-minute strategy call.${calLine}\n\nBest,\nForge`,
+    2: `${greeting},\n\nQuick thought — your ${weakLabel} scored ${weakScore}/100. That's the #1 area where ${businessName} is likely losing potential customers.\n\nI have a few strategy call slots this week if you want to go through the details.${calLine}\n\nBest,\nForge`,
+    3: `${greeting},\n\nJust a heads up — your ${businessName} scan results (including annotated screenshots and your blueprint) will expire in a few days.\n\nIf you'd like to discuss the findings before they're gone, grab a free strategy call.${calLine}\n\nEither way, hope the scan was useful.\n\nBest,\nForge`,
   };
 
   return { subject: subjects[position], body: bodies[position] };

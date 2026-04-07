@@ -39,6 +39,12 @@ const StartScanSchema = z.object({
   utmSource: z.string().optional(),
   utmMedium: z.string().optional(),
   utmCampaign: z.string().optional(),
+  providedSocials: z.object({
+    instagram: z.string().optional(),
+    facebook: z.string().optional(),
+    tiktok: z.string().optional(),
+    linkedin: z.string().optional(),
+  }).optional(),
 });
 
 /**
@@ -80,14 +86,23 @@ export async function POST(
       );
     }
 
-    const { url, utmSource, utmMedium, utmCampaign } = parsed.data;
+    const { url, utmSource, utmMedium, utmCampaign, providedSocials } = parsed.data;
 
     // (b) Get client IP
     const clientIp = getClientIp(request);
 
-    // (c) Check rate limit: 3 scans per IP per 24h
-    const rateLimit = await checkRateLimit(clientIp, 'ip_scan', 3, 86400000);
+    // (c) Check rate limits: 5/minute burst guard, then 3/24h daily limit
+    const burstLimit = await checkRateLimit(clientIp, 'ip_api', 5, 60000);
+    if (!burstLimit.allowed) {
+      return apiError(
+        'RATE_LIMITED',
+        'Too many requests. Please slow down.',
+        429,
+        { remaining: 0, resetAt: burstLimit.resetAt }
+      );
+    }
 
+    const rateLimit = await checkRateLimit(clientIp, 'ip_scan', 20, 86400000);
     if (!rateLimit.allowed) {
       return apiError(
         'RATE_LIMITED',
@@ -131,6 +146,7 @@ export async function POST(
         ...(utmSource && { utm_source: utmSource }),
         ...(utmMedium && { utm_medium: utmMedium }),
         ...(utmCampaign && { utm_campaign: utmCampaign }),
+        ...(providedSocials && { provided_socials: providedSocials }),
       })
       .select('id')
       .single();

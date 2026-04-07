@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r09 Split Screen</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r09: Split Screen
+   Two permanent panels. Left = fixed overview. Right = scrollable detail.
+   Left panel highlights active stage as user scrolls.
+   Documentation-site style (Stripe Docs) applied to audit. */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+  --r: 12px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── SPLIT SHELL ── */
+.split {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  height: 100vh;
+}
+
+/* ── LEFT PANEL (fixed) ── */
+.left-panel {
+  background: var(--surface);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  padding: 40px 32px;
+  overflow-y: auto;
+}
+
+.left-logo {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+.left-logo b { color: var(--accent); font-weight: 400; }
+
+.left-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.625rem;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+
+/* Overall score in left panel */
+.left-score {
+  text-align: center;
+  padding: 32px 0;
+  border-top: 1px solid var(--glass-border);
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 32px;
+}
+
+.left-score-num {
+  font-family: 'Instrument Serif', serif;
+  font-size: 5rem;
+  line-height: 0.85;
+  color: var(--critical);
+}
+
+.left-score-suf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+.left-score-label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.left-revenue {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6875rem;
+  color: var(--critical);
+  margin-top: 8px;
+}
+
+/* Stage list */
+.stage-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stage-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+.stage-link:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--glass-border);
+}
+.stage-link.active {
+  background: var(--container);
+  border-color: rgba(212, 165, 55, 0.15);
+}
+
+.sl-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sl-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.sl-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.sl-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+/* CTA pinned at bottom */
+.left-cta {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.left-cta-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.left-cta-btn:hover {
+  box-shadow: 0 6px 24px rgba(212, 165, 55, 0.25);
+  transform: translateY(-1px);
+}
+
+.left-cta-sub {
+  font-size: 0.6875rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* ── RIGHT PANEL (scrollable) ── */
+.right-panel {
+  overflow-y: auto;
+  padding: 48px 56px;
+  position: relative;
+  scroll-behavior: smooth;
+}
+
+.right-panel::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 380px;
+  opacity: 0.03;
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.3) 1px, transparent 0);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Stage sections in right panel */
+.right-section {
+  margin-bottom: 80px;
+  position: relative;
+  z-index: 1;
+}
+
+.right-section:last-of-type {
+  margin-bottom: 40px;
+}
+
+.rs-header {
+  margin-bottom: 28px;
+}
+
+.rs-kicker {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.rs-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.75rem, 3vw + 0.5rem, 2.5rem);
+  letter-spacing: -0.02em;
+}
+
+.rs-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.chip {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 12px;
+  border-radius: 999px;
+}
+.chip-crit { background: rgba(239, 68, 68, 0.08); color: var(--critical); }
+.chip-warn { background: rgba(234, 179, 8, 0.08); color: var(--warning); }
+
+/* Screenshot + findings layout */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+/* Device */
+.device {
+  background: var(--container);
+  border-radius: var(--r);
+  padding: 10px 10px 0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+}
+
+.device-bar {
+  height: 26px;
+  background: var(--card);
+  border-radius: 8px 8px 0 0;
+  margin: -10px -10px 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 5px;
+}
+
+.device-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+.device-screen {
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg, #1a1030, #2d1050, #1a1030);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+
+/* Annotation dots */
+.anno-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; position: absolute;
+}
+.anno-c { background: var(--critical); color: white; }
+.anno-w { background: var(--warning); color: var(--base); }
+.anno-p { background: var(--positive); color: white; }
+
+/* Findings */
+.findings {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.finding {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  transition: all 0.2s;
+}
+.finding:hover {
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateX(4px);
+  border-left-color: var(--glass-border);
+}
+
+.f-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; flex-shrink: 0;
+}
+.f-c { background: var(--critical); color: white; }
+.f-w { background: var(--warning); color: var(--base); }
+.f-p { background: var(--positive); color: white; }
+
+.f-title { font-size: 0.9375rem; font-weight: 700; }
+.f-desc { font-size: 0.8125rem; color: var(--secondary); margin-top: 2px; }
+
+/* Summary card */
+.summary-card {
+  background: var(--container);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 18px 22px;
+  margin-top: 16px;
+  grid-column: 1 / -1;
+}
+.summary-card p { font-size: 0.9375rem; }
+
+/* Empty state */
+.empty-block {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 48px 32px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.empty-block::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+.empty-block h3 { font-size: 1.125rem; font-weight: 600; position: relative; }
+.empty-block p { font-size: 0.875rem; color: var(--secondary); max-width: 400px; margin: 12px auto 0; position: relative; }
+
+/* Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 20px;
+  max-width: 480px;
+}
+.stat-box {
+  background: var(--surface);
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+.stat-box:hover { border-color: var(--glass-border); }
+.stat-num { font-family: 'JetBrains Mono', monospace; font-size: 1.75rem; font-weight: 500; }
+.stat-label { font-size: 0.625rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-top: 4px; }
+
+/* CTA section in right */
+.right-cta {
+  text-align: center;
+  padding: 64px 0 32px;
+  border-top: 1px solid var(--glass-border);
+  position: relative;
+  z-index: 1;
+}
+
+.right-cta h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  letter-spacing: -0.02em;
+}
+
+.right-cta p {
+  font-size: 0.9375rem;
+  color: var(--secondary);
+  margin-top: 8px;
+}
+
+.right-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 16px 44px;
+  border-radius: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 24px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.right-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(212, 165, 55, 0.3);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1024px) {
+  .split { grid-template-columns: 300px 1fr; }
+  .right-panel { padding: 36px 32px; }
+  .content-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  html, body { overflow: auto; height: auto; }
+  .split { grid-template-columns: 1fr; height: auto; }
+  .left-panel {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 16px 20px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .left-score { display: none; }
+  .left-cta { display: none; }
+  .left-url { margin-bottom: 0; }
+  .stage-list { flex-direction: row; overflow-x: auto; gap: 8px; }
+  .stage-link { min-width: fit-content; padding: 8px 12px; }
+  .right-panel { padding: 28px 20px; }
+  .content-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="split">
+
+  <!-- LEFT PANEL -->
+  <aside class="left-panel">
+    <div class="left-logo">FORGE<b>.</b></div>
+    <div class="left-url">blotato.com</div>
+
+    <div class="left-score">
+      <span class="left-score-num fd">19</span><span class="left-score-suf">/100</span>
+      <div class="left-score-label">Overall Score</div>
+      <div class="left-revenue">60-80% revenue leak</div>
+    </div>
+
+    <ul class="stage-list">
+      <li><a href="#s-traffic" class="stage-link" id="nav-traffic">
+        <div class="sl-left"><div class="sl-indicator" style="background:var(--critical)"></div><span class="sl-name">Traffic</span></div>
+        <span class="sl-score" style="color:var(--critical)">0</span>
+      </a></li>
+      <li><a href="#s-landing" class="stage-link active" id="nav-landing">
+        <div class="sl-left"><div class="sl-indicator" style="background:var(--warning)"></div><span class="sl-name">Landing</span></div>
+        <span class="sl-score" style="color:var(--warning)">35</span>
+      </a></li>
+      <li><a href="#s-capture" class="stage-link" id="nav-capture">
+        <div class="sl-left"><div class="sl-indicator" style="background:var(--warning)"></div><span class="sl-name">Capture</span></div>
+        <span class="sl-score" style="color:var(--warning)">45</span>
+      </a></li>
+      <li><a href="#s-offer" class="stage-link" id="nav-offer">
+        <div class="sl-left"><div class="sl-indicator" style="background:var(--critical)"></div><span class="sl-name">Offer</span></div>
+        <span class="sl-score" style="color:var(--critical)">15</span>
+      </a></li>
+      <li><a href="#s-followup" class="stage-link" id="nav-followup">
+        <div class="sl-left"><div class="sl-indicator" style="background:var(--critical)"></div><span class="sl-name">Follow-up</span></div>
+        <span class="sl-score" style="color:var(--critical)">0</span>
+      </a></li>
+    </ul>
+
+    <div class="left-cta">
+      <button class="left-cta-btn">Book Strategy Call &rarr;</button>
+      <p class="left-cta-sub">Free consultation</p>
+    </div>
+  </aside>
+
+  <!-- RIGHT PANEL -->
+  <main class="right-panel">
+
+    <!-- TRAFFIC -->
+    <section class="right-section" id="s-traffic">
+      <div class="rs-header">
+        <div class="rs-kicker"><span class="fm" style="color:var(--secondary);margin-right:4px">01</span> Stage 1 of 5</div>
+        <h2 class="rs-title fd">Traffic Sources</h2>
+        <div class="rs-meta">
+          <span class="chip chip-crit fm">0 / 100</span>
+          <span class="chip chip-crit">Critical</span>
+        </div>
+      </div>
+      <div class="empty-block">
+        <h3>No Traffic Sources Detected</h3>
+        <p>No social media profiles found. 100% of your traffic relies on direct search or word-of-mouth.</p>
+      </div>
+    </section>
+
+    <!-- LANDING -->
+    <section class="right-section" id="s-landing">
+      <div class="rs-header">
+        <div class="rs-kicker"><span class="fm" style="color:var(--secondary);margin-right:4px">02</span> Stage 2 of 5</div>
+        <h2 class="rs-title fd">Landing Experience</h2>
+        <div class="rs-meta">
+          <span class="chip chip-warn fm">35 / 100</span>
+          <span class="chip chip-warn">Weak</span>
+        </div>
+      </div>
+      <div class="content-grid">
+        <div class="device">
+          <div class="device-bar">
+            <div class="device-dot" style="background:#EF4444"></div>
+            <div class="device-dot" style="background:#EAB308"></div>
+            <div class="device-dot" style="background:#22C55E"></div>
+            <span class="fm" style="margin-left:8px;font-size:9px;color:var(--muted)">blotato.com</span>
+          </div>
+          <div class="device-screen">
+            <div style="font-size:9px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.1);padding:2px 8px;border-radius:999px;margin-bottom:10px">10,387+ Business Owners</div>
+            <div style="font-size:18px;color:white;font-weight:700;text-align:center;line-height:1.2">Make <span style="color:#FF6B9D">1 week</span> of content<br>in <span style="color:#FF6B9D">1 minute</span></div>
+            <div style="background:#FF6B9D;color:white;padding:4px 14px;border-radius:6px;margin-top:10px;font-size:10px;font-weight:600">Start FREE Week</div>
+            <div class="anno-dot anno-c" style="top:18%;left:52%">1</div>
+            <div class="anno-dot anno-w" style="top:44%;left:46%">2</div>
+            <div class="anno-dot anno-p" style="top:70%;left:44%">3</div>
+          </div>
+        </div>
+        <div class="findings">
+          <div class="finding"><div class="f-dot f-c">1</div><div><div class="f-title">Generic Headline</div><p class="f-desc">Visitors can't tell what Blotato does in 5 seconds.</p></div></div>
+          <div class="finding"><div class="f-dot f-w">2</div><div><div class="f-title">Dual CTAs</div><p class="f-desc">"Login" and "Start FREE Week" compete.</p></div></div>
+          <div class="finding"><div class="f-dot f-w">3</div><div><div class="f-title">No Trust Signals</div><p class="f-desc">No logos or testimonials.</p></div></div>
+          <div class="finding"><div class="f-dot f-p">4</div><div><div class="f-title">Strong Trial CTA</div><p class="f-desc">"Start FREE Week" creates urgency.</p></div></div>
+        </div>
+        <div class="summary-card">
+          <p>Homepage fails to communicate what Blotato does in 5 seconds. 4 findings.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CAPTURE -->
+    <section class="right-section" id="s-capture">
+      <div class="rs-header">
+        <div class="rs-kicker"><span class="fm" style="color:var(--secondary);margin-right:4px">03</span> Stage 3 of 5</div>
+        <h2 class="rs-title fd">Lead Capture</h2>
+        <div class="rs-meta">
+          <span class="chip chip-warn fm">45 / 100</span>
+          <span class="chip chip-warn">Weak</span>
+        </div>
+      </div>
+      <div class="findings" style="max-width:520px">
+        <div class="finding"><div class="f-dot f-c">1</div><div><div class="f-title">No Email Above Fold</div><p class="f-desc">Email field would capture leads faster.</p></div></div>
+        <div class="finding"><div class="f-dot f-w">2</div><div><div class="f-title">No Lead Magnet</div><p class="f-desc">No resource to exchange for contact info.</p></div></div>
+        <div class="finding"><div class="f-dot f-p">3</div><div><div class="f-title">Free Trial Entry</div><p class="f-desc">Free week reduces friction.</p></div></div>
+      </div>
+    </section>
+
+    <!-- OFFER -->
+    <section class="right-section" id="s-offer">
+      <div class="rs-header">
+        <div class="rs-kicker"><span class="fm" style="color:var(--secondary);margin-right:4px">04</span> Stage 4 of 5</div>
+        <h2 class="rs-title fd">Offer Clarity</h2>
+        <div class="rs-meta">
+          <span class="chip chip-crit fm">15 / 100</span>
+          <span class="chip chip-crit">Critical</span>
+        </div>
+      </div>
+      <div class="empty-block">
+        <h3>Offer Is Unclear</h3>
+        <p>No pricing page, no feature comparison, no FAQ.</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-num" style="color:var(--critical)">0</div><div class="stat-label">Pricing</div></div>
+        <div class="stat-box"><div class="stat-num" style="color:var(--critical)">0</div><div class="stat-label">Features</div></div>
+        <div class="stat-box"><div class="stat-num" style="color:var(--warning)">1</div><div class="stat-label">Trial</div></div>
+      </div>
+    </section>
+
+    <!-- FOLLOW-UP -->
+    <section class="right-section" id="s-followup">
+      <div class="rs-header">
+        <div class="rs-kicker"><span class="fm" style="color:var(--secondary);margin-right:4px">05</span> Stage 5 of 5</div>
+        <h2 class="rs-title fd">Follow-Up Systems</h2>
+        <div class="rs-meta">
+          <span class="chip chip-crit fm">0 / 100</span>
+          <span class="chip chip-crit">Critical</span>
+        </div>
+      </div>
+      <div class="empty-block">
+        <h3>No Follow-Up Detected</h3>
+        <p>No Facebook Pixel, no Google tag, no email sequences. Every leaving visitor is lost permanently.</p>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <div class="right-cta">
+      <h2 class="fd">Your Prioritized Fix Plan</h2>
+      <p>We've found the problems. Let us build your step-by-step fix plan.</p>
+      <button class="right-cta-btn">Get Your Fix Plan &rarr;</button>
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+// Highlight active stage on scroll
+const rightPanel = document.querySelector('.right-panel');
+const sections = document.querySelectorAll('.right-section');
+const navLinks = document.querySelectorAll('.stage-link');
+const ids = ['traffic', 'landing', 'capture', 'offer', 'followup'];
+
+rightPanel.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach((s, i) => {
+    const rect = s.getBoundingClientRect();
+    if (rect.top < 200) current = ids[i];
+  });
+  navLinks.forEach((l, i) => {
+    l.classList.toggle('active', ids[i] === current);
+  });
+});
+</script>
+
+</body>
+</html>

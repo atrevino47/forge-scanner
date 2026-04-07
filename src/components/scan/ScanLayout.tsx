@@ -18,13 +18,18 @@ import { useAuth } from '@/components/providers/SupabaseProvider';
 import { ProgressIndicator } from './ProgressIndicator';
 import { CapturePrompt } from './CapturePrompt';
 import { SocialConfirmation } from './SocialConfirmation';
-import { StageSection } from './StageSection';
-import { FunnelHealthSummary } from './FunnelHealthSummary';
 import { BlueprintCTA } from './BlueprintCTA';
 import { BlueprintView } from './BlueprintView';
-import { SaveResultsPrompt } from './SaveResultsPrompt';
 import { ChatContainer } from '@/components/chat/ChatContainer';
 import { ChatToggle } from '@/components/chat/ChatToggle';
+import { ResultsTopBar } from './ResultsTopBar';
+import { ResultsBottomNav, type ResultsTab } from './ResultsBottomNav';
+import { AuditOverview } from './AuditOverview';
+import { StageFindingsView } from './StageFindingsView';
+import { HealthPotential } from './HealthPotential';
+import { ImplementationRoadmap } from './ImplementationRoadmap';
+import { PrescriptionSection } from './PrescriptionSection';
+import { GeoAeoSection } from './GeoAeoSection';
 
 // ── Stage ordering ──────────────────────────────────────
 const STAGE_ORDER: FunnelStage[] = [
@@ -322,11 +327,16 @@ function scanReducer(state: ScanState, action: ScanAction): ScanState {
 export function ScanLayout({ scanId }: { scanId: string }) {
   const [state, dispatch] = useReducer(scanReducer, initialState);
   const { hasBooked, openCalcom } = useCalcom();
-  const { user } = useAuth();
+  // Auth context — available for future use (e.g., SaveResultsPrompt)
+  useAuth();
 
   // Chat state — controlled here so the 30s timer can auto-open
   const [chatOpen, setChatOpen] = useState(false);
   const chatTimerFiredRef = useRef(false);
+
+  // Tab navigation state
+  const [activeTab, setActiveTab] = useState<ResultsTab>('overview');
+  const [activeStage, setActiveStage] = useState<FunnelStage>('landing');
 
   // Refs for GSAP blur/unblur animation (FIX-0020)
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -343,17 +353,38 @@ export function ScanLayout({ scanId }: { scanId: string }) {
   }, [scanId]);
 
   // ── SSE connection for real-time updates ──
+  // Ref tracks the EventSource so we can close it from the message handler
+  // when the scan reaches a terminal state (completed/failed). Without this,
+  // EventSource auto-reconnects after the server closes the stream, replays
+  // all events from scratch, and the ProgressIndicator re-mounts — yanking
+  // the user back to the top of the page in an infinite loop.
+  const esRef = useRef<EventSource | null>(null);
+
   useEffect(() => {
+    // Don't open SSE if the scan is already in a terminal state
+    if (state.status === 'completed' || state.status === 'failed') return;
+
     const es = new EventSource(`/api/scan/status/${scanId}`);
+    esRef.current = es;
+
     es.onmessage = (e) => {
       try {
         const event = JSON.parse(e.data as string) as ScanSSEEvent;
         dispatch({ type: 'SSE_EVENT', event });
+
+        // Terminal events — close SSE to prevent auto-reconnect loop
+        if (event.type === 'scan_completed' || event.type === 'scan_failed') {
+          es.close();
+          esRef.current = null;
+        }
       } catch {}
     };
     es.onerror = () => {};
-    return () => es.close();
-  }, [scanId]);
+    return () => {
+      es.close();
+      esRef.current = null;
+    };
+  }, [scanId, state.status]);
 
   // ── 30s auto-open chat after scan completes ──
   useEffect(() => {
@@ -486,21 +517,58 @@ export function ScanLayout({ scanId }: { scanId: string }) {
   );
 
   return (
-    <div className="min-h-screen px-6 pt-20 pb-16">
-      <div className="mx-auto max-w-[1120px]">
+    <div className="min-h-screen bg-forge-base">
+      {/* Fixed top bar */}
+      <ResultsTopBar
+        onBookCall={() => handleOpenCalcom('banner_cta')}
+        scannedUrl={state.websiteUrl}
+        showUrl={isComplete}
+      />
+
+      <main className="pt-20 md:pt-24 pb-28 md:pb-12 px-4 sm:px-6 lg:px-8 w-full max-w-lg md:max-w-[1120px] mx-auto">
         {/* Progress indicator — visible while scanning */}
         {isScanning && <ProgressIndicator messages={state.progressMessages} />}
 
         {/* Error state */}
         {isFailed && (
-          <div className="glass-card rounded-xl p-8 text-center">
+          <div className="bg-forge-surface rounded-xl p-8 text-center">
             <h2 className="font-display mb-2 text-2xl tracking-display text-forge-text">
-              [COPY: scan failed headline]
+              Scan Failed
             </h2>
             <p className="text-forge-text-muted">
-              {state.error || '[COPY: generic scan error message]'}
+              {state.error || 'Something went wrong. Please try again.'}
             </p>
           </div>
+        )}
+
+        {/* Desktop inline tab navigation — hidden on mobile (bottom nav used instead) */}
+        {isComplete && (
+          <nav className="hidden md:flex items-center gap-1 mb-8 bg-forge-surface/60 backdrop-blur-sm p-1 rounded-lg w-fit">
+            {(['overview', 'stages', 'roadmap'] as const).map((tab) => {
+              const labels = { overview: 'Overview', stages: 'Stages', roadmap: 'Roadmap' };
+              const icons = { overview: 'dashboard', stages: 'architecture', roadmap: 'analytics' };
+              const isActive = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-md font-mono text-[11px] font-bold uppercase tracking-widest transition-all ${
+                    isActive
+                      ? 'bg-forge-base text-forge-accent shadow-sm'
+                      : 'text-forge-text-secondary hover:text-forge-text'
+                  }`}
+                >
+                  <span
+                    className="material-symbols-outlined text-base"
+                    style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                  >
+                    {icons[tab]}
+                  </span>
+                  {labels[tab]}
+                </button>
+              );
+            })}
+          </nav>
         )}
 
         {/* Results content (GSAP-driven blur when email gate is active) */}
@@ -509,56 +577,149 @@ export function ScanLayout({ scanId }: { scanId: string }) {
           className={needsEmailGate ? 'pointer-events-none select-none' : ''}
           style={needsEmailGate ? { filter: 'blur(8px)', scale: 0.98 } : {}}
         >
-          {STAGE_ORDER.map((stage) => {
-            const screenshots = state.screenshots.filter((s) => s.stage === stage);
-            const stageState = state.stages[stage];
-            if (screenshots.length === 0 && !stageState) return null;
-            return (
-              <StageSection
-                key={stage}
-                stage={stage}
-                stageState={stageState}
-                screenshots={screenshots}
-              />
-            );
-          })}
+          {/* ── TAB CONTENT ── */}
+          {activeTab === 'overview' && (
+            <div className="space-y-12">
+              {/* Desktop: two-column layout — audit left, sidebar right */}
+              <div className="md:grid md:grid-cols-[1fr_380px] md:gap-10 md:items-start">
+                {/* Left column — main audit content */}
+                <div className="space-y-12">
+                  <AuditOverview
+                    summary={state.completedSummary}
+                    stages={state.stages}
+                    screenshots={state.screenshots}
+                    onInitiateFix={() => handleOpenCalcom('results_cta')}
+                  />
+                </div>
 
-          {/* Health summary — after all stages complete */}
-          {state.completedSummary && (
-            <FunnelHealthSummary summary={state.completedSummary} />
+                {/* Right column — sidebar: stage breakdown + health potential (desktop only, stacked below on mobile) */}
+                <aside className="space-y-8 md:sticky md:top-28">
+                  {/* Stage Summary Grid */}
+                  {isComplete && STAGE_ORDER.some((s) => state.stages[s]) && (
+                    <section className="bg-forge-surface p-5 rounded-xl">
+                      <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-forge-text-secondary mb-4">
+                        Stage Breakdown
+                      </h3>
+                      <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 -mx-2 px-2 md:mx-0 md:px-0 scrollbar-hide">
+                        {STAGE_ORDER.map((stage) => {
+                          const stageState = state.stages[stage];
+                          if (!stageState) return null;
+                          const score = stageState.summary?.score ?? 0;
+                          const exists = stageState.summary?.exists ?? false;
+                          const scoreColor = !exists
+                            ? 'text-forge-text-muted'
+                            : score >= 70
+                              ? 'text-forge-positive'
+                              : score >= 40
+                                ? 'text-forge-warning'
+                                : 'text-forge-critical';
+                          return (
+                            <button
+                              key={stage}
+                              onClick={() => {
+                                setActiveTab('stages');
+                                setActiveStage(stage);
+                              }}
+                              className="shrink-0 md:shrink md:w-full flex flex-col md:flex-row md:justify-between items-center md:items-center gap-1 md:gap-0 px-4 py-3 bg-forge-base border border-forge-card rounded-lg hover:bg-forge-card transition-all active:scale-[0.98]"
+                            >
+                              <span className="font-mono text-[9px] uppercase tracking-widest text-forge-text-secondary font-bold whitespace-nowrap">
+                                {STAGE_LABELS[stage]}
+                              </span>
+                              {stageState.summary ? (
+                                <span className={`font-display text-xl md:text-lg font-black tabular-nums ${scoreColor}`}>
+                                  {exists ? score : '—'}
+                                </span>
+                              ) : (
+                                <span className="font-mono text-[9px] text-forge-text-muted uppercase tracking-wider">
+                                  Scanning
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  )}
+
+                  {/* Blueprint CTA — sidebar placement on desktop */}
+                  {isComplete && state.emailCaptured && !state.blueprintData && (
+                    <BlueprintCTA
+                      scanId={scanId}
+                      blueprintAvailable={state.blueprintAvailable}
+                      onGenerated={(blueprint) =>
+                        dispatch({ type: 'BLUEPRINT_GENERATED', blueprint })
+                      }
+                    />
+                  )}
+                </aside>
+              </div>
+
+              {state.completedSummary && (
+                <HealthPotential
+                  summary={state.completedSummary}
+                  onInitiateOptimization={() => handleOpenCalcom('results_cta')}
+                />
+              )}
+
+              {/* GEO/AEO — AI discoverability analysis (findings extracted from traffic stage) */}
+              {isComplete && (
+                <GeoAeoSection
+                  stages={state.stages}
+                  onBookCall={() => handleOpenCalcom('geo_aeo_cta')}
+                />
+              )}
+
+              {/* Prescription offers — Hormozi-style prescriptive fixes based on findings */}
+              {isComplete && (
+                <PrescriptionSection
+                  stages={state.stages}
+                  onBookCall={() => handleOpenCalcom('prescription_cta')}
+                />
+              )}
+            </div>
           )}
 
-          {/* Blueprint CTA — after scan + email captured */}
-          {isComplete && state.emailCaptured && !state.blueprintData && (
-            <BlueprintCTA
-              scanId={scanId}
-              blueprintAvailable={state.blueprintAvailable}
-              onGenerated={(blueprint) =>
-                dispatch({ type: 'BLUEPRINT_GENERATED', blueprint })
-              }
+          {activeTab === 'stages' && (
+            <div>
+              {/* Stage selector pills */}
+              <div className="flex gap-2 overflow-x-auto pb-4 mb-6 -mx-2 px-2 scrollbar-hide">
+                {STAGE_ORDER.map((stage) => {
+                  const hasData = state.stages[stage] || state.screenshots.some((s) => s.stage === stage);
+                  if (!hasData) return null;
+                  return (
+                    <button
+                      key={stage}
+                      onClick={() => setActiveStage(stage)}
+                      className={`shrink-0 px-4 py-2 rounded-sm font-mono text-[10px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] ${
+                        activeStage === stage
+                          ? 'bg-forge-accent text-white shadow-md'
+                          : 'bg-forge-surface text-forge-text-secondary hover:bg-forge-card'
+                      }`}
+                    >
+                      {STAGE_LABELS[stage]}
+                    </button>
+                  );
+                })}
+              </div>
+              <StageFindingsView
+                stage={activeStage}
+                stageState={state.stages[activeStage]}
+                screenshots={state.screenshots.filter((s) => s.stage === activeStage)}
+                onInitiateFix={() => handleOpenCalcom('results_cta')}
+              />
+            </div>
+          )}
+
+          {activeTab === 'roadmap' && (
+            <ImplementationRoadmap
+              stages={state.stages}
+              onForgeSolution={() => handleOpenCalcom('results_cta')}
             />
           )}
 
-          {/* Blueprint view — after blueprint generated */}
-          {state.blueprintData && (
+          {/* Blueprint view — after blueprint generated (overview tab, full width) */}
+          {activeTab === 'overview' && state.blueprintData && (
             <BlueprintView blueprint={state.blueprintData} />
-          )}
-
-          {/* Save results OAuth prompt — after blueprint, non-blocking */}
-          {state.blueprintData && !user && (
-            <SaveResultsPrompt />
-          )}
-
-          {/* Secondary CTA to book a call (after blueprint) */}
-          {state.blueprintData && (
-            <div className="py-8 text-center">
-              <button
-                onClick={() => handleOpenCalcom('results_cta')}
-                className="inline-flex items-center gap-2 rounded-lg bg-forge-accent px-8 py-3 font-body font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover"
-              >
-                [COPY: book strategy call after blueprint]
-              </button>
-            </div>
           )}
         </div>
 
@@ -566,21 +727,21 @@ export function ScanLayout({ scanId }: { scanId: string }) {
         {needsEmailGate && (
           <div
             ref={gateOverlayRef}
-            className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-forge-base via-forge-base/95 to-transparent px-6 pb-8 pt-20"
+            className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-forge-base via-forge-base/95 to-transparent px-6 pb-28 pt-20"
             style={{ opacity: 0 }}
           >
             <div className="mx-auto max-w-md text-center">
               <h3 className="font-display mb-2 text-xl tracking-display">
-                [COPY: email gate headline]
+                Unlock Your Full Results
               </h3>
               <p className="mb-4 text-sm text-forge-text-muted">
-                [COPY: email gate description]
+                Enter your email to see the complete audit findings.
               </p>
               <button
                 onClick={() => dispatch({ type: 'SHOW_CAPTURE' })}
-                className="rounded-lg bg-forge-accent px-6 py-3 font-body font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover"
+                className="rounded-lg bg-forge-accent px-6 py-3 font-body font-semibold text-white transition-colors duration-200 hover:bg-forge-accent-hover"
               >
-                [COPY: unlock results button]
+                Unlock Results
               </button>
             </div>
           </div>
@@ -609,7 +770,12 @@ export function ScanLayout({ scanId }: { scanId: string }) {
             onDismiss={() => dispatch({ type: 'DISMISS_SOCIAL' })}
           />
         )}
-      </div>
+      </main>
+
+      {/* Bottom navigation — only show when scan is complete */}
+      {isComplete && (
+        <ResultsBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      )}
 
       {/* Chat toggle + container — only after email captured + leadId available */}
       {state.emailCaptured && state.leadId && (

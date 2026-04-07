@@ -50,10 +50,10 @@ export function SaveResultsPrompt() {
       </button>
 
       <p className="font-display mb-3 text-lg tracking-display text-forge-text">
-        [COPY: Save your results]
+        Save your results
       </p>
       <p className="mb-4 text-sm text-forge-text-muted">
-        [COPY: Sign in to revisit your scan anytime]
+        Sign in to revisit your audit anytime — your blueprint won&apos;t disappear.
       </p>
 
       <button
@@ -78,14 +78,14 @@ export function SaveResultsPrompt() {
             fill="#EA4335"
           />
         </svg>
-        [COPY: Continue with Google]
+        Continue with Google
       </button>
 
       <button
         onClick={handleDismiss}
         className="mt-3 block w-full text-xs text-forge-text-muted hover:text-forge-text"
       >
-        [COPY: Skip]
+        No thanks, I&apos;ll lose my results
       </button>
     </div>
   );

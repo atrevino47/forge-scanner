@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Forge Scanner — r14 Conversational / Story Mode</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* r14: Conversational / Story Mode
+   AI narrates findings as a conversation with the reader.
+   Each section begins with an AI "narrator" message.
+   Screenshots and findings embedded in the narrative flow.
+   Most human, least dashboard-y approach. */
+
+:root {
+  --base: #0B1120;
+  --surface: #0F172A;
+  --container: #1A2340;
+  --card: #1E293B;
+  --accent: #D4A537;
+  --accent-bright: #F2C050;
+  --text: #E8E6E3;
+  --secondary: #94A3B8;
+  --muted: #64748B;
+  --critical: #EF4444;
+  --warning: #EAB308;
+  --positive: #22C55E;
+  --glass-border: rgba(78, 70, 54, 0.1);
+  --r: 12px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--base);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.fd { font-family: 'Instrument Serif', serif; letter-spacing: -0.02em; line-height: 1.08; }
+.fm { font-family: 'JetBrains Mono', monospace; }
+
+/* ── HEADER ── */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11, 17, 32, 0.94);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+}
+
+.logo { font-family: 'Instrument Serif', serif; font-size: 1.125rem; }
+.logo b { color: var(--accent); font-weight: 400; }
+
+.header-r { display: flex; align-items: center; gap: 16px; }
+.header-url { font-family: 'JetBrains Mono', monospace; font-size: 0.6875rem; color: var(--muted); }
+
+/* ── CONVERSATION THREAD ── */
+.thread {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 48px 32px 120px;
+}
+
+/* AI narrator message */
+.narrator {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+.narrator-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: 15px;
+  color: var(--base);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.narrator-content {
+  flex: 1;
+}
+
+.narrator-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.narrator-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.narrator-text strong {
+  color: var(--text);
+}
+
+.narrator-text em {
+  color: var(--secondary);
+  font-style: normal;
+}
+
+/* Large narrative text */
+.narrator-text-large {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.375rem;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+
+/* Inline data callouts within narration */
+.inline-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.inline-stat-crit {
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--critical);
+}
+
+.inline-stat-warn {
+  background: rgba(234, 179, 8, 0.08);
+  color: var(--warning);
+}
+
+/* Embedded finding block within conversation */
+.finding-embed {
+  background: var(--surface);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--r);
+  padding: 20px;
+  margin: 16px 0 16px 50px;
+}
+
+.fe-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.fe-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+}
+.fe-c { background: var(--critical); color: white; }
+.fe-w { background: var(--warning); color: var(--base); }
+.fe-p { background: var(--positive); color: white; }
+
+.fe-title { font-size: 0.9375rem; font-weight: 700; }
+
+.fe-desc {
+  font-size: 0.8125rem;
+  color: var(--secondary);
+  line-height: 1.5;
+}
+
+/* Embedded screenshot */
+.screenshot-embed {
+  margin: 16px 0 16px 50px;
+  background: var(--container);
+  border-radius: var(--r);
+  padding: 10px 10px 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  max-width: 480px;
+}
+
+.se-bar {
+  height: 24px;
+  background: var(--card);
+  border-radius: 6px 6px 0 0;
+  margin: -10px -10px 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 5px;
+}
+
+.se-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+.se-screen {
+  border-radius: 4px 4px 0 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  background: linear-gradient(135deg, #1a1030, #2d1050, #1a1030);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+}
+
+.se-anno {
+  width: 20px; height: 20px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700; position: absolute;
+}
+
+/* Score reveal in conversation */
+.score-reveal {
+  text-align: center;
+  padding: 40px 0;
+  margin: 16px 0 16px 50px;
+}
+
+.score-reveal-num {
+  font-family: 'Instrument Serif', serif;
+  font-size: 6rem;
+  line-height: 0.85;
+  color: var(--critical);
+}
+
+.score-reveal-suf {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+
+.score-reveal-label {
+  font-size: 0.875rem;
+  color: var(--secondary);
+  margin-top: 8px;
+}
+
+/* Revenue embed */
+.revenue-embed {
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  margin: 16px 0 16px 50px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.revenue-embed-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.revenue-embed strong { font-size: 0.875rem; color: var(--critical); }
+.revenue-embed span { font-size: 0.8125rem; color: var(--secondary); }
+
+/* Section breaks */
+.thread-break {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 48px 0 48px 50px;
+}
+
+/* User response (simulated) */
+.user-msg {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 32px;
+}
+
+.user-bubble {
+  background: var(--container);
+  border-radius: 12px 12px 2px 12px;
+  padding: 12px 18px;
+  font-size: 0.9375rem;
+  max-width: 360px;
+}
+
+/* CTA in conversation */
+.cta-narrator {
+  display: flex;
+  gap: 14px;
+  margin-top: 48px;
+}
+
+.cta-block {
+  background: rgba(212, 165, 55, 0.04);
+  border: 1px solid rgba(212, 165, 55, 0.12);
+  border-radius: var(--r);
+  padding: 24px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.cta-block h3 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.cta-block p {
+  font-size: 0.8125rem;
+  color: var(--secondary);
+  margin-top: 6px;
+}
+
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  color: var(--base);
+  border: none;
+  padding: 14px 36px;
+  border-radius: 10px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(212, 165, 55, 0.3);
+}
+
+/* Chat input at bottom */
+.chat-input {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--glass-border);
+  padding: 12px 32px;
+  display: flex;
+  justify-content: center;
+  z-index: 100;
+}
+
+.chat-input-inner {
+  max-width: 640px;
+  width: 100%;
+  display: flex;
+  gap: 10px;
+}
+
+.chat-field {
+  flex: 1;
+  background: var(--container);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.chat-field:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(212, 165, 55, 0.15);
+}
+
+.chat-send {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #F2C050, #D4A537);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+}
+.chat-send:hover { transform: scale(1.05); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .thread { padding: 32px 20px 100px; }
+  .finding-embed,
+  .screenshot-embed,
+  .score-reveal,
+  .revenue-embed,
+  .thread-break {
+    margin-left: 0;
+  }
+  .score-reveal-num { font-size: 4rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">FORGE<b>.</b></div>
+  <div class="header-r">
+    <span class="header-url fm">blotato.com</span>
+  </div>
+</header>
+
+<!-- CONVERSATION THREAD -->
+<div class="thread">
+
+  <!-- Opening -->
+  <div class="narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <div class="narrator-name">Forge Consultant</div>
+      <p class="narrator-text narrator-text-large">I just finished analyzing blotato.com's entire conversion funnel. Let me walk you through what I found.</p>
+    </div>
+  </div>
+
+  <!-- Score reveal -->
+  <div class="narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <div class="narrator-name">Forge Consultant</div>
+      <p class="narrator-text">Here's your overall score:</p>
+    </div>
+  </div>
+
+  <div class="score-reveal">
+    <div class="score-reveal-num fd">19<span class="score-reveal-suf">/100</span></div>
+    <p class="score-reveal-label">3 of 5 funnel stages are critical. Industry average is 52.</p>
+  </div>
+
+  <div class="revenue-embed">
+    <div class="revenue-embed-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--critical)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    </div>
+    <div>
+      <strong>60-80% Revenue Leak</strong><br>
+      <span>Three missing or broken stages mean the vast majority of potential customers never convert.</span>
+    </div>
+  </div>
+
+  <!-- User response -->
+  <div class="user-msg">
+    <div class="user-bubble">That bad? What's the biggest problem?</div>
+  </div>
+
+  <!-- Traffic section -->
+  <div class="narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <div class="narrator-name">Forge Consultant</div>
+      <p class="narrator-text">Let me start with your biggest problem. <strong>Your traffic stage scored <span class="inline-stat inline-stat-crit">0/100</span></strong>. That's not a typo.</p>
+    </div>
+  </div>
+
+  <div class="narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <p class="narrator-text">I couldn't find a single social media profile, content channel, or tracked traffic source. Your entire visitor base comes from direct search or word-of-mouth. <em>Without diversified traffic, every other optimization is meaningless.</em></p>
+    </div>
+  </div>
+
+  <div class="thread-break"></div>
+
+  <!-- Landing section -->
+  <div class="narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <div class="narrator-name">Forge Consultant</div>
+      <p class="narrator-text">Next, I looked at your landing page. This one's more nuanced — there's actually some good here, but it's buried under problems. Score: <span class="inline-stat inline-stat-warn">35/100</span>.</p>
+    </div>
+  </div>
+
+  <div class="narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <p class="narrator-text">Here's what I see when I look at blotato.com:</p>
+    </div>
+  </div>
+
+  <!-- Screenshot -->
+  <div class="screenshot-embed">
+    <div class="se-bar">
+      <div class="se-dot" style="background:#EF4444"></div>
+      <div class="se-dot" style="background:#EAB308"></div>
+      <div class="se-dot" style="background:#22C55E"></div>
+      <span class="fm" style="margin-left:6px;font-size:9px;color:var(--muted)">blotato.com</span>
+    </div>
+    <div class="se-screen">
+      <div style="font-size:9px;color:rgba(255,255,255,.5);background:rgba(255,255,255,.1);padding:2px 8px;border-radius:999px;margin-bottom:10px">10,387+ Business Owners</div>
+      <div style="font-size:18px;color:white;font-weight:700;text-align:center;line-height:1.2">Make <span style="color:#FF6B9D">1 week</span> of content<br>in <span style="color:#FF6B9D">1 minute</span></div>
+      <div style="background:#FF6B9D;color:white;padding:4px 14px;border-radius:6px;margin-top:10px;font-size:10px;font-weight:600">Start FREE Week</div>
+      <div class="se-anno fe-c" style="top:18%;left:52%;background:var(--critical);color:white">1</div>
+      <div class="se-anno fe-w" style="top:44%;left:46%;background:var(--warning);color:var(--base)">2</div>
+      <div class="se-anno fe-p" style="top:70%;left:44%;background:var(--positive);color:white">3</div>
+    </div>
+  </div>
+
+  <div class="narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <p class="narrator-text">The first thing that jumped out: <strong>I can't tell what Blotato does</strong>. "Make 1 week of content in 1 minute" is catchy, but it doesn't tell me what kind of content, for what platform, or why I should care. That's your biggest landing page issue.</p>
+    </div>
+  </div>
+
+  <div class="finding-embed">
+    <div class="fe-header"><div class="fe-dot fe-c">1</div><span class="fe-title">Generic Headline</span></div>
+    <p class="fe-desc">Visitors can't tell what Blotato does in 5 seconds. No product category mentioned.</p>
+  </div>
+
+  <div class="finding-embed">
+    <div class="fe-header"><div class="fe-dot fe-w">2</div><span class="fe-title">Dual CTAs</span></div>
+    <p class="fe-desc">"Login" and "Start FREE Week" compete for attention, splitting conversion paths.</p>
+  </div>
+
+  <div class="finding-embed">
+    <div class="fe-header"><div class="fe-dot fe-w">3</div><span class="fe-title">No Trust Signals</span></div>
+    <p class="fe-desc">The "10,387+ Business Owners" claim lacks credibility without logos or testimonials.</p>
+  </div>
+
+  <div class="narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <p class="narrator-text">The good news? <strong>Your "Start FREE Week" CTA is actually solid</strong> — it creates urgency and reduces friction. That's worth keeping.</p>
+    </div>
+  </div>
+
+  <div class="finding-embed">
+    <div class="fe-header"><div class="fe-dot fe-p">4</div><span class="fe-title">Strong Trial CTA</span></div>
+    <p class="fe-desc">"Start FREE Week" creates urgency and lowers friction effectively.</p>
+  </div>
+
+  <div class="thread-break"></div>
+
+  <!-- Capture -->
+  <div class="narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <div class="narrator-name">Forge Consultant</div>
+      <p class="narrator-text">Moving to lead capture — scored <span class="inline-stat inline-stat-warn">45/100</span>. The few visitors who stay have no easy way to give you their information outside of starting a full trial. No email capture, no lead magnet. It's all-or-nothing.</p>
+    </div>
+  </div>
+
+  <div class="thread-break"></div>
+
+  <!-- Offer -->
+  <div class="narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <div class="narrator-name">Forge Consultant</div>
+      <p class="narrator-text">Here's where it gets really painful. Your offer clarity scored <span class="inline-stat inline-stat-crit">15/100</span>. I found zero pricing, zero feature comparisons, and zero FAQs. Even captured leads can't understand what they're buying.</p>
+    </div>
+  </div>
+
+  <div class="thread-break"></div>
+
+  <!-- Follow-up -->
+  <div class="narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <div class="narrator-name">Forge Consultant</div>
+      <p class="narrator-text">And finally — follow-up. Score: <span class="inline-stat inline-stat-crit">0/100</span>. No Facebook Pixel, no Google tag, no email sequences. When someone leaves your site, <em>they're gone forever</em>. You have no way to bring them back.</p>
+    </div>
+  </div>
+
+  <!-- User asks about fixing -->
+  <div class="user-msg">
+    <div class="user-bubble">Okay, this is sobering. What should I fix first?</div>
+  </div>
+
+  <!-- CTA transition -->
+  <div class="cta-narrator">
+    <div class="narrator-avatar">F</div>
+    <div class="narrator-content">
+      <div class="narrator-name">Forge Consultant</div>
+      <p class="narrator-text">Great question. I've already ranked your issues by revenue impact. Want me to generate your prioritized fix plan?</p>
+      <div class="cta-block">
+        <h3 class="fd">Your Prioritized Fix Plan</h3>
+        <p>AI-generated. Ordered by revenue impact. Takes 30 seconds.</p>
+        <button class="cta-btn">Generate My Fix Plan &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CHAT INPUT -->
+<div class="chat-input">
+  <div class="chat-input-inner">
+    <input class="chat-field" placeholder="Ask about your results..." aria-label="Chat with consultant">
+    <button class="chat-send" aria-label="Send">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--base)" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+</body>
+</html>

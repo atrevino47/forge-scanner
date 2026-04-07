@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { z } from 'zod';
 import { createServiceClient } from '@/lib/db/client';
 import type { SendMessageResponse, ApiError } from '@/../contracts/api';
 import type { Channel } from '@/../contracts/types';
 import type { DbConversation, DbMessage } from '@/lib/db/types';
+import { classifyMessage } from '@/lib/ai/objection-classifier';
+import { writeVaultEvent } from '@/lib/vault/event-writer';
 
 // ============================================================
 // POST /api/chat/message
@@ -120,6 +122,56 @@ export async function POST(
       `[chat/message] Stored message in conversationId=${conversationId}, ` +
         `channel=${channel ?? 'web'}, length=${content.length} → messageId=${userMessage.id}`
     );
+
+    // Run classification in parallel — don't block the response
+    const classifyAndUpdate = async () => {
+      try {
+        // Fetch recent messages for context
+        const { data: recentMessages } = await supabase
+          .from('messages')
+          .select('content, role')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: false })
+          .limit(6)
+          .returns<Array<{ content: string; role: string }>>();
+
+        const context = (recentMessages ?? [])
+          .reverse()
+          .map((m) => `${m.role}: ${m.content}`);
+
+        const objectionType = await classifyMessage(content, context);
+
+        // Update message metadata with classification result
+        await supabase
+          .from('messages')
+          .update({ metadata: { objection_type: objectionType } })
+          .eq('id', userMessage.id);
+
+        // Update conversation tracking if objection detected
+        if (objectionType !== 'none' && objectionType !== 'ready_to_book') {
+          await supabase
+            .from('conversations')
+            .update({
+              objection_count: conversation.objection_count + 1,
+              last_objection_type: objectionType,
+            })
+            .eq('id', conversationId);
+        }
+
+        // Write vault event
+        writeVaultEvent({
+          type: 'message_exchanged',
+          scanId: conversation.scan_id,
+          chatChannel: channel ?? 'web',
+          details: { objection_type: objectionType, message_count: context.length },
+        });
+      } catch (err) {
+        console.error('[chat/message] Classification failed (non-blocking):', err);
+      }
+    };
+
+    // Run after response is sent — keeps serverless function alive on Vercel
+    after(classifyAndUpdate());
 
     const response: SendMessageResponse = {
       messageId: userMessage.id,

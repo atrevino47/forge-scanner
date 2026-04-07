@@ -68,7 +68,7 @@ export function CapturePrompt({
       const data = (await res.json()) as { lead: { id: string } };
       onSubmit(data.lead.id, email.trim(), phone.trim() || undefined);
     } catch {
-      setError('[COPY: capture error message]');
+      setError('Something went wrong. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -92,10 +92,10 @@ export function CapturePrompt({
         <div className="mb-4 flex items-start justify-between">
           <div>
             <h3 className="font-display text-lg tracking-display text-forge-text">
-              [COPY: capture prompt headline]
+              Your scan is running — grab your results
             </h3>
             <p className="mt-1 text-sm text-forge-text-muted">
-              [COPY: capture prompt description]
+              Enter your email to unlock the full audit, blueprint, and AI recommendations.
             </p>
           </div>
           <button
@@ -127,7 +127,7 @@ export function CapturePrompt({
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="[COPY: phone placeholder with benefit]"
+              placeholder="+1 (555) 000-0000"
               className="h-11 flex-1 bg-transparent font-body text-sm text-forge-text placeholder:text-forge-text-muted/50 focus:outline-none"
             />
           </div>
@@ -139,11 +139,11 @@ export function CapturePrompt({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-lg bg-forge-accent py-3 font-body text-sm font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50"
+            className="w-full rounded-lg bg-forge-accent py-3 font-body text-sm font-semibold text-white transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50"
           >
             {isSubmitting
               ? 'Saving...'
-              : '[COPY: capture submit button]'}
+              : 'Unlock My Full Results'}
           </button>
         </form>
       </div>

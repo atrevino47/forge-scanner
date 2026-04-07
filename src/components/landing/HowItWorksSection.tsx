@@ -3,82 +3,95 @@
 import { useRef } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Globe, Zap, FileText } from 'lucide-react';
-import { clipReveal, fadeSlideUp } from '@/lib/gsap-presets';
+import { scaleIn } from '@/lib/gsap-presets';
 
 const steps = [
   {
     number: '01',
-    icon: Globe,
-    title: '[COPY: Step 1 title]',
-    description: '[COPY: Step 1 description — entering their URL]',
+    title: 'Enter Your URL',
+    description:
+      'Paste your website URL. Our AI starts scanning your entire digital presence immediately.',
   },
   {
     number: '02',
-    icon: Zap,
-    title: '[COPY: Step 2 title]',
-    description: '[COPY: Step 2 description — AI scanning their funnel]',
+    title: 'AI Analyzes Everything',
+    description:
+      'We capture real screenshots of your site, socials, ads, and GBP. AI annotates every issue with specific callouts.',
   },
   {
     number: '03',
-    icon: FileText,
-    title: '[COPY: Step 3 title]',
-    description: '[COPY: Step 3 description — receiving their blueprint]',
+    title: 'Get Your Blueprint',
+    description:
+      'See your optimized funnel map and a professional mockup of your weakest piece. Then book a free strategy call.',
   },
 ];
 
 export function HowItWorksSection() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  /* ANIMATION SEQUENCE (scroll-triggered at top 80% viewport):
-   * Beat 1 (0.00s): Section headline — clipReveal
-   * Beat 2 (0.20s): Step cards — fadeSlideUp with 150ms stagger
+  /* ANIMATION SEQUENCE (scroll-triggered at top 85% viewport):
+   * Beat 1 (0.00s): Step cards — scaleIn with 120ms stagger
    */
   useGSAP(
     () => {
-      const tl = gsap.timeline({
+      const cards = scaleIn({ stagger: 0.12 });
+      gsap.fromTo('[data-how="card"]', cards.from, {
+        ...cards.vars,
         scrollTrigger: {
           trigger: containerRef.current,
-          start: 'top 80%',
+          start: 'top 85%',
           toggleActions: 'play none none none',
         },
       });
-
-      const headline = clipReveal();
-      tl.fromTo('[data-how="headline"]', headline.from, headline.vars, 0);
-
-      const cards = fadeSlideUp({ stagger: 0.15 });
-      tl.fromTo('[data-how="card"]', cards.from, cards.vars, 0.2);
     },
     { scope: containerRef },
   );
 
   return (
-    <section ref={containerRef} className="relative px-6 py-24 sm:py-32">
+    <section
+      ref={containerRef}
+      className="relative px-4 py-14 sm:px-6 sm:py-24 lg:py-32"
+      style={{ background: '#F5F4F0' }}
+    >
       <div className="mx-auto max-w-[1120px]">
-        <h2
-          data-how="headline"
-          className="font-display mb-16 text-center tracking-display leading-display"
-          style={{ fontSize: 'clamp(2rem, 3vw + 0.5rem, 3rem)' }}
+        {/* Section label — font-mono xs uppercase tracking-widest */}
+        <p
+          className="mb-12 text-center font-mono text-xs uppercase tracking-widest"
+          style={{ color: '#6B6860' }}
         >
-          [COPY: How it works section title]
-        </h2>
+          How It Works
+        </p>
 
         <div className="grid gap-6 sm:grid-cols-3">
           {steps.map((step) => (
-            <div key={step.number} data-how="card" className="glass-card rounded-xl p-8">
-              <span className="font-mono text-sm font-medium text-forge-accent">
+            <div
+              key={step.number}
+              data-how="card"
+              className="relative overflow-hidden rounded-xl border p-8"
+              style={{
+                borderColor: '#ECEAE4',
+                background: '#FAFAF7',
+                minHeight: '200px',
+              }}
+            >
+              {/* Step number — font-mono text-6xl Forge Orange opacity 0.15 */}
+              <span
+                className="pointer-events-none absolute right-4 top-2 select-none font-mono text-7xl font-bold leading-none"
+                style={{ color: '#E8530E', opacity: 0.15 }}
+              >
                 {step.number}
               </span>
 
-              <div className="mt-4 mb-4 flex h-12 w-12 items-center justify-center rounded-lg border border-forge-border bg-forge-surface">
-                <step.icon className="h-5 w-5 text-forge-text-muted" />
-              </div>
-
-              <h3 className="font-body mb-2 text-lg font-semibold text-forge-text">
+              <h3
+                className="mb-3 font-display text-xl font-bold"
+                style={{ color: '#1A1917', letterSpacing: '-0.01em' }}
+              >
                 {step.title}
               </h3>
-              <p className="font-body text-sm leading-body text-forge-text-muted">
+              <p
+                className="font-body text-sm"
+                style={{ lineHeight: 1.65, color: '#6B6860' }}
+              >
                 {step.description}
               </p>
             </div>

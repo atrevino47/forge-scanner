@@ -3,15 +3,24 @@
 import { useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { ChevronDown } from 'lucide-react';
 import { clipReveal, fadeSlideUp } from '@/lib/gsap-presets';
 
 const faqs = [
-  { question: '[COPY: FAQ question 1]', answer: '[COPY: FAQ answer 1]' },
-  { question: '[COPY: FAQ question 2]', answer: '[COPY: FAQ answer 2]' },
-  { question: '[COPY: FAQ question 3]', answer: '[COPY: FAQ answer 3]' },
-  { question: '[COPY: FAQ question 4]', answer: '[COPY: FAQ answer 4]' },
-  { question: '[COPY: FAQ question 5]', answer: '[COPY: FAQ answer 5]' },
+  {
+    question: 'Is it really free?',
+    answer:
+      "Yes. The full scan, annotations, and funnel blueprint are completely free. No credit card, no trial. We make money when you hire Forge to fix what we find.",
+  },
+  {
+    question: 'Do I need to create an account?',
+    answer:
+      "No account needed. We'll ask for your email mid-scan so we can send you the results. That's it.",
+  },
+  {
+    question: 'What happens after the scan?',
+    answer:
+      "You get a complete audit with a prioritized fix list and an optimized blueprint. From there you can book a free strategy call to walk through the findings — or just take the report and run with it.",
+  },
 ];
 
 export function FAQSection() {
@@ -46,14 +55,23 @@ export function FAQSection() {
   }, []);
 
   return (
-    <section ref={containerRef} className="relative px-6 py-24 sm:py-32">
-      <div className="mx-auto max-w-[960px]">
+    <section
+      ref={containerRef}
+      className="relative px-4 py-14 sm:px-6 sm:py-24 lg:py-32"
+      style={{ background: '#FAFAF7' }}
+    >
+      <div className="mx-auto max-w-[720px]">
         <h2
           data-faq="headline"
-          className="font-display mb-16 text-center tracking-display leading-display"
-          style={{ fontSize: 'clamp(2rem, 3vw + 0.5rem, 3rem)' }}
+          className="mb-16 text-center font-display font-bold"
+          style={{
+            fontSize: 'clamp(1.75rem, 3vw + 0.5rem, 2.75rem)',
+            letterSpacing: '-0.02em',
+            lineHeight: 1.08,
+            color: '#1A1917',
+          }}
         >
-          [COPY: FAQ section title]
+          Common Questions
         </h2>
 
         <div>
@@ -84,21 +102,21 @@ function FAQItem({
   onToggle: () => void;
 }) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const chevronRef = useRef<SVGSVGElement>(null);
+  const plusRef = useRef<HTMLSpanElement>(null);
 
   useGSAP(
     () => {
-      if (!contentRef.current || !chevronRef.current) return;
+      if (!contentRef.current || !plusRef.current) return;
 
       if (isOpen) {
-        gsap.to(chevronRef.current, { rotation: 180, duration: 0.3, ease: 'power2.out' });
+        gsap.to(plusRef.current, { rotation: 45, duration: 0.3, ease: 'power2.out' });
         gsap.fromTo(
           contentRef.current,
           { height: 0, opacity: 0 },
           { height: 'auto', opacity: 1, duration: 0.4, ease: 'power2.out' },
         );
       } else {
-        gsap.to(chevronRef.current, { rotation: 0, duration: 0.3, ease: 'power2.out' });
+        gsap.to(plusRef.current, { rotation: 0, duration: 0.3, ease: 'power2.out' });
         gsap.to(contentRef.current, { height: 0, opacity: 0, duration: 0.3, ease: 'power2.in' });
       }
     },
@@ -106,13 +124,37 @@ function FAQItem({
   );
 
   return (
-    <div data-faq="item" className="border-b border-forge-border">
+    <div
+      data-faq="item"
+      className="border-b"
+      style={{ borderColor: '#ECEAE4' }}
+    >
       <button onClick={onToggle} className="flex w-full items-center justify-between py-5 text-left">
-        <span className="pr-4 font-body text-base font-medium text-forge-text">{question}</span>
-        <ChevronDown ref={chevronRef} className="h-5 w-5 shrink-0 text-forge-text-muted" />
+        {/* Question — Outfit weight 600 text-lg */}
+        <span
+          className="pr-4 font-display text-lg font-semibold"
+          style={{ color: '#1A1917' }}
+        >
+          {question}
+        </span>
+        {/* Plus/minus toggle */}
+        <span
+          ref={plusRef}
+          className="flex h-5 w-5 shrink-0 items-center justify-center text-lg font-light leading-none"
+          style={{ color: '#B8B5AD' }}
+          aria-hidden="true"
+        >
+          +
+        </span>
       </button>
       <div ref={contentRef} className="overflow-hidden" style={{ height: 0, opacity: 0 }}>
-        <p className="pb-5 font-body text-sm leading-body text-forge-text-muted">{answer}</p>
+        {/* Answer — Space Grotesk text-sm color #6B6860 */}
+        <p
+          className="pb-5 font-body text-sm"
+          style={{ lineHeight: 1.65, color: '#6B6860' }}
+        >
+          {answer}
+        </p>
       </div>
     </div>
   );

@@ -97,7 +97,7 @@ export function BlueprintView({ blueprint }: BlueprintViewProps) {
         className="font-display mb-8 text-center tracking-display leading-display"
         style={{ fontSize: 'clamp(1.8rem, 3vw + 0.5rem, 2.5rem)' }}
       >
-        [COPY: your optimized funnel blueprint]
+        Your Optimized Funnel Blueprint
       </h2>
 
       {/* ── Funnel Map ── */}
@@ -197,7 +197,7 @@ function FunnelStageNode({
   const handleMouseEnter = useCallback(() => {
     gsap.to(nodeRef.current, {
       scale: 1.02,
-      boxShadow: '0 0 20px rgba(212, 165, 55, 0.15)',
+      boxShadow: '0 0 20px rgba(232, 83, 14, 0.15)',
       duration: 0.2,
       ease: 'power2.out',
     });
@@ -206,7 +206,7 @@ function FunnelStageNode({
   const handleMouseLeave = useCallback(() => {
     gsap.to(nodeRef.current, {
       scale: 1,
-      boxShadow: '0 0 0px rgba(212, 165, 55, 0)',
+      boxShadow: '0 0 0px rgba(232, 83, 14, 0)',
       duration: 0.2,
       ease: 'power2.out',
     });

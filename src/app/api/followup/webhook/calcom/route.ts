@@ -8,6 +8,7 @@ import type { BookingSource } from '@/../contracts/types';
 import { apiError, validateBody } from '@/lib/api-utils';
 import { createServiceClient } from '@/lib/db/client';
 import type { DbLead, DbBooking, DbScan } from '@/lib/db/types';
+import { writeVaultEvent } from '@/lib/vault/event-writer';
 
 // ── Zod schema ─────────────────────────────────────────────────
 const calcomWebhookSchema = z.object({
@@ -212,6 +213,19 @@ async function handleBookingCreated(
     console.error('[calcom-webhook] Failed to insert booking:', insertError);
     return apiError('INTERNAL', 'Failed to create booking record', 500);
   }
+
+  writeVaultEvent({
+    type: 'booking_confirmed',
+    scanId: scanId ?? '',
+    leadEmail: lead.email,
+    leadPhone: lead.phone,
+    businessName: lead.business_name,
+    details: {
+      calEventId: payload.uid,
+      scheduledAt: payload.startTime,
+      source: bookingSource,
+    },
+  });
 
   // ── Update active conversations to 'booked' ─────────────────
   await supabase

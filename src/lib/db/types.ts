@@ -50,6 +50,8 @@ export interface DbScan {
   status: ScanStatus;
   detected_socials: Record<string, unknown>;
   provided_socials: Record<string, unknown> | null;
+  social_enrichment: Record<string, unknown> | null;
+  ad_detection: Record<string, unknown> | null;
   utm_source: string | null;
   utm_medium: string | null;
   utm_campaign: string | null;
@@ -118,6 +120,9 @@ export interface DbConversation {
   scan_id: string;
   lead_id: string;
   status: ConversationStatus;
+  engagement_score: number;
+  objection_count: number;
+  last_objection_type: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -4,6 +4,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import type { ApiError } from '@/../contracts/api';
+import { getStripe } from '@/lib/stripe/client';
+import { requireAdminSession } from '@/lib/auth/admin';
 
 const querySchema = z.object({
   paymentIntentId: z.string().min(1, 'paymentIntentId is required'),
@@ -17,6 +19,9 @@ interface VerifyPaymentResponse {
 
 export async function GET(request: NextRequest): Promise<NextResponse<VerifyPaymentResponse | ApiError>> {
   try {
+    const authError = await requireAdminSession(request);
+    if (authError) return authError as NextResponse<ApiError>;
+
     const { searchParams } = new URL(request.url);
     const parsed = querySchema.safeParse({
       paymentIntentId: searchParams.get('paymentIntentId'),
@@ -35,17 +40,26 @@ export async function GET(request: NextRequest): Promise<NextResponse<VerifyPaym
       );
     }
 
-    // TODO: Retrieve actual PaymentIntent from Stripe
-    // TODO: Cross-reference with internal payment record
+    const stripe = getStripe();
+    const pi = await stripe.paymentIntents.retrieve(parsed.data.paymentIntentId);
 
-    const mockResponse: VerifyPaymentResponse = {
-      verified: true,
-      status: 'succeeded',
-      amountCents: 50000,
+    const statusMap: Record<string, VerifyPaymentResponse['status']> = {
+      succeeded: 'succeeded',
+      processing: 'processing',
+      requires_payment_method: 'requires_payment_method',
+      canceled: 'canceled',
     };
 
-    return NextResponse.json(mockResponse, { status: 200 });
+    return NextResponse.json(
+      {
+        verified: true,
+        status: statusMap[pi.status] ?? 'requires_payment_method',
+        amountCents: pi.amount,
+      },
+      { status: 200 },
+    );
   } catch (error) {
+    console.error('[payments/verify] Error:', error);
     return NextResponse.json(
       {
         error: {

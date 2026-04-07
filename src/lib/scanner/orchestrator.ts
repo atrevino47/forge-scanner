@@ -3,10 +3,12 @@
 // Central entry point for the scan analysis pipeline
 
 import type {
+  AdDetectionResult,
   Annotation,
   FunnelStage,
   FunnelStageResult,
   ScreenshotData,
+  SocialEnrichmentResult,
   StageSummary,
   VideoAnalysis,
 } from '@/../../contracts/types';
@@ -23,6 +25,8 @@ import {
   STAGE_ORDER,
   createStageResult,
 } from './utils';
+import { analyzeGeo } from './analyze-geo';
+import { analyzeAeo } from './analyze-aeo';
 
 // ============================================================
 // Event callbacks for SSE streaming
@@ -70,6 +74,15 @@ export interface ScanAnalysisInput {
 
   /** Video data for social profiles (traffic stage) */
   videoData?: ProfileVideoData[];
+
+  /** Meta Ad Library detection results (traffic stage) */
+  adDetection?: AdDetectionResult;
+
+  /** Apify social profile metrics (traffic stage) */
+  socialEnrichment?: SocialEnrichmentResult;
+
+  /** Google Ads Transparency detection results (traffic stage) */
+  googleAdsDetection?: import('./detect-google-ads').GoogleAdsResult;
 }
 
 // ============================================================
@@ -86,6 +99,9 @@ export async function runScanAnalysis(
     businessContext,
     homepageHtml,
     videoData,
+    adDetection,
+    socialEnrichment,
+    googleAdsDetection,
   } = input;
 
   // Group screenshots by stage
@@ -116,6 +132,9 @@ export async function runScanAnalysis(
             screenshotFetcher,
             businessContext,
             videoData,
+            adDetection,
+            socialEnrichment,
+            googleAdsDetection,
           },
           makeStageCallback('traffic'),
           callbacks.onAnnotationReady,
@@ -192,7 +211,32 @@ export async function runScanAnalysis(
     ),
   ];
 
-  const results = await Promise.all(stagePromises);
+  // Run GEO/AEO analysis in parallel with stages (non-blocking, uses homepage HTML)
+  const geoAeoPromise = homepageHtml
+    ? Promise.allSettled([analyzeGeo(homepageHtml), analyzeAeo(homepageHtml)])
+    : Promise.resolve(null);
+
+  const [results, geoAeoResults] = await Promise.all([
+    Promise.all(stagePromises),
+    geoAeoPromise,
+  ]);
+
+  // Merge GEO/AEO findings into the traffic stage result
+  // Frontend extracts them by ID prefix (geo-*, aeo-*) for dedicated display
+  if (geoAeoResults && Array.isArray(geoAeoResults)) {
+    const trafficResult = results.find((r) => r.stage === 'traffic');
+    if (trafficResult?.summary) {
+      const geoResult = geoAeoResults[0]?.status === 'fulfilled' ? geoAeoResults[0].value : null;
+      const aeoResult = geoAeoResults[1]?.status === 'fulfilled' ? geoAeoResults[1].value : null;
+
+      if (geoResult?.findings) {
+        trafficResult.summary.findings.push(...geoResult.findings);
+      }
+      if (aeoResult?.findings) {
+        trafficResult.summary.findings.push(...aeoResult.findings);
+      }
+    }
+  }
 
   // Calculate overall scan summary
   const overallHealth = calculateOverallScore(results);

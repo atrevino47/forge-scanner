@@ -75,7 +75,7 @@ export function SocialConfirmation({
         className="glass-card mx-4 w-full max-w-md rounded-xl p-6"
       >
         <h3 className="font-display mb-1 text-lg tracking-display text-forge-text">
-          [COPY: social confirmation headline]
+          Which profile is yours?
         </h3>
         <p className="mb-4 text-sm text-forge-text-muted">
           We found multiple {platform} profiles. Which one is yours?
@@ -120,7 +120,7 @@ export function SocialConfirmation({
           <button
             onClick={handleConfirm}
             disabled={!selected}
-            className="flex-1 rounded-lg bg-forge-accent py-2.5 font-body text-sm font-semibold text-forge-base transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50"
+            className="flex-1 rounded-lg bg-forge-accent py-2.5 font-body text-sm font-semibold text-white transition-colors duration-200 hover:bg-forge-accent-hover disabled:opacity-50"
           >
             Confirm
           </button>
