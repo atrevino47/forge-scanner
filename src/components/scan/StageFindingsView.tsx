@@ -254,7 +254,7 @@ export function StageFindingsView({ stage, stageState, screenshots, onInitiateFi
             onClick={onInitiateFix}
             className="w-full md:w-auto md:shrink-0 md:px-10 bg-[#FEFEFE] text-forge-accent py-4 font-black tracking-[0.2em] text-xs uppercase rounded-lg active:scale-95 transition-all mt-6 md:mt-0 shadow-xl shadow-black/10"
           >
-            INITIATE REFACTOR
+            Book a Strategy Call
           </button>
         </div>
       </section>

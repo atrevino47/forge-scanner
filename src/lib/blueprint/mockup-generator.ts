@@ -264,10 +264,10 @@ function getFallbackMockupHtml(businessName: string, colors: BrandColors): strin
 </head>
 <body>
   <section class="hero">
-    <div class="badge">[COPY: Category badge text]</div>
-    <h1>[COPY: Compelling headline addressing the primary pain point of ${businessName}'s target audience]</h1>
-    <p class="subtitle">[COPY: Supporting subtitle that communicates the key benefit and builds on the headline promise]</p>
-    <a href="#" class="cta">[COPY: Specific action-oriented CTA text]</a>
+    <div class="badge">Optimized by Forge</div>
+    <h1>A better version of ${businessName}'s key page is possible</h1>
+    <p class="subtitle">Based on our scan findings, here's how the highest-impact improvements would look with your brand.</p>
+    <a href="#" class="cta">See the Full Blueprint</a>
   </section>
   <div class="watermark">Built by <span>Forge</span></div>
 </body>

@@ -176,7 +176,7 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
       {/* Pipeline Anatomy — Vertical Timeline (mobile) / Grid (desktop) */}
       <section>
         <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-forge-text-secondary font-bold mb-8 px-2">
-          Pipeline Anatomy
+          Your Funnel Stages
         </h3>
 
         {/* Mobile: vertical timeline */}
@@ -228,7 +228,7 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
                   <div className="bg-forge-card/30 p-6 rounded-sm border-dashed border-2 border-forge-text-muted/30 text-center">
                     <span className="material-symbols-outlined text-forge-text-muted/50 mb-2">block</span>
                     <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-forge-text-secondary font-bold">
-                      Insufficient Data Matrix
+                      Not Detected
                     </p>
                   </div>
                 ) : null}
@@ -298,7 +298,7 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
         <div className="relative z-10 md:flex md:items-center md:justify-between md:gap-12">
           <div className="space-y-4 md:flex-1">
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] opacity-80">
-              Foundry Insight
+              Your Next Step
             </span>
             <h5 className="font-display text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight leading-none">
               Ready to Forge?
@@ -311,7 +311,7 @@ export function AuditOverview({ summary, stages, screenshots, onInitiateFix }: A
             onClick={onInitiateFix}
             className="w-full md:w-auto md:shrink-0 py-4 md:px-10 bg-[#FEFEFE] text-forge-accent font-display font-black text-xs uppercase tracking-[0.25em] rounded-lg active:scale-95 transition-all shadow-xl shadow-black/10 mt-4 md:mt-0"
           >
-            INITIATE FIX LOGIC
+            Book a Strategy Call
           </button>
         </div>
         <span

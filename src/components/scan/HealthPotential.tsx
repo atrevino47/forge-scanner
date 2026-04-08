@@ -222,7 +222,7 @@ export function HealthPotential({ summary, onInitiateOptimization }: HealthPoten
             onClick={onInitiateOptimization}
             className="w-full md:w-auto md:shrink-0 md:px-10 bg-[#FEFEFE] text-forge-accent font-mono py-5 rounded-lg font-black uppercase tracking-widest text-xs active:scale-95 transition-all duration-200 shadow-xl shadow-black/10"
           >
-            INITIATE OPTIMIZATION
+            Book a Strategy Call
           </button>
         </div>
         <div className="absolute -bottom-10 -right-10 opacity-10">
