@@ -3,7 +3,6 @@
 // Supports self-hosted Chrome (BROWSER_WS_ENDPOINT) with Browserless.io fallback.
 
 import { chromium, type Browser, type Page } from 'playwright-core';
-import sharp from 'sharp';
 
 // ============================================================
 // Viewport presets
@@ -59,9 +58,8 @@ const COOKIE_DISMISS_SELECTORS = [
 
 
 
-// Scroll-and-stitch constants
-const STITCH_OVERLAP_PX = 50;
-const MAX_SCROLL_SEGMENTS = 30;
+// Tall viewport cap — Chrome's max GPU texture size
+const MAX_VIEWPORT_HEIGHT = 16_384;
 
 const SCREENSHOT_STYLE = `
   .elementor-invisible {
@@ -218,219 +216,6 @@ export async function captureScreenshot(
       `[screenshots/client] Screenshot capture failed: ${message}`,
     );
   }
-}
-
-// ============================================================
-// Scroll-and-stitch helpers
-// ============================================================
-
-/**
- * Smart scroll that works on sites where `window.scrollTo()` doesn't work.
- * Some sites (WordPress + Elementor, RevSlider) set `html, body { height: 100% }`
- * which constrains them to viewport height. The actual content overflows the body,
- * making document.body the scroll container instead of the window.
- *
- * Detects which scroll target works on first call and reuses it.
- */
-async function smartScrollTo(page: Page, y: number): Promise<void> {
-  await page.evaluate((targetY) => {
-    // Set ALL scroll targets — some sites use body as the scroll container
-    // (WordPress + Elementor with height:100% on html+body), others use
-    // the standard window/documentElement. Setting all three is safe and
-    // avoids false-positive short-circuiting when checking window.scrollY
-    // (which reads 0 on body-scroll sites even when body.scrollTop !== 0).
-    window.scrollTo({ top: targetY, behavior: 'instant' });
-    document.documentElement.scrollTop = targetY;
-    document.body.scrollTop = targetY;
-  }, y);
-}
-
-/**
- * Scrolls page in viewport-height steps to trigger scroll-based lazy loaders,
- * then returns to top. Replaces the tall viewport resize as the lazy-load
- * trigger mechanism.
- */
-async function triggerLazyLoadViaScroll(
-  page: Page,
-  viewportSize: { width: number; height: number },
-): Promise<void> {
-  try {
-    const docHeight = await page.evaluate(() =>
-      Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
-    );
-    const steps = Math.min(Math.ceil(docHeight / viewportSize.height), MAX_SCROLL_SEGMENTS);
-
-    for (let i = 1; i <= steps; i++) {
-      await smartScrollTo(page, i * viewportSize.height);
-      await page.waitForTimeout(200);
-    }
-
-    await smartScrollTo(page, 0);
-    await page.waitForTimeout(300);
-  } catch {
-    console.warn('[screenshots/client] Lazy-load scroll pass failed, proceeding');
-  }
-}
-
-/**
- * Scroll-and-stitch capture: scrolls through the page one viewport at a time,
- * captures each segment, and stitches them vertically with Sharp.
- *
- * Avoids Chrome's GPU tile eviction at extreme viewport heights. Fixed/sticky
- * elements are hidden after the first segment to prevent duplication.
- */
-async function scrollAndStitch(
-  page: Page,
-  viewportSize: { width: number; height: number },
-): Promise<Buffer> {
-  const docHeight = await page.evaluate(() =>
-    Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
-  );
-  const vh = viewportSize.height;
-  const vw = viewportSize.width;
-
-  // Short page — single capture, no stitching needed
-  if (docHeight <= vh) {
-    const single = await page.screenshot({
-      type: 'png',
-      fullPage: false,
-      animations: 'disabled',
-      caret: 'hide',
-      style: SCREENSHOT_STYLE,
-    });
-    return Buffer.from(single);
-  }
-
-  // CSS for segments 2+ — cookie/consent overlays hidden by selector.
-  // Fixed/sticky elements are handled per-segment via inline style injection
-  // (catches JS-toggled headers that change position on scroll).
-  const hideOverlayCSS = `[id*="cookie" i], [class*="cookie" i], [id*="consent" i], [class*="consent" i],
-     [id*="CybotCookiebot"], .cc-window, .cc-banner, #onetrust-banner-sdk,
-     .otFlat, [class*="gdpr" i], [id*="gdpr" i] {
-       display: none !important;
-     }`;
-
-  // Build scroll positions — cap at max scrollable and actual segment limit
-  const maxScroll = docHeight - vh;
-  const scrollPositions: number[] = [0];
-  for (let i = 1; i < MAX_SCROLL_SEGMENTS; i++) {
-    const target = i * vh - STITCH_OVERLAP_PX;
-    if (target >= maxScroll) {
-      scrollPositions.push(maxScroll); // Final position — always land exactly at bottom
-      break;
-    }
-    scrollPositions.push(target);
-  }
-  // Ensure we always capture the bottom of the page
-  if (scrollPositions[scrollPositions.length - 1] < maxScroll) {
-    scrollPositions.push(maxScroll);
-  }
-
-  console.log(`[screenshots/client] Scroll-and-stitch: ${scrollPositions.length} segments, doc=${docHeight}`);
-
-  // Capture each segment, recording actual scroll positions
-  const captured: { buffer: Buffer; actualY: number }[] = [];
-
-  for (let i = 0; i < scrollPositions.length; i++) {
-    await smartScrollTo(page, scrollPositions[i]);
-    await page.waitForTimeout(i === 0 ? 100 : 150);
-
-    // Get actual scroll position (browser may clamp)
-    const actualY = await page.evaluate(() =>
-      Math.max(window.scrollY, document.documentElement.scrollTop, document.body.scrollTop),
-    );
-
-    // For segments 2+: force-hide ALL currently fixed/sticky elements via inline styles.
-    // This catches JS-toggled headers that weren't fixed/sticky at detection time.
-    // The inline styles are restored after each capture to avoid layout disruption.
-    if (i > 0) {
-      await page.evaluate(() => {
-        document.querySelectorAll('*').forEach((el) => {
-          const pos = window.getComputedStyle(el).position;
-          if (pos === 'fixed') {
-            el.setAttribute('data-stitch-restore', (el as HTMLElement).style.cssText);
-            (el as HTMLElement).style.setProperty('visibility', 'hidden', 'important');
-          } else if (pos === 'sticky') {
-            el.setAttribute('data-stitch-restore', (el as HTMLElement).style.cssText);
-            (el as HTMLElement).style.setProperty('position', 'relative', 'important');
-          }
-        });
-      });
-    }
-
-    const segmentStyle = i === 0
-      ? SCREENSHOT_STYLE
-      : `${SCREENSHOT_STYLE}\n${hideOverlayCSS}`;
-
-    const shot = await page.screenshot({
-      type: 'png',
-      fullPage: false,
-      animations: 'disabled',
-      caret: 'hide',
-      style: segmentStyle,
-    });
-    captured.push({ buffer: Buffer.from(shot), actualY });
-
-    // Restore inline styles after capture
-    if (i > 0) {
-      await page.evaluate(() => {
-        document.querySelectorAll('[data-stitch-restore]').forEach((el) => {
-          (el as HTMLElement).style.cssText = el.getAttribute('data-stitch-restore') || '';
-          el.removeAttribute('data-stitch-restore');
-        });
-      });
-    }
-  }
-
-  // Stitch segments using ACTUAL scroll positions to calculate overlap
-  const compositeInputs: { input: Buffer; top: number; left: number }[] = [];
-  let stitchY = 0;
-
-  for (let i = 0; i < captured.length; i++) {
-    if (i === 0) {
-      // First segment: use full viewport height
-      compositeInputs.push({ input: captured[i].buffer, top: 0, left: 0 });
-      stitchY = vh;
-    } else {
-      const prevY = captured[i - 1].actualY;
-      const currY = captured[i].actualY;
-
-      // Overlap = how much of this segment was already in the previous segment
-      const overlap = Math.max(0, (prevY + vh) - currY);
-
-      // For last segment: visible content may be less than viewport
-      const isLast = i === captured.length - 1;
-      const contentInViewport = isLast ? Math.min(vh, docHeight - currY) : vh;
-      const usableHeight = contentInViewport - overlap;
-
-      if (usableHeight <= 0) {
-        console.warn(`[screenshots/client] Segment ${i} fully overlaps previous (overlap=${overlap}px), skipping`);
-        continue;
-      }
-
-      const cropped = await sharp(captured[i].buffer)
-        .extract({ left: 0, top: overlap, width: vw, height: usableHeight })
-        .toBuffer();
-
-      compositeInputs.push({ input: cropped, top: stitchY, left: 0 });
-      stitchY += usableHeight;
-    }
-  }
-
-  const stitched = await sharp({
-    create: {
-      width: vw,
-      height: stitchY,
-      channels: 4,
-      background: { r: 255, g: 255, b: 255, alpha: 1 },
-    },
-  })
-    .composite(compositeInputs)
-    .png()
-    .toBuffer();
-
-  console.log(`[screenshots/client] Stitched: ${vw}x${stitchY} from ${captured.length} segments`);
-  return stitched;
 }
 
 // ============================================================
@@ -792,78 +577,94 @@ export async function capturePageWithMetadata(
       // Non-critical — IO mock and scroll handle most cases
     }
 
-    // ── Capture mode: full (scroll-and-stitch) vs fast ──
+    // ── TALL VIEWPORT CAPTURE ──────────────────────────────
+    // Instead of scrolling (which causes Chrome to evict rasterized tiles
+    // when scrolled away), resize the viewport to match the full document
+    // height. If nothing is "below the fold," lazy loading never triggers
+    // and Chrome composites the entire page in one pass.
     let screenshotBuffer: Buffer;
 
-    if (mode === 'full') {
-      /* SCROLL-AND-STITCH CAPTURE
-       *
-       * Instead of resizing to a tall viewport (which causes Chrome tile
-       * eviction — blank areas in the middle of long pages), we:
-       * 1. Scroll through the page to trigger lazy loaders
-       * 2. Re-swap data-src for newly loaded elements
-       * 3. Wait for images to decode
-       * 4. Capture one viewport-sized segment at a time
-       * 5. Stitch all segments vertically with Sharp
-       */
+    // Phase 1 — Initial settle for JS hydration + above-fold animations
+    await page.waitForTimeout(mode === 'full' ? 1500 : 800);
 
-      // Phase 1 — Initial settle for JS hydration + above-fold animations
-      await page.waitForTimeout(1500);
+    // Phase 2 — Measure document height and resize viewport to full page
+    const docHeight = await page.evaluate(() =>
+      Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
+    );
+    const tallHeight = Math.min(docHeight, MAX_VIEWPORT_HEIGHT);
+    await page.setViewportSize({ width: viewportSize.width, height: tallHeight });
+    console.log(`[screenshots/client] Tall viewport: ${viewportSize.width}x${tallHeight} (doc=${docHeight})`);
 
-      // Phase 2 — Scroll to trigger lazy loaders, then return to top
-      await triggerLazyLoadViaScroll(page, viewportSize);
+    // Phase 3 — Wait for lazy content triggered by the expanded viewport
+    await page.waitForTimeout(1500);
 
-      // Phase 3 — Re-run data-src swap for elements now loaded
-      try {
-        await page.evaluate(() => {
-          const srcAttrs = ['data-src', 'data-lazy-src', 'data-original', 'data-lazy'];
-          document.querySelectorAll('img').forEach((img) => {
-            for (const attr of srcAttrs) {
-              const val = img.getAttribute(attr);
-              if (val && (!img.src || img.src.includes('data:') || img.src.includes('placeholder') || img.src.includes('blank'))) {
-                img.src = val;
-                break;
-              }
-            }
-          });
-          document.querySelectorAll('img[loading="lazy"]').forEach((img) => {
-            img.removeAttribute('loading');
-            const currentSrc = img.getAttribute('src');
-            if (currentSrc) {
-              img.removeAttribute('src');
-              img.setAttribute('src', currentSrc);
-            }
-          });
-        });
-      } catch {
-        // Non-critical
-      }
-
-      // Phase 4 — Wait for all images to decode + fonts to load
-      try {
-        await page.evaluate(async () => {
-          await Promise.allSettled(
-            Array.from(document.querySelectorAll('img')).map((img) => {
-              if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-              return Promise.race([
-                img.decode().catch(() => {}),
-                new Promise((r) => setTimeout(r, 5_000)),
-              ]);
-            }),
-          );
-          await document.fonts.ready;
-        });
-      } catch {
-        console.warn(`[screenshots/client] Image decode wait failed for ${url}. Continuing.`);
-      }
-
-      // Phase 5 — Scroll-and-stitch capture
-      screenshotBuffer = await scrollAndStitch(page, viewportSize);
-    } else {
-      // Fast mode fallback (no current callers — all use 'full')
-      await page.waitForTimeout(2000);
-      screenshotBuffer = await scrollAndStitch(page, viewportSize);
+    // Phase 4 — Re-measure (lazy content may have grown the page)
+    const finalHeight = await page.evaluate(() =>
+      Math.max(document.body.scrollHeight, document.documentElement.scrollHeight),
+    );
+    if (finalHeight > docHeight) {
+      const newTallHeight = Math.min(finalHeight, MAX_VIEWPORT_HEIGHT);
+      await page.setViewportSize({ width: viewportSize.width, height: newTallHeight });
+      console.log(`[screenshots/client] Page grew: ${docHeight} → ${finalHeight}, viewport now ${newTallHeight}`);
+      await page.waitForTimeout(1000);
     }
+
+    // Phase 5 — Re-run data-src swap for newly loaded elements
+    try {
+      await page.evaluate(() => {
+        const srcAttrs = ['data-src', 'data-lazy-src', 'data-original', 'data-lazy'];
+        document.querySelectorAll('img').forEach((img) => {
+          for (const attr of srcAttrs) {
+            const val = img.getAttribute(attr);
+            if (val && (!img.src || img.src.includes('data:') || img.src.includes('placeholder') || img.src.includes('blank'))) {
+              img.src = val;
+              break;
+            }
+          }
+        });
+        document.querySelectorAll('img[loading="lazy"]').forEach((img) => {
+          img.removeAttribute('loading');
+          const currentSrc = img.getAttribute('src');
+          if (currentSrc) {
+            img.removeAttribute('src');
+            img.setAttribute('src', currentSrc);
+          }
+        });
+      });
+    } catch {
+      // Non-critical
+    }
+
+    // Phase 6 — Wait for all images to decode + fonts to load
+    try {
+      await page.evaluate(async () => {
+        await Promise.allSettled(
+          Array.from(document.querySelectorAll('img')).map((img) => {
+            if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+            return Promise.race([
+              img.decode().catch(() => {}),
+              new Promise((r) => setTimeout(r, 5_000)),
+            ]);
+          }),
+        );
+        await document.fonts.ready;
+      });
+    } catch {
+      console.warn(`[screenshots/client] Image decode wait failed for ${url}. Continuing.`);
+    }
+
+    // Phase 7 — Screenshot with fullPage: false (viewport IS the full page)
+    const shot = await page.screenshot({
+      fullPage: false,
+      type: 'png',
+      animations: 'disabled',
+      caret: 'hide',
+      style: SCREENSHOT_STYLE,
+    });
+    screenshotBuffer = Buffer.from(shot);
+
+    // Phase 8 — Reset viewport to original size
+    await page.setViewportSize(viewportSize);
 
     // Extract page content and title
     const html = await page.content();
