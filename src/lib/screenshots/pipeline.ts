@@ -220,13 +220,20 @@ export async function runScreenshotPipeline(params: {
       // Extract business name from page title or URL for ad search
       const businessNameForSearch = businessName || extractBusinessNameFromUrl(websiteUrl);
 
-      // Run ad detection, Google Ads check, and social enrichment in parallel
-      // These are optional enrichments — pipeline continues if any fail
-      const [adResult, googleAdsResult, enrichResult] = await Promise.allSettled([
+      // Google Ads detection — synchronous HTML analysis (no network call)
+      if (homepageHtml) {
+        googleAdsDetection = detectGoogleAds(homepageHtml, websiteUrl);
+        if (googleAdsDetection.hasActiveAds) {
+          console.log(`[pipeline] Google Ads detected: ${googleAdsDetection.signals.join(', ')}`);
+        }
+      }
+
+      // Run Meta ad detection and social enrichment in parallel
+      // These are optional enrichments — pipeline continues if either fails
+      const [adResult, enrichResult] = await Promise.allSettled([
         businessNameForSearch
           ? detectMetaAds(businessNameForSearch, websiteUrl)
           : Promise.resolve(null),
-        detectGoogleAds(websiteUrl),
         enrichSocialProfiles(detectedSocials),
       ]);
 
@@ -237,15 +244,6 @@ export async function runScreenshotPipeline(params: {
         }
       } else {
         console.error('[pipeline] Ad detection failed:', adResult.reason);
-      }
-
-      if (googleAdsResult.status === 'fulfilled') {
-        googleAdsDetection = googleAdsResult.value;
-        if (googleAdsDetection.hasActiveAds) {
-          console.log('[pipeline] Google Ads detected for domain');
-        }
-      } else {
-        console.error('[pipeline] Google Ads detection failed:', googleAdsResult.reason);
       }
 
       if (enrichResult.status === 'fulfilled') {
@@ -728,10 +726,10 @@ function adDetectionToContext(adDetection: AdDetectionResult): string {
 }
 
 function googleAdsToContext(result: GoogleAdsResult): string {
-  const lines = ['GOOGLE ADS TRANSPARENCY DATA:'];
-  lines.push(`  Has active ads: ${result.hasActiveAds}`);
-  if (result.adCount !== null) {
-    lines.push(`  Approximate ad count: ${result.adCount}`);
+  const lines = ['GOOGLE ADS DETECTION (from homepage HTML):'];
+  lines.push(`  Has active ads infrastructure: ${result.hasActiveAds}`);
+  if (result.signals.length > 0) {
+    lines.push(`  Signals found: ${result.signals.join(', ')}`);
   }
   lines.push(`  Transparency URL: ${result.transparencyUrl}`);
   return lines.join('\n');

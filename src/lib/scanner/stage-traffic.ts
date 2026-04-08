@@ -341,15 +341,16 @@ function adDetectionToAnnotations(adDetection: AdDetectionResult): Annotation[] 
 
 function googleAdsToAnnotations(result: GoogleAdsResult): Annotation[] {
   if (result.hasActiveAds) {
+    const signalSummary = result.signals.length > 0
+      ? ` Signals found: ${result.signals.join(', ')}.`
+      : '';
     return [
       {
         id: 'traffic-google-ads-active',
         position: { x: 50, y: 12 },
         type: 'positive',
-        title: 'Active Google Ads detected',
-        detail: `This business is running Google Ads.${
-          result.adCount !== null ? ` Approximately ${result.adCount} active ads found.` : ''
-        } This indicates paid search investment — the key question is whether landing pages are optimized for the traffic these ads drive.`,
+        title: 'Business is actively running Google Ads',
+        detail: `Google Ads conversion tracking and remarketing infrastructure detected on this website.${signalSummary} This indicates paid search investment — the key question is whether landing pages are optimized for the traffic these ads drive.`,
         category: 'paid_traffic',
       },
     ];
@@ -360,9 +361,9 @@ function googleAdsToAnnotations(result: GoogleAdsResult): Annotation[] {
       id: 'traffic-google-ads-none',
       position: { x: 50, y: 12 },
       type: 'opportunity',
-      title: 'No Google Ads detected',
+      title: 'No Google Ads detected — paid search could capture high-intent traffic',
       detail:
-        'No active Google Ads found. If competitors are bidding on relevant keywords, this business is missing high-intent search traffic. Google Ads can capture buyers actively searching for their services.',
+        'No Google Ads conversion tracking or remarketing tags found on this website. If competitors are bidding on relevant keywords, this business is missing high-intent search traffic. Google Ads can capture buyers actively searching for their services.',
       category: 'paid_traffic',
     },
   ];
