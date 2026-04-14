@@ -1,18 +1,15 @@
-# FORGE FUNNEL SCANNER — MASTER INSTRUCTIONS
+# FORGE FUNNEL SCANNER — PROJECT INSTRUCTIONS
 
-> **Every Claude Code agent reads this file FIRST, then their specific agent file, then the latest audit.**
+@agents/cody.md
 
-## Read order — non-negotiable
+## Read order
 
-1. **This file** (`CLAUDE.md`) — shared rules, architecture, current state
-2. **Your agent file** (`docs/AGENT-BACKEND.md`, `docs/AGENT-FRONTEND.md`, `docs/AGENT-AI-ENGINE.md`, or `docs/AGENT-ORCHESTRATOR.md`)
-3. **Active plans** (`docs/plans/PLAN-LOG.md`) — find active plans, read their files for multi-session context
-4. **The spec** (`../../specs-plans/FORGE-FUNNEL-SCANNER-SPEC.md`) — source of truth for what we're building
-5. **The business plan** (`../../specs-plans/FORGE-BUSINESS-PLAN.md`) — why we're building it
-6. **Latest audit** (`docs/audits/AUDIT-{NNN}.md`) — where we are right now
-7. **Fix log** (`docs/fixes/FIX-LOG.md`) — what's been done and what's pending
-
-Skipping any of these causes decisions that conflict with the spec, the architecture, or work already completed.
+1. **This file** (`CLAUDE.md`) — project rules, architecture, current state
+2. **Cody identity** (`../../build/orchestrator/CLAUDE.md`) — read on boot step 1
+3. **Scanner spec** (`../../canon/forge-scanner-spec.md`) — source of truth for what we're building
+4. **Latest audit** (`docs/audits/AUDIT-{NNN}.md`) — where we are right now
+5. **Fix log** (`docs/fixes/FIX-LOG.md`) — what's been done and pending
+6. **Active plans** (`docs/plans/PLAN-LOG.md`) — multi-session context
 
 ---
 
@@ -64,26 +61,11 @@ Skipping any of these causes decisions that conflict with the spec, the architec
 
 ---
 
-## Architecture — 4 agents, strict ownership
+## Architecture
 
-### Agent boundaries are walls, not suggestions
+### Contracts
 
-| Agent | Instruction File | Owns |
-|-------|-----------------|------|
-| **Orchestrator** | `docs/AGENT-ORCHESTRATOR.md` | `/contracts/`, `/docs/` |
-| **Backend** | `docs/AGENT-BACKEND.md` | `/src/app/api/`, `/src/lib/db/`, `/src/lib/auth/`, `/src/lib/screenshots/`, `/src/lib/followup/`, `/src/lib/stripe/`, `/src/lib/rate-limit/`, `/src/middleware.ts`, `/supabase/`, `/next.config.ts` |
-| **Frontend** | `docs/AGENT-FRONTEND.md` | `/src/app/layout.tsx`, `/src/app/page.tsx`, `/src/app/scan/`, `/src/app/admin/`, `/src/components/`, `/src/styles/`, `/public/` |
-| **AI Engine** | `docs/AGENT-AI-ENGINE.md` | `/src/lib/ai/`, `/src/lib/prompts/`, `/src/lib/scanner/`, `/src/lib/blueprint/` |
-
-**Why strict ownership matters:** Agents can work in parallel without merge conflicts. The Orchestrator audits impartially because it never writes the code it judges. Cross-agent bugs get fix sub-tickets. This separation is what keeps concurrent sessions from destroying each other's work.
-
-### Contracts — the API between agents
-
-`/contracts/` has three files: `types.ts`, `events.ts`, `api.ts`. These define every shared type, SSE event shape, and request/response schema.
-
-- **Only the Orchestrator modifies contracts**
-- All agents import from contracts — never redefine types locally
-- If you need a new type, tell Adrián → Orchestrator adds it
+`/contracts/` has three files: `types.ts`, `events.ts`, `api.ts`. Shared types, SSE event shapes, request/response schemas. All code imports from contracts — never redefine types locally.
 
 ### Key architectural patterns
 
@@ -204,36 +186,12 @@ import { getScanResults } from '@/lib/db/queries';
 
 ## Audit & fix system
 
-The Orchestrator manages quality through a formal audit/fix cycle. Every agent must understand this system.
+Full audit/fix protocol in `../../build/orchestrator/procedures.md`.
 
-### Audit files
-- Location: `docs/audits/AUDIT-{NNN}.md` — append-only, never modify previous audits
-
-### Fix log
-- Location: `docs/fixes/FIX-LOG.md` — single append-only table tracking every fix
-
-### Fix tickets
-- Location: `docs/fixes/FIX-{NNNN}.md` — created by Orchestrator, executed by owning agent
-- Cross-agent fixes: sub-tickets `FIX-{NNNN}a.md`, `FIX-{NNNN}b.md`
-
-### Plan registry
-- Location: `docs/plans/PLAN-LOG.md` — index of multi-session initiatives
-- Each plan: `docs/plans/PLAN-{NNNN}.md` — full context for cross-session continuity
-- Read active plans at session start. Update "Current State" at session end.
-
-### When you receive a fix ticket
-1. Read the ticket file completely
-2. Read the file(s) listed in "File(s) to modify"
-3. Apply **ONLY** the change described — no refactoring, no "while I'm here" improvements
-4. Do NOT modify files outside your owned directories
-5. Do NOT modify the fix ticket or FIX-LOG.md (Orchestrator-owned)
-6. After applying the fix, confirm to Adrián what you changed
-
-### Branch discipline
-- All agent work on `claude/<description>` branches (e.g., `claude/phase-d-polish`)
-- Before first commit: if on `main` or `dev`, create a `claude/*` branch first
-- **Agents NEVER merge into `main` or `dev`** — Adrián handles all merges
-- **Agents NEVER push to remote** — Adrián handles all pushes
+- Audits: `docs/audits/AUDIT-{NNN}.md` — append-only
+- Fix log: `docs/fixes/FIX-LOG.md` — append-only table
+- Fix tickets: `docs/fixes/FIX-{NNNN}.md`
+- Plans: `docs/plans/PLAN-LOG.md` — read active plans at session start
 
 ---
 
