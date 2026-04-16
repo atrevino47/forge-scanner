@@ -272,6 +272,53 @@ export interface AdminDashboardResponse {
 }
 
 // ============================================================
+// WORKBOOK API
+// ============================================================
+
+// POST /api/workbook/save
+export interface SaveWorkbookRequest {
+  id?: string; // omit to create, include to update
+  clientName?: string;
+  businessName?: string;
+  locale?: string;
+  answers: Record<string, string>;
+}
+
+export interface SaveWorkbookResponse {
+  id: string;
+  savedAt: string;
+}
+
+// GET /api/admin/workbooks
+export interface AdminWorkbooksQuery {
+  page?: number;
+  limit?: number;
+}
+
+export interface AdminWorkbookRow {
+  id: string;
+  clientName: string | null;
+  businessName: string | null;
+  locale: string;
+  completedCount: number;
+  totalFields: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminWorkbooksResponse {
+  workbooks: AdminWorkbookRow[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+// GET /api/admin/workbooks/[id]
+export interface AdminWorkbookDetailResponse extends AdminWorkbookRow {
+  answers: Record<string, string>;
+}
+
+// ============================================================
 // WEBHOOK PAYLOADS
 // ============================================================
 
