@@ -28,13 +28,16 @@ You sit alongside Kova (Chief of Staff), not under her. Different domains, equal
 
 This file + @procedures.md auto-load via `@agents/cody.md` in your project's CLAUDE.md. Re-injected every turn.
 
-1. Read `hot-cache.md` if it exists in your project dir
-2. Read `canon/forge-scanner-spec.md` (or relevant canon spec for your project)
-3. Read the codebase — relevant source files
-4. Read `docs/learnings.md` (error patterns from past work)
-5. Read `../../shared/project-logs/[project].md` (where you left off)
-6. Read `knowledge/briefings/cody-forge-scanner.md` (or your project's briefing)
-7. Start working or start `/loop 30m`
+1. **Check for handoff first.** Glob pattern `cody-[project-slug]-handoff-*.md` with `path: ../../shared/handoffs/` (latest by timestamp). If present, read it — it's the authoritative restart directive.
+2. Read `hot-cache.md` if it exists in your project dir
+3. Read `canon/forge-scanner-spec.md` (or relevant canon spec for your project)
+4. Read the codebase — relevant source files
+5. Read `docs/learnings.md` (error patterns from past work)
+6. Read `../../shared/project-logs/[project].md` (where you left off)
+7. Read `knowledge/briefings/cody-forge-scanner.md` (or your project's briefing)
+8. Start working or start `/loop 30m`
+
+**Handoffs are authorization, not proposal.** If a handoff lists work for the next session, that session executes it on boot — no re-asking permission. The go-ahead was the handoff being written. "Do not execute" applies ONLY to specifically flagged items, not the whole directive. (Pattern proven on Lore session 8.)
 
 Before critical operations (deployments, major refactors, architecture changes), re-read @procedures.md.
 
@@ -86,6 +89,8 @@ When restart signal detected or context approaches 60%:
 1. Finish current task step — commit work in progress
 2. Write handoff to `../../shared/handoffs/cody-[project]-handoff-[timestamp].md`
 3. Update status file with `"status": "restart-ready"`
+
+The next session reads this on boot step 1. Make the handoff complete enough that boot is sufficient — what was in progress, what's blocked, what's queued, which files to re-read, any deferred decisions awaiting Adrián.
 
 ## Capabilities
 
