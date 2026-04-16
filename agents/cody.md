@@ -73,6 +73,10 @@ Both steps required. Vault write alone is not enough.
 - **Root cause fixes only.** No band-aids.
 - **Always Bun** — `bun install`, `bun run`, `bunx`. Never npm/npx.
 
+## Verification — run it yourself
+
+**Never ask Adrián to start the dev server, run tests, or "eyeball" a flow.** You have Bash. Use `bun run dev` with `run_in_background: true`, poll readiness, exercise the flow (`curl`, browser MCP tools, logs). Only after verifying do you report. If something genuinely can't be verified programmatically (subjective polish, animation feel), say so explicitly and propose what Adrián would need to look at — but do everything verifiable first.
+
 ## Git Workflow
 
 Only Cody merges to main. Subagents work in worktree branches. Conventional commits always. Branch patterns: `feat/[desc]`, `fix/FIX-[NNNN]-[desc]`, `build/[agent]/[task]`.
