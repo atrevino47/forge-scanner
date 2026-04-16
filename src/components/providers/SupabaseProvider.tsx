@@ -15,6 +15,11 @@ interface AuthContextValue {
   supabase: SupabaseClient;
   user: User | null;
   signInWithGoogle: () => Promise<void>;
+  signInWithMagicLink: (email: string) => Promise<{ error: string | null }>;
+  signUpWithPassword: (
+    email: string,
+    password: string,
+  ) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -49,8 +54,39 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     });
   }, [supabase]);
 
+  const signInWithMagicLink = useCallback(
+    async (email: string) => {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: window.location.href },
+      });
+      return { error: error?.message ?? null };
+    },
+    [supabase],
+  );
+
+  const signUpWithPassword = useCallback(
+    async (email: string, password: string) => {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: window.location.href },
+      });
+      return { error: error?.message ?? null };
+    },
+    [supabase],
+  );
+
   return (
-    <AuthContext.Provider value={{ supabase, user, signInWithGoogle }}>
+    <AuthContext.Provider
+      value={{
+        supabase,
+        user,
+        signInWithGoogle,
+        signInWithMagicLink,
+        signUpWithPassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
