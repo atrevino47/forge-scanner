@@ -6,12 +6,11 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ArrowRight } from 'lucide-react';
 import { clipReveal, fadeSlideUp } from '@/lib/gsap-presets';
+import { revenueAuditCopy as copy } from '@/lib/copy/revenue-audit';
 
 export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [url, setUrl] = useState('');
-  const [instagram, setInstagram] = useState('');
-  const [facebook, setFacebook] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const router = useRouter();
@@ -60,15 +59,7 @@ export function HeroSection() {
       const res = await fetch('/api/scan/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: trimmed,
-          ...(instagram.trim() || facebook.trim() ? {
-            providedSocials: {
-              ...(instagram.trim() && { instagram: instagram.trim() }),
-              ...(facebook.trim() && { facebook: facebook.trim() }),
-            },
-          } : {}),
-        }),
+        body: JSON.stringify({ url: trimmed }),
       });
 
       if (!res.ok) {
@@ -142,9 +133,7 @@ export function HeroSection() {
             color: 'var(--forge-text)',
           }}
         >
-          Your funnel is leaking revenue.
-          <br />
-          <span style={{ color: 'var(--forge-accent)' }}>Let&apos;s find where.</span>
+          {copy.landing.heroHeadline}
         </h1>
 
         {/* Subheadline */}
@@ -156,7 +145,7 @@ export function HeroSection() {
             color: 'var(--forge-text-secondary)',
           }}
         >
-          We scan your website, socials, and ads — and show you exactly what&apos;s costing you customers. Real screenshots. Specific fixes. No fluff.
+          {copy.landing.heroSubheadline}
         </p>
 
         {/* URL Input */}
@@ -181,7 +170,7 @@ export function HeroSection() {
                 type="text"
                 value={url}
                 onChange={(e) => { setUrl(e.target.value.trim()); if (formError) setFormError(null); }}
-                placeholder="yourwebsite.com"
+                placeholder={copy.landing.urlPlaceholder}
                 required
                 autoFocus
                 className="h-14 flex-1 bg-transparent px-5 font-body text-base placeholder:text-forge-text-muted/50 focus:outline-none sm:h-16 sm:text-lg"
@@ -203,49 +192,10 @@ export function HeroSection() {
                 e.currentTarget.style.background = 'var(--forge-accent)';
               }}
             >
-              {isSubmitting ? 'Scanning...' : 'Scan My Funnel'}
+              {isSubmitting ? 'Starting…' : copy.landing.urlCta}
               {!isSubmitting && <ArrowRight className="h-4 w-4" />}
             </button>
           </div>
-
-          {/* Social handles — auto-reveal when user starts typing URL */}
-          {url.length > 0 && (
-            <div className="mt-4">
-              <p className="mb-2 font-mono text-xs uppercase tracking-widest" style={{ color: 'var(--forge-text-muted)' }}>
-                Optional — for a deeper scan
-              </p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div
-                  className="flex items-center overflow-hidden rounded-lg border"
-                  style={{ borderColor: 'var(--forge-border)', background: 'var(--forge-surface)' }}
-                >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center font-mono text-xs" style={{ color: 'var(--forge-text-muted)' }}>IG</span>
-                  <input
-                    type="text"
-                    value={instagram}
-                    onChange={(e) => setInstagram(e.target.value)}
-                    placeholder="@handle"
-                    className="h-12 flex-1 bg-transparent pr-4 font-body text-sm placeholder:text-forge-text-muted/50 focus:outline-none"
-                    style={{ color: 'var(--forge-text)' }}
-                  />
-                </div>
-                <div
-                  className="flex items-center overflow-hidden rounded-lg border"
-                  style={{ borderColor: 'var(--forge-border)', background: 'var(--forge-surface)' }}
-                >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center font-mono text-xs" style={{ color: 'var(--forge-text-muted)' }}>FB</span>
-                  <input
-                    type="text"
-                    value={facebook}
-                    onChange={(e) => setFacebook(e.target.value)}
-                    placeholder="facebook.com/page or @handle"
-                    className="h-12 flex-1 bg-transparent pr-4 font-body text-sm placeholder:text-forge-text-muted/50 focus:outline-none"
-                    style={{ color: 'var(--forge-text)' }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
 
           {formError && (
             <p className="font-body text-sm text-forge-critical mt-2">{formError}</p>
