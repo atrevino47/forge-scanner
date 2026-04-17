@@ -6,9 +6,7 @@ Tracks multi-session initiatives. Every agent session reads this file to find ac
 
 ## Active
 
-| Plan ID | Date | Title | Status |
-|---------|------|-------|--------|
-| PLAN-0004 | 2026-04-16 | Storytelling Experience Scaffold | executing — branch `feat/storytelling-experience` |
+_None. Scanner is live; next build cycle pending directive._
 
 ## Archived
 

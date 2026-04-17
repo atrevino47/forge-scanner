@@ -40,11 +40,8 @@ const CaptureInfoSchema = z.object({
   providedSocials: ProvidedSocialsSchema,
   socialConfirmation: SocialConfirmationSchema,
 }).refine(
-  (data) => data.email || data.socialConfirmation || data.providedSocials,
-  {
-    message:
-      'At least one of email, socialConfirmation, or providedSocials must be provided',
-  }
+  (data) => data.email || data.socialConfirmation,
+  { message: 'Either email or socialConfirmation must be provided' }
 );
 
 export async function POST(
