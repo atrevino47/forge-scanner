@@ -44,7 +44,7 @@ export async function GET(
     // Fetch page
     const { data, error } = await supabase
       .from('workbook_submissions')
-      .select('id, client_name, business_name, locale, completed_count, total_fields, created_at, updated_at')
+      .select('id, type, client_name, business_name, locale, completed_count, total_fields, created_at, updated_at')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -57,6 +57,7 @@ export async function GET(
 
     const workbooks: AdminWorkbookRow[] = (data ?? []).map((row) => ({
       id: row.id,
+      type: (row.type ?? 'branding') as AdminWorkbookRow['type'],
       clientName: row.client_name,
       businessName: row.business_name,
       locale: row.locale,

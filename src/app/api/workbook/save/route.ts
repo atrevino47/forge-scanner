@@ -1,6 +1,7 @@
 // POST /api/workbook/save
 // Public endpoint — saves or updates a workbook submission.
 // If the request carries a valid Supabase session, links the row to the user.
+// Supports multiple workbook types (branding, offers) via `type` field.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -8,7 +9,8 @@ import { createServiceClient } from '@/lib/db/client';
 import { getUser } from '@/lib/auth/config';
 import type { SaveWorkbookResponse, ApiError } from '@/../contracts/api';
 
-const CONTENT_FIELDS = [
+// Legacy branding field list — used when client doesn't send completedCount/totalFields
+const BRANDING_FIELDS = [
   'catalyst', 'coreTruth', 'proof',
   'originStory', 'failureStory', 'successStory', 'clientStory', 'industryStory',
   'idealClient', 'services', 'freeResources', 'voiceIdentity',
@@ -16,10 +18,13 @@ const CONTENT_FIELDS = [
 
 const bodySchema = z.object({
   id: z.string().uuid().optional(),
+  type: z.enum(['branding', 'offers']).optional(),
   clientName: z.string().max(200).optional(),
   businessName: z.string().max(200).optional(),
   locale: z.string().max(5).optional(),
   answers: z.record(z.string(), z.string()),
+  completedCount: z.number().int().nonnegative().optional(),
+  totalFields: z.number().int().positive().max(200).optional(),
 });
 
 export async function POST(
@@ -36,11 +41,14 @@ export async function POST(
       );
     }
 
-    const { id, clientName, businessName, locale, answers } = parsed.data;
+    const { id, type, clientName, businessName, locale, answers, completedCount, totalFields } = parsed.data;
+    const workbookType = type ?? 'branding';
 
-    const completedCount = CONTENT_FIELDS.filter(
+    // Client sends counts for its own field set; fall back to branding legacy if absent
+    const computedCompleted = completedCount ?? BRANDING_FIELDS.filter(
       (f) => (answers[f as string] || '').trim().length > 0
     ).length;
+    const computedTotal = totalFields ?? BRANDING_FIELDS.length;
 
     // Check if user is authenticated — link row to their account
     let userId: string | null = null;
@@ -56,11 +64,13 @@ export async function POST(
     if (id) {
       // Update existing row
       const updatePayload: Record<string, unknown> = {
+        type: workbookType,
         client_name: clientName ?? null,
         business_name: businessName ?? null,
         locale: locale ?? 'en',
         answers,
-        completed_count: completedCount,
+        completed_count: computedCompleted,
+        total_fields: computedTotal,
         updated_at: new Date().toISOString(),
       };
       // Claim unclaimed row for authenticated user
@@ -83,12 +93,13 @@ export async function POST(
 
     // Create new row
     const insertPayload: Record<string, unknown> = {
+      type: workbookType,
       client_name: clientName ?? null,
       business_name: businessName ?? null,
       locale: locale ?? 'en',
       answers,
-      completed_count: completedCount,
-      total_fields: CONTENT_FIELDS.length,
+      completed_count: computedCompleted,
+      total_fields: computedTotal,
     };
     if (userId) insertPayload.user_id = userId;
 

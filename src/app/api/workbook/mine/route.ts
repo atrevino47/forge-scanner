@@ -1,5 +1,5 @@
-// GET /api/workbook/mine?locale=en
-// Returns the authenticated user's workbook for the given locale
+// GET /api/workbook/mine?locale=en&type=branding
+// Returns the authenticated user's workbook for the given locale + type
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getUser } from '@/lib/auth/config';
@@ -18,7 +18,10 @@ export async function GET(
       );
     }
 
-    const locale = new URL(request.url).searchParams.get('locale') ?? 'en';
+    const url = new URL(request.url);
+    const locale = url.searchParams.get('locale') ?? 'en';
+    const typeParam = url.searchParams.get('type');
+    const type = typeParam === 'offers' ? 'offers' : 'branding';
     const supabase = createServiceClient();
 
     const { data } = await supabase
@@ -26,6 +29,7 @@ export async function GET(
       .select('id, answers, completed_count, created_at, updated_at')
       .eq('user_id', user.id)
       .eq('locale', locale)
+      .eq('type', type)
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle();

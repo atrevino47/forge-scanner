@@ -1,21 +1,34 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
+import type { WorkbookType } from '@/../contracts/api';
 
 /* ═══════════════════════════════════════════════════════
  * TYPES & CONSTANTS
  * ═══════════════════════════════════════════════════════ */
 
-const STORAGE_PREFIX = 'forge-branding-workbook';
-
-export const CONTENT_FIELDS = [
+export const BRANDING_CONTENT_FIELDS = [
   'catalyst', 'coreTruth', 'proof',
   'originStory', 'failureStory', 'successStory', 'clientStory', 'industryStory',
   'idealClient', 'services', 'freeResources', 'voiceIdentity',
 ] as const;
 
+export const OFFERS_CONTENT_FIELDS = [
+  'crowdAvatar', 'crowdPain',
+  'dreamOutcome', 'statusGain',
+  'problemsDream', 'problemsLikelihood', 'problemsEffort', 'problemsTime',
+  'solutionsList',
+  'deliveryMechanism', 'productType',
+  'trimHighCost', 'addLowCostHighValue', 'bundle',
+  'scarcityUrgency', 'bonuses', 'guarantee', 'offerName', 'pricing',
+] as const;
+
+// Kept for backward compat — existing imports expect this name
+export const CONTENT_FIELDS = BRANDING_CONTENT_FIELDS;
+
 export type FieldId =
-  | (typeof CONTENT_FIELDS)[number]
+  | (typeof BRANDING_CONTENT_FIELDS)[number]
+  | (typeof OFFERS_CONTENT_FIELDS)[number]
   | 'clientName'
   | 'businessName';
 
@@ -31,7 +44,14 @@ export const cx = {
  * HOOK — shared state + save logic
  * ═══════════════════════════════════════════════════════ */
 
-export function useWorkbook(locale: string, userId?: string | null) {
+export function useWorkbook(
+  locale: string,
+  userId?: string | null,
+  options?: { type?: WorkbookType; contentFields?: readonly string[] },
+) {
+  const type: WorkbookType = options?.type ?? 'branding';
+  const contentFields = options?.contentFields ?? BRANDING_CONTENT_FIELDS;
+
   const [fields, setFields] = useState<Record<string, string>>({});
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [loaded, setLoaded] = useState(false);
@@ -47,7 +67,12 @@ export function useWorkbook(locale: string, userId?: string | null) {
   const lastAutoSave = useRef('');
   const autoSaveInFlight = useRef(false);
 
-  const storageKey = `${STORAGE_PREFIX}-${locale}`;
+  // Legacy key preserved for branding (don't wipe existing users' progress).
+  // Offers uses a new namespaced key.
+  const storageKey =
+    type === 'branding'
+      ? `forge-branding-workbook-${locale}`
+      : `forge-${type}-workbook-${locale}`;
 
   /* ── Load from localStorage on mount ── */
   useEffect(() => {
@@ -80,7 +105,7 @@ export function useWorkbook(locale: string, userId?: string | null) {
     if (!userId || !loaded) return;
     (async () => {
       try {
-        const res = await fetch(`/api/workbook/mine?locale=${locale}`);
+        const res = await fetch(`/api/workbook/mine?locale=${locale}&type=${type}`);
         if (!res.ok) return;
         const data = await res.json() as { id: string | null; answers: Record<string, string> | null };
         if (data.id && data.answers) {
@@ -91,7 +116,7 @@ export function useWorkbook(locale: string, userId?: string | null) {
         }
       } catch { /* server unavailable — use localStorage */ }
     })();
-  }, [userId, loaded, locale, storageKey]);
+  }, [userId, loaded, locale, type, storageKey]);
 
   /* ── Auto-save to localStorage (debounced 800ms) ── */
   useEffect(() => {
@@ -116,16 +141,20 @@ export function useWorkbook(locale: string, userId?: string | null) {
       if (Object.keys(f).length === 0) return;        // empty
 
       autoSaveInFlight.current = true;
+      const completedCountNow = contentFields.filter((id) => (f[id] || '').trim().length > 0).length;
       try {
         const res = await fetch('/api/workbook/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             id: serverIdRef.current ?? undefined,
+            type,
             clientName: f.clientName || undefined,
             businessName: f.businessName || undefined,
             locale,
             answers: f,
+            completedCount: completedCountNow,
+            totalFields: contentFields.length,
           }),
         });
         if (res.ok) {
@@ -140,15 +169,16 @@ export function useWorkbook(locale: string, userId?: string | null) {
       autoSaveInFlight.current = false;
     }, 30_000);
     return () => clearInterval(interval);
-  }, [loaded, locale, storageKey]);
+  }, [loaded, locale, type, contentFields, storageKey]);
 
   const update = useCallback((id: FieldId, value: string) => {
     setFields((prev) => ({ ...prev, [id]: value }));
   }, []);
 
-  const completedCount = CONTENT_FIELDS.filter(
+  const completedCount = contentFields.filter(
     (id) => (fields[id] || '').trim().length > 0
   ).length;
+  const totalFields = contentFields.length;
 
   /* ── Manual save (button click) ── */
   const handleSave = async () => {
@@ -160,10 +190,13 @@ export function useWorkbook(locale: string, userId?: string | null) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: serverId ?? undefined,
+          type,
           clientName: fields.clientName || undefined,
           businessName: fields.businessName || undefined,
           locale,
           answers: fields,
+          completedCount,
+          totalFields,
         }),
       });
       if (!res.ok) { setSaveStatus('error'); return; }
@@ -189,7 +222,7 @@ export function useWorkbook(locale: string, userId?: string | null) {
 
   const v = (id: FieldId) => fields[id] || '';
 
-  return { fields, loaded, saveStatus, completedCount, update, handleSave, handleExport, handleReset, v, isDark, toggleDark };
+  return { fields, loaded, saveStatus, completedCount, totalFields, update, handleSave, handleExport, handleReset, v, isDark, toggleDark };
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -242,15 +275,16 @@ export function Divider() {
 }
 
 export function WorkbookToolbar({
-  completedCount, saveStatus, onSave, onExport, onReset,
+  completedCount, totalFields, saveStatus, onSave, onExport, onReset,
   isDark, onToggleDark,
   saveLabel, exportLabel, resetLabel, sectionsLabel,
 }: {
-  completedCount: number; saveStatus: string;
+  completedCount: number; totalFields?: number; saveStatus: string;
   onSave: () => void; onExport: () => void; onReset: () => void;
   isDark?: boolean; onToggleDark?: () => void;
   saveLabel?: string; exportLabel?: string; resetLabel?: string; sectionsLabel?: string;
 }) {
+  const total = totalFields ?? CONTENT_FIELDS.length;
   return (
     <div className="print:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-forge-border bg-forge-glass backdrop-blur-xl">
       <div className="mx-auto flex max-w-[740px] items-center justify-between px-6 py-3">
@@ -259,7 +293,7 @@ export function WorkbookToolbar({
             <svg viewBox="0 0 36 36" className="h-9 w-9 -rotate-90">
               <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-forge-border" />
               <circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" strokeWidth="2.5"
-                strokeDasharray={`${(completedCount / CONTENT_FIELDS.length) * 94.25} 94.25`}
+                strokeDasharray={`${(completedCount / total) * 94.25} 94.25`}
                 strokeLinecap="round" className="text-forge-accent transition-all duration-500" />
             </svg>
             <span className="absolute inset-0 flex items-center justify-center font-mono text-[10px] font-bold text-forge-text">
@@ -268,7 +302,7 @@ export function WorkbookToolbar({
           </div>
           <div className="hidden sm:block">
             <span className="font-body text-[13px] text-forge-text-secondary">
-              {completedCount} {sectionsLabel ?? `of ${CONTENT_FIELDS.length} sections`}
+              {completedCount} {sectionsLabel ?? `of ${total} sections`}
             </span>
             {saveStatus === 'saving' && <span className="ml-3 font-body text-[12px] text-forge-text-muted animate-pulse">Saving...</span>}
             {saveStatus === 'saved' && <span className="ml-3 font-body text-[12px] text-forge-positive">Saved</span>}

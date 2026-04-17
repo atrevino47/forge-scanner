@@ -32,6 +32,7 @@ export async function GET(
 
     return NextResponse.json({
       id: data.id,
+      type: (data.type ?? 'branding') as AdminWorkbookDetailResponse['type'],
       clientName: data.client_name,
       businessName: data.business_name,
       locale: data.locale,

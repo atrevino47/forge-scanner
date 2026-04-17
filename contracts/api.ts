@@ -275,13 +275,18 @@ export interface AdminDashboardResponse {
 // WORKBOOK API
 // ============================================================
 
+export type WorkbookType = 'branding' | 'offers';
+
 // POST /api/workbook/save
 export interface SaveWorkbookRequest {
   id?: string; // omit to create, include to update
+  type?: WorkbookType; // defaults to 'branding' for backward compat
   clientName?: string;
   businessName?: string;
   locale?: string;
   answers: Record<string, string>;
+  completedCount?: number; // client-computed — API stores as-is when provided
+  totalFields?: number;
 }
 
 export interface SaveWorkbookResponse {
@@ -297,6 +302,7 @@ export interface AdminWorkbooksQuery {
 
 export interface AdminWorkbookRow {
   id: string;
+  type: WorkbookType;
   clientName: string | null;
   businessName: string | null;
   locale: string;
