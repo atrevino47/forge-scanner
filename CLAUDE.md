@@ -5,7 +5,7 @@
 ## Read order
 
 1. **This file** (`CLAUDE.md`) — project rules, architecture, current state
-2. **Cody identity** (`../../build/orchestrator/CLAUDE.md`) — read on boot step 1
+2. **Cody identity** (`agents/cody.md` → symlinks to `../../forge-agents/cody/CLAUDE.md`) — read on boot step 1
 3. **Scanner spec** (`../../canon/forge-scanner-spec.md`) — source of truth for what we're building
 4. **Latest audit** (`docs/audits/AUDIT-{NNN}.md`) — where we are right now
 5. **Fix log** (`docs/fixes/FIX-LOG.md`) — what's been done and pending
@@ -186,7 +186,7 @@ import { getScanResults } from '@/lib/db/queries';
 
 ## Audit & fix system
 
-Full audit/fix protocol in `../../build/orchestrator/procedures.md`.
+Full audit/fix protocol in `agents/procedures.md` (symlinks to `../../forge-agents/cody/procedures.md`).
 
 - Audits: `docs/audits/AUDIT-{NNN}.md` — append-only
 - Fix log: `docs/fixes/FIX-LOG.md` — append-only table
@@ -348,14 +348,14 @@ bunx supabase db push  # Push migrations to remote
 
 ### What's not built yet
 - **Multi-channel follow-up beyond email** — Twilio SMS + WhatsApp (env vars not configured, code stubs exist)
-- **Contact scraping for exit recovery** — when lead leaves without email
+- **Contact scraping for exit recovery** — when lead leaves without emailx
 - **Carousel/lazy-loaded below-fold content** — known capture gap, parked
 - **Frontend polish via Stitch redesign** — PLAN-0001, deferred
 - **Video content performance analysis** — spec item, not started
 - **Resend domain verification** — operational task, blocks email sending in production
 
 ### Active plan
-See `docs/plans/PLAN-0003.md` — Scanner issues execution (Hetzner VPS + code polish). Phases 1+3 complete, Phase 2 (Adrián ops tasks) pending.
+See `docs/plans/PLAN_nnnn.md` for the latest plan. make sure it says active. if the plan is resolved, then its NOT active. 
 
 Check `../../shared/project-logs/forge-scanner.md` for latest status and `docs/fixes/FIX-LOG.md` for pending work.
 
