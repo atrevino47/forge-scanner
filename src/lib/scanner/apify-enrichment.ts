@@ -24,7 +24,12 @@ const ACTORS = {
   tiktok: 'clockworks/free-tiktok-scraper',
   facebook: 'apify/facebook-pages-scraper',
   googleMaps: 'compass/crawler-google-places',
+  youtube: 'streamers/youtube-scraper',
+  twitter: 'apidojo/tweet-scraper',
 } as const;
+
+const YOUTUBE_MAX_VIDEOS = 10;
+const TWITTER_MAX_TWEETS = 10;
 
 // ============================================================
 // Main enrichment function
@@ -73,6 +78,20 @@ export async function enrichSocialProfiles(
   if (gbpPlaceId) {
     scraperPromises.push(
       scrapeGoogleMaps(client, gbpPlaceId),
+    );
+  }
+
+  // YouTube
+  if (socials.youtube?.confidence === 'high') {
+    scraperPromises.push(
+      scrapeYouTube(client, socials.youtube.url),
+    );
+  }
+
+  // X / Twitter
+  if (socials.twitter?.confidence === 'high') {
+    scraperPromises.push(
+      scrapeTwitter(client, socials.twitter.handle),
     );
   }
 
@@ -318,6 +337,149 @@ async function scrapeGoogleMaps(
     };
   } catch (error) {
     console.error(`[apify-enrichment] Google Maps scrape failed for place ${placeId}:`, error);
+    return null;
+  }
+}
+
+// ============================================================
+// YouTube scraper (streamers/youtube-scraper)
+// ============================================================
+
+interface YouTubeChannelResult {
+  channelName?: string;
+  channelUrl?: string;
+  channelUsername?: string;
+  numberOfSubscribers?: number;
+  channelTotalVideos?: number;
+  channelDescription?: string;
+  viewCount?: number;
+  likes?: number;
+  commentsCount?: number;
+}
+
+async function scrapeYouTube(
+  client: ApifyClient,
+  channelUrl: string,
+): Promise<SocialProfileMetrics | null> {
+  try {
+    const run = await client.actor(ACTORS.youtube).call(
+      {
+        startUrls: [{ url: channelUrl }],
+        maxResults: YOUTUBE_MAX_VIDEOS,
+        maxResultStreams: 0,
+        maxResultsShorts: 0,
+      },
+      { memory: ACTOR_MEMORY_MB, waitSecs: APIFY_TIMEOUT_MS / 1000 },
+    );
+
+    const { items } = await client.dataset(run.defaultDatasetId).listItems();
+    if (items.length === 0) return null;
+
+    const videos = items as unknown as YouTubeChannelResult[];
+    const channel = videos[0];
+
+    const subs = channel.numberOfSubscribers ?? null;
+    const views = videos.map((v) => v.viewCount).filter((v): v is number => typeof v === 'number');
+    const likes = videos.map((v) => v.likes).filter((v): v is number => typeof v === 'number');
+    const comments = videos.map((v) => v.commentsCount).filter((v): v is number => typeof v === 'number');
+
+    const avgLikes = calculateAverage(likes);
+    const avgComments = calculateAverage(comments);
+    const avgViews = calculateAverage(views);
+    // YouTube engagement rate: (likes + comments) / views across sampled videos
+    const engagementRate = avgViews && avgViews > 0 && avgLikes !== null
+      ? Math.round(((avgLikes + (avgComments ?? 0)) / avgViews) * 10000) / 100
+      : null;
+
+    return {
+      platform: 'youtube',
+      handle: channel.channelUsername || channel.channelName || 'unknown',
+      followerCount: subs,
+      followingCount: null,
+      postCount: channel.channelTotalVideos ?? null,
+      engagementRate,
+      avgLikes,
+      avgComments,
+      isVerified: false,
+      bio: channel.channelDescription || null,
+      reviewCount: null,
+      averageRating: null,
+      totalPhotos: null,
+    };
+  } catch (error) {
+    console.error(`[apify-enrichment] YouTube scrape failed for ${channelUrl}:`, error);
+    return null;
+  }
+}
+
+// ============================================================
+// X / Twitter scraper (apidojo/tweet-scraper V2)
+// ============================================================
+
+interface TweetResult {
+  author?: {
+    userName?: string;
+    name?: string;
+    followers?: number;
+    following?: number;
+    statusesCount?: number;
+    isVerified?: boolean;
+    description?: string;
+  };
+  likeCount?: number;
+  replyCount?: number;
+  retweetCount?: number;
+  viewCount?: number;
+}
+
+async function scrapeTwitter(
+  client: ApifyClient,
+  handle: string,
+): Promise<SocialProfileMetrics | null> {
+  try {
+    const cleanHandle = handle.replace('@', '');
+    const run = await client.actor(ACTORS.twitter).call(
+      {
+        twitterHandles: [cleanHandle],
+        maxItems: TWITTER_MAX_TWEETS,
+        sort: 'Latest',
+      },
+      { memory: ACTOR_MEMORY_MB, waitSecs: APIFY_TIMEOUT_MS / 1000 },
+    );
+
+    const { items } = await client.dataset(run.defaultDatasetId).listItems();
+    if (items.length === 0) return null;
+
+    const tweets = items as unknown as TweetResult[];
+    const author = tweets[0]?.author;
+    if (!author) return null;
+
+    const likes = tweets.map((t) => t.likeCount).filter((v): v is number => typeof v === 'number');
+    const replies = tweets.map((t) => t.replyCount).filter((v): v is number => typeof v === 'number');
+    const avgLikes = calculateAverage(likes);
+    const avgComments = calculateAverage(replies);
+    const followers = author.followers ?? 0;
+    const engagementRate = followers > 0 && avgLikes !== null
+      ? Math.round(((avgLikes + (avgComments ?? 0)) / followers) * 10000) / 100
+      : null;
+
+    return {
+      platform: 'twitter',
+      handle: author.userName || cleanHandle,
+      followerCount: author.followers ?? null,
+      followingCount: author.following ?? null,
+      postCount: author.statusesCount ?? null,
+      engagementRate,
+      avgLikes,
+      avgComments,
+      isVerified: author.isVerified ?? false,
+      bio: author.description || null,
+      reviewCount: null,
+      averageRating: null,
+      totalPhotos: null,
+    };
+  } catch (error) {
+    console.error(`[apify-enrichment] Twitter scrape failed for @${handle}:`, error);
     return null;
   }
 }
