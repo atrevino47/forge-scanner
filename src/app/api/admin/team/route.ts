@@ -2,7 +2,6 @@
 // CRUD operations for admin team member management
 
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
 import type { ApiError } from '@/../contracts/api';
 import { requireAdminSession } from '@/lib/auth/admin';
 
@@ -32,27 +31,7 @@ interface TeamDeleteResponse {
   id: string;
 }
 
-// ---------- Schemas ----------
-
-const createMemberSchema = z.object({
-  email: z.string().email('Valid email is required'),
-  fullName: z.string().min(1, 'Full name is required'),
-  role: z.enum(['admin', 'closer', 'viewer']),
-});
-
-const updateMemberSchema = z.object({
-  id: z.string().min(1, 'Member ID is required'),
-  email: z.string().email().optional(),
-  fullName: z.string().min(1).optional(),
-  role: z.enum(['admin', 'closer', 'viewer']).optional(),
-  active: z.boolean().optional(),
-});
-
-const deleteMemberSchema = z.object({
-  id: z.string().min(1, 'Member ID is required'),
-});
-
-// ---------- Mock Data ----------
+// ---------- Mock Data (GET only) ----------
 
 const MOCK_MEMBERS: TeamMember[] = [
   {
@@ -63,24 +42,6 @@ const MOCK_MEMBERS: TeamMember[] = [
     active: true,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
-  },
-  {
-    id: 'team_002',
-    email: 'closer@forgewith.ai',
-    fullName: 'Jamie Rivera',
-    role: 'closer',
-    active: true,
-    createdAt: '2026-02-15T10:00:00.000Z',
-    updatedAt: '2026-03-01T08:30:00.000Z',
-  },
-  {
-    id: 'team_003',
-    email: 'viewer@forgewith.ai',
-    fullName: 'Alex Kim',
-    role: 'viewer',
-    active: false,
-    createdAt: '2026-03-01T12:00:00.000Z',
-    updatedAt: '2026-03-10T16:00:00.000Z',
   },
 ];
 
@@ -112,168 +73,32 @@ export async function GET(request: NextRequest): Promise<NextResponse<TeamListRe
   }
 }
 
-// ---------- POST: Create team member ----------
+// ---------- POST / PUT / DELETE: Not yet implemented ----------
+// Returning 501 so callers get an honest error instead of silent mock success.
 
-export async function POST(request: NextRequest): Promise<NextResponse<TeamMemberResponse | ApiError>> {
-  try {
-    const authError = await requireAdminSession(request);
-    if (authError) return authError as NextResponse<ApiError>;
-
-    const body: unknown = await request.json();
-    const parsed = createMemberSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'INVALID_INPUT',
-            message: 'Invalid team member data',
-            details: parsed.error.flatten(),
-          },
-        },
-        { status: 400 },
-      );
-    }
-
-    // TODO: Create actual team member in Supabase Auth + database
-
-    const now = new Date().toISOString();
-    const mockMember: TeamMember = {
-      id: `team_${crypto.randomUUID().slice(0, 8)}`,
-      email: parsed.data.email,
-      fullName: parsed.data.fullName,
-      role: parsed.data.role,
-      active: true,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    return NextResponse.json({ member: mockMember }, { status: 201 });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error: {
-          code: 'INTERNAL',
-          message: 'Failed to create team member',
-          details: error instanceof Error ? error.message : undefined,
-        },
-      },
-      { status: 500 },
-    );
-  }
+export async function POST(request: NextRequest): Promise<NextResponse<ApiError>> {
+  const authError = await requireAdminSession(request);
+  if (authError) return authError as NextResponse<ApiError>;
+  return NextResponse.json(
+    { error: { code: 'NOT_IMPLEMENTED', message: 'Team management is not yet implemented.' } },
+    { status: 501 },
+  );
 }
 
-// ---------- PUT: Update team member ----------
-
-export async function PUT(request: NextRequest): Promise<NextResponse<TeamMemberResponse | ApiError>> {
-  try {
-    const authError = await requireAdminSession(request);
-    if (authError) return authError as NextResponse<ApiError>;
-
-    const body: unknown = await request.json();
-    const parsed = updateMemberSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'INVALID_INPUT',
-            message: 'Invalid update data',
-            details: parsed.error.flatten(),
-          },
-        },
-        { status: 400 },
-      );
-    }
-
-    // TODO: Update actual team member in Supabase
-
-    const existing = MOCK_MEMBERS.find((m) => m.id === parsed.data.id);
-    if (!existing) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'NOT_FOUND',
-            message: `Team member ${parsed.data.id} not found`,
-          },
-        },
-        { status: 404 },
-      );
-    }
-
-    const updatedMember: TeamMember = {
-      ...existing,
-      ...(parsed.data.email !== undefined && { email: parsed.data.email }),
-      ...(parsed.data.fullName !== undefined && { fullName: parsed.data.fullName }),
-      ...(parsed.data.role !== undefined && { role: parsed.data.role }),
-      ...(parsed.data.active !== undefined && { active: parsed.data.active }),
-      updatedAt: new Date().toISOString(),
-    };
-
-    return NextResponse.json({ member: updatedMember }, { status: 200 });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error: {
-          code: 'INTERNAL',
-          message: 'Failed to update team member',
-          details: error instanceof Error ? error.message : undefined,
-        },
-      },
-      { status: 500 },
-    );
-  }
+export async function PUT(request: NextRequest): Promise<NextResponse<ApiError>> {
+  const authError = await requireAdminSession(request);
+  if (authError) return authError as NextResponse<ApiError>;
+  return NextResponse.json(
+    { error: { code: 'NOT_IMPLEMENTED', message: 'Team management is not yet implemented.' } },
+    { status: 501 },
+  );
 }
 
-// ---------- DELETE: Remove team member ----------
-
-export async function DELETE(request: NextRequest): Promise<NextResponse<TeamDeleteResponse | ApiError>> {
-  try {
-    const authError = await requireAdminSession(request);
-    if (authError) return authError as NextResponse<ApiError>;
-
-    const body: unknown = await request.json();
-    const parsed = deleteMemberSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'INVALID_INPUT',
-            message: 'Invalid delete request',
-            details: parsed.error.flatten(),
-          },
-        },
-        { status: 400 },
-      );
-    }
-
-    // TODO: Soft-delete or remove team member from Supabase
-
-    const existing = MOCK_MEMBERS.find((m) => m.id === parsed.data.id);
-    if (!existing) {
-      return NextResponse.json(
-        {
-          error: {
-            code: 'NOT_FOUND',
-            message: `Team member ${parsed.data.id} not found`,
-          },
-        },
-        { status: 404 },
-      );
-    }
-
-    return NextResponse.json({ deleted: true, id: parsed.data.id }, { status: 200 });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error: {
-          code: 'INTERNAL',
-          message: 'Failed to delete team member',
-          details: error instanceof Error ? error.message : undefined,
-        },
-      },
-      { status: 500 },
-    );
-  }
+export async function DELETE(request: NextRequest): Promise<NextResponse<ApiError>> {
+  const authError = await requireAdminSession(request);
+  if (authError) return authError as NextResponse<ApiError>;
+  return NextResponse.json(
+    { error: { code: 'NOT_IMPLEMENTED', message: 'Team management is not yet implemented.' } },
+    { status: 501 },
+  );
 }
