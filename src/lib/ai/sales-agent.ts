@@ -10,6 +10,8 @@ import { getEmailFollowupPrompt, type SequencePosition } from '../prompts/email-
 import { getSMSFollowupPrompt } from '../prompts/sms-followup';
 import { getWhatsAppFollowupPrompt, type WhatsAppSequencePosition } from '../prompts/whatsapp-followup';
 
+const CALCOM_EMBED_URL = process.env.NEXT_PUBLIC_CALCOM_EMBED_URL;
+
 // ============================================================
 // Build the system prompt for the AI Sales Agent
 // Signature matches what Backend already calls
@@ -32,7 +34,7 @@ export async function buildSalesAgentSystemPrompt(params: {
     channel: params.channel ?? 'web',
     businessName: biz,
     leadName: params.leadName,
-    calcomUrl: process.env.NEXT_PUBLIC_CALCOM_EMBED_URL,
+    calcomUrl: CALCOM_EMBED_URL,
     activeObjectionContext: params.activeObjectionContext,
     messageCount: params.messageCount,
   });
@@ -56,7 +58,7 @@ export function generateInitialMessage(params: {
     channel: params.channel ?? 'web',
     businessName: biz,
     leadName: params.leadName,
-    calcomUrl: process.env.NEXT_PUBLIC_CALCOM_EMBED_URL,
+    calcomUrl: CALCOM_EMBED_URL,
   });
 }
 
@@ -77,7 +79,7 @@ export async function generateFollowupEmail(
   calcomUrl?: string,
 ): Promise<FollowupEmailResult> {
   const biz = businessName || extractDomain(scanResult.websiteUrl);
-  const calLink = calcomUrl || process.env.NEXT_PUBLIC_CALCOM_EMBED_URL;
+  const calLink = calcomUrl || CALCOM_EMBED_URL;
 
   const prompt = getEmailFollowupPrompt(
     scanResult,
@@ -120,7 +122,7 @@ export async function generateFollowupSMS(
   calcomUrl?: string,
 ): Promise<FollowupSMSResult> {
   const biz = businessName || extractDomain(scanResult.websiteUrl);
-  const calLink = calcomUrl || process.env.NEXT_PUBLIC_CALCOM_EMBED_URL;
+  const calLink = calcomUrl || CALCOM_EMBED_URL;
 
   const prompt = getSMSFollowupPrompt(scanResult, biz, calLink);
 
@@ -156,7 +158,7 @@ export async function generateFollowupWhatsApp(
   calcomUrl?: string,
 ): Promise<FollowupWhatsAppResult> {
   const biz = businessName || extractDomain(scanResult.websiteUrl);
-  const calLink = calcomUrl || process.env.NEXT_PUBLIC_CALCOM_EMBED_URL;
+  const calLink = calcomUrl || CALCOM_EMBED_URL;
 
   const prompt = getWhatsAppFollowupPrompt(
     scanResult,
