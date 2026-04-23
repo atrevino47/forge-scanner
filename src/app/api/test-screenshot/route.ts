@@ -10,6 +10,10 @@ import {
 import type { CaptureMode } from '@/lib/screenshots/client';
 
 export async function GET(req: NextRequest) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   const url = req.nextUrl.searchParams.get('url');
   const mode = (req.nextUrl.searchParams.get('mode') ?? 'full') as CaptureMode;
   const viewport = req.nextUrl.searchParams.get('viewport') === 'mobile' ? 'mobile' : 'desktop';
