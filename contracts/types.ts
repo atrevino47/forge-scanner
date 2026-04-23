@@ -120,13 +120,32 @@ export interface ScanResult {
   createdAt: string;
 }
 
+export interface SocialEntry {
+  handle: string;
+  url: string;
+  confidence: 'high' | 'low';
+}
+
+export function isSocialEntry(value: unknown): value is SocialEntry {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'handle' in value &&
+    'url' in value &&
+    'confidence' in value &&
+    typeof (value as SocialEntry).handle === 'string' &&
+    typeof (value as SocialEntry).url === 'string' &&
+    ((value as SocialEntry).confidence === 'high' || (value as SocialEntry).confidence === 'low')
+  );
+}
+
 export interface DetectedSocials {
-  instagram?: { handle: string; url: string; confidence: 'high' | 'low' };
-  facebook?: { handle: string; url: string; confidence: 'high' | 'low' };
-  tiktok?: { handle: string; url: string; confidence: 'high' | 'low' };
-  linkedin?: { handle: string; url: string; confidence: 'high' | 'low' };
-  youtube?: { handle: string; url: string; confidence: 'high' | 'low' };
-  twitter?: { handle: string; url: string; confidence: 'high' | 'low' };
+  instagram?: SocialEntry;
+  facebook?: SocialEntry;
+  tiktok?: SocialEntry;
+  linkedin?: SocialEntry;
+  youtube?: SocialEntry;
+  twitter?: SocialEntry;
 }
 
 export interface ProvidedSocials {

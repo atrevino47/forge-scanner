@@ -4,6 +4,7 @@ import type { ApiError } from '@/../contracts/api';
 import type { ScanSSEEvent, ScanCompletedSummary } from '@/../contracts/events';
 import type { DbScan, DbScreenshot, DbFunnelStage } from '@/lib/db/types';
 import type { Annotation, DetectedSocials, SourceType } from '@/../contracts/types';
+import { isSocialEntry } from '@/../contracts/types';
 
 // ============================================================
 // GET /api/scan/status/[id]
@@ -14,26 +15,6 @@ import type { Annotation, DetectedSocials, SourceType } from '@/../contracts/typ
 const POLL_INTERVAL_MS = 1500;
 const TIMEOUT_MS = 300_000; // 5 minutes
 const CAPTURE_PROMPT_DELAY_MS = 15_000;
-
-interface SocialEntry {
-  handle: string;
-  url: string;
-  confidence: 'high' | 'low';
-}
-
-function isSocialEntry(value: unknown): value is SocialEntry {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'handle' in value &&
-    'url' in value &&
-    'confidence' in value &&
-    typeof (value as SocialEntry).handle === 'string' &&
-    typeof (value as SocialEntry).url === 'string' &&
-    ((value as SocialEntry).confidence === 'high' ||
-      (value as SocialEntry).confidence === 'low')
-  );
-}
 
 export async function GET(
   request: NextRequest,
