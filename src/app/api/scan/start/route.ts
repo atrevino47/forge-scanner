@@ -17,11 +17,11 @@ const StartScanSchema = z.object({
     .string()
     .min(1, 'URL is required')
     .transform((val) => {
-      const trimmed = val.trim();
+      let trimmed = val.trim();
       if (!/^https?:\/\//i.test(trimmed)) {
-        return `https://${trimmed}`;
+        trimmed = `https://${trimmed}`;
       }
-      return trimmed;
+      return trimmed.replace(/\/+$/, '');
     })
     .pipe(
       z.string().url('Must be a valid URL').refine(
@@ -47,23 +47,6 @@ const StartScanSchema = z.object({
   }).optional(),
 });
 
-/**
- * Normalize a URL: ensure it has a protocol and strip trailing slash.
- */
-function normalizeUrl(raw: string): string {
-  let url = raw.trim();
-
-  // Ensure protocol
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`;
-  }
-
-  // Strip trailing slash
-  url = url.replace(/\/+$/, '');
-
-  return url;
-}
-
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<StartScanResponse | ApiError>> {
@@ -86,7 +69,7 @@ export async function POST(
       );
     }
 
-    const { url, utmSource, utmMedium, utmCampaign, providedSocials } = parsed.data;
+    const { url: normalizedUrl, utmSource, utmMedium, utmCampaign, providedSocials } = parsed.data;
 
     // (b) Get client IP
     const clientIp = getClientIp(request);
@@ -111,9 +94,6 @@ export async function POST(
         { remaining: rateLimit.remaining, resetAt: rateLimit.resetAt }
       );
     }
-
-    // (d) Normalize URL
-    const normalizedUrl = normalizeUrl(url);
 
     // (e) Create lead record
     const supabase = createServiceClient();
