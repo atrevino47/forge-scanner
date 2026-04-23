@@ -125,6 +125,8 @@ export interface DetectedSocials {
   facebook?: { handle: string; url: string; confidence: 'high' | 'low' };
   tiktok?: { handle: string; url: string; confidence: 'high' | 'low' };
   linkedin?: { handle: string; url: string; confidence: 'high' | 'low' };
+  youtube?: { handle: string; url: string; confidence: 'high' | 'low' };
+  twitter?: { handle: string; url: string; confidence: 'high' | 'low' };
 }
 
 export interface ProvidedSocials {
@@ -132,6 +134,8 @@ export interface ProvidedSocials {
   facebook?: string;
   tiktok?: string;
   linkedin?: string;
+  youtube?: string;
+  twitter?: string;
 }
 
 // ============================================================
@@ -199,7 +203,7 @@ export interface AdDetectionResult {
 // ============================================================
 
 export interface SocialProfileMetrics {
-  platform: 'instagram' | 'tiktok' | 'facebook' | 'google_maps';
+  platform: 'instagram' | 'tiktok' | 'facebook' | 'google_maps' | 'youtube' | 'twitter';
   handle: string;
   followerCount: number | null;
   followingCount: number | null;

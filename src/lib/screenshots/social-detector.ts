@@ -8,7 +8,7 @@ import type { DetectedSocials, FunnelStage } from '../../../contracts/types';
 // Types
 // ============================================================
 
-type SocialPlatform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin';
+type SocialPlatform = 'instagram' | 'facebook' | 'tiktok' | 'linkedin' | 'youtube' | 'twitter';
 
 interface SocialMatch {
   platform: SocialPlatform;
@@ -76,6 +76,25 @@ const SOCIAL_PATTERNS: ReadonlyArray<{
     handleExtractor: (url: string): string => {
       const match = url.match(/linkedin\.com\/(company|in)\/([a-zA-Z0-9_-]+)/i);
       return match ? `@${match[2]}` : '';
+    },
+  },
+  {
+    platform: 'youtube',
+    // Matches /@handle, /c/channel, /channel/UCxxxx, /user/name
+    urlPattern: /youtube\.com\/(?:@([a-zA-Z0-9_.-]+)|c\/([a-zA-Z0-9_.-]+)|channel\/(UC[a-zA-Z0-9_-]{22})|user\/([a-zA-Z0-9_-]+))/i,
+    handleExtractor: (url: string): string => {
+      const m = url.match(/youtube\.com\/(?:@([a-zA-Z0-9_.-]+)|c\/([a-zA-Z0-9_.-]+)|channel\/(UC[a-zA-Z0-9_-]{22})|user\/([a-zA-Z0-9_-]+))/i);
+      if (!m) return '';
+      return `@${m[1] || m[2] || m[3] || m[4]}`;
+    },
+  },
+  {
+    platform: 'twitter',
+    // Matches both twitter.com/handle and x.com/handle; excludes /intent /share
+    urlPattern: /(?:twitter\.com|x\.com)\/(?!intent|share|home|search|i\/)([a-zA-Z0-9_]{1,15})(?:\/|$|\?)/i,
+    handleExtractor: (url: string): string => {
+      const m = url.match(/(?:twitter\.com|x\.com)\/(?!intent|share|home|search|i\/)([a-zA-Z0-9_]{1,15})(?:\/|$|\?)/i);
+      return m ? `@${m[1]}` : '';
     },
   },
 ];
