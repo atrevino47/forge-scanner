@@ -361,4 +361,24 @@ Check `../../shared/project-logs/forge-scanner.md` for latest status and `docs/f
 
 ---
 
+## Documentation map
+
+Human-readable docs live under `docs/` with YAML frontmatter + `last_reviewed` dates. Use them instead of re-deriving context from source on every session.
+
+- `docs/ARCHITECTURE.md` — system design, mermaid diagrams, 13 key architectural decisions
+- `docs/API.md` — every HTTP endpoint (35 routes) with request/response shapes
+- `docs/DATA-MODELS.md` — schema, enums, RLS matrix, migration history, ERD
+- `docs/SETUP.md` — dev bring-up from zero + troubleshooting
+- `docs/DEPLOYMENT.md` — prod flow (Vercel + Supabase + Hetzner), rollback, disaster checklist
+- `docs/DEVELOPMENT.md` — conventions, commit format, recipes, quality gates
+- `docs/AGENTS.md` — refreshed agent-ownership taxonomy + audit/fix protocol
+- `docs/KNOWN-ISSUES.md` — intentional tradeoffs + open debt map
+- `docs/DEPENDENCIES.md` — service/SDK catalog with cost + fallback posture
+- `docs/HETZNER-SETUP.md` — Chrome VPS bring-up
+- `README.md` — project entry + quick-start
+
+Build-era originals (`docs/AGENT-*.md`, `LAUNCH-GUIDE.md`) are retained as archaeology; don't follow them as current operating procedure — read `docs/AGENTS.md` instead.
+
+---
+
 *Build the scanner. Execute the outreach. Close founding clients. Deliver results. Build case studies. Raise prices. Move to Dubai.*
