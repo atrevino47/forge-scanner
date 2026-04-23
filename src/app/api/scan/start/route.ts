@@ -176,9 +176,7 @@ export async function POST(
     );
 
     // (h) Return 201 with scan info
-    console.log(
-      `[scan/start] Initiated scan for ${normalizedUrl} → scanId=${scan.id}, leadId=${lead.id}`
-    );
+    console.log(`[scan/start] Initiated scan scanId=${scan.id}`);
 
     const response: StartScanResponse = {
       scanId: scan.id as string,
