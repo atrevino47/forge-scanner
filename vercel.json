@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/stale-scans",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/rate-limit-purge",
+      "schedule": "0 4 * * *"
     }
   ]
 }
