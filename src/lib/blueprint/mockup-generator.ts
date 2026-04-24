@@ -4,13 +4,16 @@
 
 import type {
   BlueprintData,
+  BlueprintDiagram,
   FunnelMapData,
   FunnelStage,
+  MoneyModelLayerKey,
   ScanResult,
   StageFinding,
 } from '@/../../contracts/types';
-import { analyzeWithSonnet } from '../ai/client';
+import { analyzeWithSonnet, extractJSON } from '../ai/client';
 import { getMockupPrompt } from '../prompts/mockup';
+import { getBlueprintDiagramPrompt } from '../prompts/blueprint-diagram';
 import { extractBrandColors, type BrandColors } from './brand-extractor';
 import { generateFunnelMap } from './funnel-map';
 
@@ -36,14 +39,28 @@ export async function generateBlueprint(
     extractBrandColors(homepageScreenshotBase64),
   ]);
 
-  // Step 3: Generate mockup for the weakest stage
-  const { mockupHtml, mockupTarget } = await generateMockup({
-    scanResult,
-    funnelMap,
-    brandColors,
-    businessName: businessName || extractBusinessName(scanResult.websiteUrl),
-    industry,
-  });
+  const resolvedBusinessName = businessName || extractBusinessName(scanResult.websiteUrl);
+
+  // Step 3 + 4: Generate mockup + Blueprint diagram in parallel.
+  // Diagram is the v2 Blueprint view; mockup is kept for the legacy iframe
+  // fallback path until the diagram UI has bedded in across prospects.
+  const [{ mockupHtml, mockupTarget }, diagram] = await Promise.all([
+    generateMockup({
+      scanResult,
+      funnelMap,
+      brandColors,
+      businessName: resolvedBusinessName,
+      industry,
+    }),
+    generateBlueprintDiagram({
+      scanResult,
+      funnelMap,
+      businessName: resolvedBusinessName,
+    }).catch((err) => {
+      console.error('[blueprint-diagram] generation failed, falling back to legacy funnel-map view:', err);
+      return null;
+    }),
+  ]);
 
   return {
     id: crypto.randomUUID(),
@@ -52,8 +69,109 @@ export async function generateBlueprint(
     mockupHtml,
     mockupTarget,
     brandColors,
+    diagram,
     createdAt: new Date().toISOString(),
   };
+}
+
+// ============================================================
+// Generate industry-ideal Blueprint diagram (v2 Blueprint view)
+// ============================================================
+
+interface DiagramGenerationInput {
+  scanResult: ScanResult;
+  funnelMap: FunnelMapData;
+  businessName: string;
+}
+
+async function generateBlueprintDiagram(
+  input: DiagramGenerationInput,
+): Promise<BlueprintDiagram | null> {
+  const { scanResult, funnelMap, businessName } = input;
+
+  const weakestMoneyModelLayer: MoneyModelLayerKey =
+    funnelMap.money_model?.biggest_leak_key ?? inferMoneyLayerFromStage(funnelMap.biggestGap);
+
+  const topFindings: StageFinding[] = scanResult.stages
+    .flatMap((s) => s.summary?.findings ?? [])
+    .filter((f) => f.type === 'critical' || f.type === 'warning' || f.type === 'opportunity')
+    .sort((a, b) => impactRank(b.impact) - impactRank(a.impact))
+    .slice(0, 8);
+
+  const bookUrl = process.env.NEXT_PUBLIC_CALCOM_EMBED_URL ?? '';
+
+  const prompt = getBlueprintDiagramPrompt({
+    weakestStage: funnelMap.biggestGap,
+    weakestMoneyModelLayer,
+    industry: null,
+    topFindings,
+    businessName,
+    websiteUrl: scanResult.websiteUrl,
+    bookUrl,
+  });
+
+  const raw = await analyzeWithSonnet({
+    systemPrompt: prompt,
+    userPrompt:
+      'Generate the JSON blueprint diagram following the schema exactly. Return ONLY valid JSON — no preamble, no code fences, no commentary.',
+    maxTokens: 4096,
+  });
+
+  try {
+    const parsed = extractJSON<BlueprintDiagram>(raw);
+    return sanitizeDiagram(parsed, bookUrl);
+  } catch (err) {
+    console.error('[blueprint-diagram] Failed to parse JSON:', err);
+    return null;
+  }
+}
+
+const LOCKED_CTA_SUBTEXT =
+  'If you want this personalized sales funnel implemented in your business, book a call.';
+
+function sanitizeDiagram(raw: BlueprintDiagram, bookUrl: string): BlueprintDiagram | null {
+  if (!raw || !raw.diagram || !Array.isArray(raw.diagram.nodes) || raw.diagram.nodes.length < 3) {
+    return null;
+  }
+  // Enforce locked CTA copy — any drift gets overwritten rather than rejected.
+  const cta = raw.primary_cta ?? {
+    headline: 'Want this built into your business?',
+    body: '',
+    button_label: 'Book a call' as const,
+    button_subtext: LOCKED_CTA_SUBTEXT,
+    book_url: bookUrl,
+  };
+  return {
+    ...raw,
+    primary_cta: {
+      headline: (cta.headline || 'Want this built into your business?').toString().slice(0, 120),
+      body: (cta.body || '').toString().slice(0, 400),
+      button_label: 'Book a call',
+      button_subtext: LOCKED_CTA_SUBTEXT,
+      book_url: (cta.book_url || bookUrl || '').toString(),
+    },
+  };
+}
+
+function inferMoneyLayerFromStage(stage: FunnelStage): MoneyModelLayerKey {
+  switch (stage) {
+    case 'traffic':
+    case 'landing':
+    case 'capture':
+      return 'attraction';
+    case 'offer':
+      return 'front_end_cash';
+    case 'followup':
+      return 'upsell_downsell';
+    default:
+      return 'front_end_cash';
+  }
+}
+
+function impactRank(impact: 'high' | 'medium' | 'low'): number {
+  if (impact === 'high') return 3;
+  if (impact === 'medium') return 2;
+  return 1;
 }
 
 // ============================================================

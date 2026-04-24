@@ -24,15 +24,24 @@ const ParamsSchema = z.object({
   scanId: z.string().min(1, 'Scan ID is required'),
 });
 
+// The `diagram` field (BlueprintDiagram) is persisted by piggybacking on the
+// existing `funnel_map` JSONB column under the `__blueprint_diagram__` key.
+// Keeps the demo path working without requiring a DB migration (migrations are
+// frozen for this window). A follow-up migration can promote it to its own column.
+type DiagramCarrier = { __blueprint_diagram__?: unknown };
+
 function dbBlueprintToData(row: DbBlueprint): GenerateBlueprintResponse {
+  const rawFunnelMap = row.funnel_map as (typeof row.funnel_map) & DiagramCarrier;
+  const { __blueprint_diagram__, ...funnelMap } = rawFunnelMap ?? {};
   return {
     blueprint: {
       id: row.id,
       scanId: row.scan_id,
-      funnelMap: row.funnel_map,
+      funnelMap,
       mockupHtml: row.mockup_html,
       mockupTarget: row.mockup_target,
       brandColors: row.brand_colors,
+      diagram: (__blueprint_diagram__ ?? null) as GenerateBlueprintResponse['blueprint']['diagram'],
       createdAt: row.created_at,
     },
   };
@@ -190,11 +199,16 @@ export async function POST(
       businessName: lead.business_name,
     });
 
-    // 9. Store in the blueprints table
+    // 9. Store in the blueprints table. Piggyback the BlueprintDiagram inside
+    // funnel_map JSONB under __blueprint_diagram__ to avoid a schema migration.
+    const funnelMapWithDiagram = blueprint.diagram
+      ? { ...blueprint.funnelMap, __blueprint_diagram__: blueprint.diagram }
+      : blueprint.funnelMap;
+
     const { error: insertError } = await supabase.from('blueprints').insert({
       id: blueprint.id,
       scan_id: scanId,
-      funnel_map: blueprint.funnelMap,
+      funnel_map: funnelMapWithDiagram,
       mockup_html: blueprint.mockupHtml,
       mockup_target: blueprint.mockupTarget,
       brand_colors: blueprint.brandColors,

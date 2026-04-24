@@ -7,6 +7,9 @@ import type {
   BlueprintData,
   BlueprintDiagram,
   FunnelMapNode,
+  MoneyModelDiagnosis,
+  MoneyModelLayer,
+  TotalLeak12mo,
 } from '../../../contracts/types';
 import { fadeSlideUp, scaleIn } from '@/lib/gsap-presets';
 import { cn } from '@/lib/utils';
@@ -69,6 +72,12 @@ export function BlueprintView({ blueprint }: BlueprintViewProps) {
     return (
       <div ref={containerRef} className="py-12">
         <DiagramHeader diagram={diagram} biggestGap={funnelMap.biggestGap} />
+        {funnelMap.money_model && (
+          <MoneyModelCard
+            diagnosis={funnelMap.money_model}
+            totalLeak={funnelMap.total_leak_12mo}
+          />
+        )}
         <GrandSlamChecklist diagram={diagram} />
         <div data-bp="section" className="mx-auto mb-10 w-full max-w-[1080px] px-4">
           <FunnelDiagram diagram={diagram} />
@@ -310,6 +319,110 @@ function PrimaryCta({ diagram }: { diagram: BlueprintDiagram }) {
             {cta.button_subtext}
           </p>
         </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// MONEY MODEL CARD — 4-layer leak diagnosis (orthogonal to funnel stages)
+// ─────────────────────────────────────────────────────────────
+
+const MONEY_LAYER_LABELS: Record<MoneyModelLayer['key'], string> = {
+  attraction: 'Attraction',
+  front_end_cash: 'Front-end Cash',
+  upsell_downsell: 'Upsell / Downsell',
+  continuity: 'Continuity',
+};
+
+const MONEY_LAYER_BG: Record<MoneyModelLayer['status'], string> = {
+  good: 'border-forge-positive/30 bg-forge-positive/5',
+  weak: 'border-forge-warning/30 bg-forge-warning/5',
+  missing: 'border-forge-critical/30 bg-forge-critical/5',
+};
+
+const MONEY_LAYER_LABEL_COLOR: Record<MoneyModelLayer['status'], string> = {
+  good: 'text-forge-positive',
+  weak: 'text-forge-warning',
+  missing: 'text-forge-critical',
+};
+
+function MoneyModelCard({
+  diagnosis,
+  totalLeak,
+}: {
+  diagnosis: MoneyModelDiagnosis;
+  totalLeak?: TotalLeak12mo;
+}) {
+  return (
+    <section
+      data-bp="section"
+      className="mx-auto mb-8 w-full max-w-[1080px] px-4"
+      aria-label="Money Model leak diagnosis"
+    >
+      <div className="rounded-xl border border-forge-border-strong bg-forge-surface p-5 md:p-6">
+        <div className="mb-4 flex flex-col gap-1 md:flex-row md:items-baseline md:justify-between">
+          <div>
+            <div className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-forge-accent">
+              Money Model · 4-layer diagnosis
+            </div>
+            <p className="mt-1 font-body text-[13px] leading-relaxed text-forge-text-secondary">
+              Orthogonal to funnel stages. This is where revenue is leaking across the business.
+            </p>
+          </div>
+          {totalLeak && (
+            <div className="text-left md:text-right">
+              <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-forge-text-muted">
+                Estimated 12-mo leak
+              </div>
+              <div className="font-display text-xl font-black tracking-tight text-forge-text md:text-2xl">
+                {totalLeak.display}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+          {diagnosis.layers.map((layer) => (
+            <div
+              key={layer.key}
+              className={cn(
+                'rounded-lg border p-4 transition-colors',
+                MONEY_LAYER_BG[layer.status],
+                layer.is_biggest && 'ring-2 ring-forge-accent/70',
+              )}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-forge-text-secondary">
+                  {MONEY_LAYER_LABELS[layer.key]}
+                </span>
+                <span
+                  className={cn(
+                    'font-mono text-[10px] uppercase tracking-widest',
+                    MONEY_LAYER_LABEL_COLOR[layer.status],
+                  )}
+                >
+                  {layer.status}
+                </span>
+              </div>
+              <div className="font-display text-lg font-black tabular-nums text-forge-text">
+                {layer.leak_12mo_usd > 0 ? `$${Math.round(layer.leak_12mo_usd).toLocaleString()}` : '—'}
+              </div>
+              <p className="mt-1.5 font-body text-[12px] leading-[1.4] text-forge-text-secondary">
+                {layer.note}
+              </p>
+              {layer.is_biggest && (
+                <div className="mt-2 inline-flex items-center gap-1 rounded-md bg-forge-accent/10 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-forge-accent">
+                  Biggest leak
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+        {diagnosis.biggest_leak_callout && (
+          <p className="mt-4 font-body text-[13.5px] leading-relaxed text-forge-text">
+            {diagnosis.biggest_leak_callout}
+          </p>
+        )}
       </div>
     </section>
   );

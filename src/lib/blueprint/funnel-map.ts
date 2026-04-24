@@ -93,6 +93,58 @@ function validateFunnelMap(
     overallHealth: Math.max(0, Math.min(100, Math.round(raw.overallHealth ?? calculateOverallScore(scanResult.stages)))),
     biggestGap,
     revenueImpactEstimate: (raw.revenueImpactEstimate || 'Fixing the weakest funnel stage could significantly increase lead flow and conversion rates.').slice(0, 600),
+    total_leak_12mo: validateTotalLeak(raw.total_leak_12mo),
+    money_model: validateMoneyModel(raw.money_model),
+  };
+}
+
+function validateTotalLeak(raw: FunnelMapData['total_leak_12mo']): FunnelMapData['total_leak_12mo'] {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const min = Math.max(0, Math.round(Number(raw.min_usd) || 0));
+  const max = Math.max(min, Math.round(Number(raw.max_usd) || 0));
+  const display = typeof raw.display === 'string' && raw.display.length > 0 ? raw.display.slice(0, 40) : `$${min.toLocaleString()} – $${max.toLocaleString()}`;
+  if (max === 0) return undefined;
+  return { min_usd: min, max_usd: max, display };
+}
+
+const VALID_LAYER_KEYS = ['attraction', 'front_end_cash', 'upsell_downsell', 'continuity'] as const;
+const VALID_LAYER_STATUS = ['good', 'weak', 'missing'] as const;
+
+function validateMoneyModel(raw: FunnelMapData['money_model']): FunnelMapData['money_model'] {
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.layers)) return undefined;
+  const byKey = new Map<string, typeof raw.layers[number]>();
+  for (const layer of raw.layers) {
+    if (layer && VALID_LAYER_KEYS.includes(layer.key as typeof VALID_LAYER_KEYS[number])) {
+      byKey.set(layer.key, layer);
+    }
+  }
+  const layers = VALID_LAYER_KEYS.map((key) => {
+    const l = byKey.get(key);
+    return {
+      key,
+      status: (l && VALID_LAYER_STATUS.includes(l.status as typeof VALID_LAYER_STATUS[number]) ? l.status : 'missing') as 'good' | 'weak' | 'missing',
+      note: (l?.note ?? '').toString().slice(0, 320),
+      leak_12mo_usd: Math.max(0, Math.round(Number(l?.leak_12mo_usd) || 0)),
+      is_biggest: Boolean(l?.is_biggest),
+    };
+  });
+  // Enforce exactly one is_biggest — pick the highest leak if multiple or zero set.
+  const marked = layers.filter((l) => l.is_biggest);
+  if (marked.length !== 1) {
+    const top = [...layers].sort((a, b) => b.leak_12mo_usd - a.leak_12mo_usd)[0];
+    for (const l of layers) l.is_biggest = l.key === top.key;
+  }
+  const biggest = layers.find((l) => l.is_biggest)!;
+  const biggestKey = VALID_LAYER_KEYS.includes(raw.biggest_leak_key as typeof VALID_LAYER_KEYS[number])
+    ? (raw.biggest_leak_key as typeof VALID_LAYER_KEYS[number])
+    : biggest.key;
+  const callout = typeof raw.biggest_leak_callout === 'string' && raw.biggest_leak_callout.length > 0
+    ? raw.biggest_leak_callout.slice(0, 400)
+    : `The ${biggestKey.replace(/_/g, ' ')} layer is the single biggest revenue leak in the current Money Model.`;
+  return {
+    layers,
+    biggest_leak_key: biggestKey,
+    biggest_leak_callout: callout,
   };
 }
 
