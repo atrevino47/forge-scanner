@@ -47,6 +47,23 @@ export type PaymentProductType = 'setup_fee' | 'monthly_retainer' | 'custom_pack
 export type CaptureMethod = 'direct' | 'scraped' | 'manual';
 
 // ============================================================
+// INDUSTRY DETECTION (runs once per scan, feeds template slots to all prompts)
+// ============================================================
+
+export interface IndustryDetection {
+  industry_slug: string; // lowercase-kebab-case, e.g. "hvac-contracting", "med-spa", "generic"
+  industry_display: string; // human-readable, e.g. "HVAC Contracting"
+  confidence: number; // 0-1; consumers fall back to "your industry" when <0.6
+  customer_role_singular: string; // "homeowner", "patient", "couple"
+  customer_role_plural: string;
+  typical_avg_ticket_usd: {
+    min: number;
+    max: number;
+  };
+  evidence: string[]; // 1-5 verbatim phrases from scraped content
+}
+
+// ============================================================
 // ANNOTATIONS
 // ============================================================
 
@@ -182,8 +199,8 @@ export interface BlueprintData {
   id: string;
   scanId: string;
   funnelMap: FunnelMapData;
-  mockupHtml: string; // generated HTML for the key piece
-  mockupTarget: string; // what was mocked up
+  mockupHtml: string; // generated HTML for the key piece (LEGACY — being replaced by diagram)
+  mockupTarget: string; // what was mocked up (LEGACY)
   brandColors: {
     primary: string;
     secondary: string;
@@ -191,7 +208,105 @@ export interface BlueprintData {
     background: string;
     text: string;
   };
+  /**
+   * Ideal Hormozi-stacked funnel diagram for the detected industry.
+   * Replaces the HTML mockup path. Populated by blueprint-diagram.ts
+   * (Minion 2 scope). When null, BlueprintView falls back to the legacy
+   * funnel-map render.
+   */
+  diagram?: BlueprintDiagram | null;
   createdAt: string;
+}
+
+// ============================================================
+// BLUEPRINT DIAGRAM (industry-ideal Hormozi funnel, JSON-first)
+// ============================================================
+
+export type MoneyModelLayerKey =
+  | 'attraction'
+  | 'front_end_cash'
+  | 'upsell_downsell'
+  | 'continuity';
+
+export type DiagramStageCategory =
+  | 'traffic'
+  | 'attraction'
+  | 'capture'
+  | 'nurture'
+  | 'offer'
+  | 'upsell'
+  | 'continuity';
+
+export type ValueEquationLever =
+  | 'Dream Outcome'
+  | 'Perceived Likelihood'
+  | 'Time Delay'
+  | 'Effort & Sacrifice'
+  | 'Multiple';
+
+export type GrandSlamStep =
+  | 'MAGIC name'
+  | '30-word test'
+  | 'Value stack'
+  | 'Anchor-first tiers'
+  | 'Risk reversal';
+
+export interface DiagramNode {
+  id: string;
+  label: string;
+  stage_category: DiagramStageCategory;
+  description: string;
+  value_equation_lever: ValueEquationLever;
+  is_missing_in_prospect: boolean;
+  is_critical_upgrade: boolean;
+}
+
+export interface DiagramEdge {
+  from: string;
+  to: string;
+  label: string;
+  benchmark_source: string;
+}
+
+export interface GrandSlamChecklistItem {
+  step_name: GrandSlamStep;
+  description: string;
+  present_in_diagram: boolean;
+}
+
+export interface OutcomeGuarantee {
+  statement: string;
+  binary_criterion: string;
+  judged_by: string;
+}
+
+export interface ObjectionFaqEntry {
+  q: string;
+  a: string;
+}
+
+export interface BlueprintPrimaryCta {
+  headline: string;
+  body: string;
+  /** Locked copy (Adrian 2026-04-23 21:45). */
+  button_label: 'Book a call';
+  button_subtext: 'If you want this personalized sales funnel implemented in your business, book a call.';
+  book_url: string;
+}
+
+export interface BlueprintDiagram {
+  industry: string;
+  customer_role: string;
+  weakest_stage: FunnelStage;
+  weakest_money_model_layer: MoneyModelLayerKey;
+  diagram: {
+    nodes: DiagramNode[];
+    edges: DiagramEdge[];
+  };
+  grand_slam_checklist: GrandSlamChecklistItem[];
+  outcome_guarantee: OutcomeGuarantee;
+  objection_faq: ObjectionFaqEntry[];
+  primary_cta: BlueprintPrimaryCta;
 }
 
 // ============================================================
