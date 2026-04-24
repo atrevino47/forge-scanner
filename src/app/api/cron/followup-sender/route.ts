@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { createServiceClient } from '@/lib/db/client';
+import { verifyCronSecret } from '@/lib/security/cron-auth';
 import { buildScanResult } from '@/lib/db/mappers';
 import { getEmailFollowupPrompt, type SequencePosition } from '@/lib/prompts/email-followup';
 import { analyzeWithSonnet } from '@/lib/ai/client';
@@ -35,9 +36,7 @@ interface CronFollowupResult {
 
 export async function POST(request: NextRequest): Promise<NextResponse<CronFollowupResult | ApiError>> {
   try {
-    const authHeader = request.headers.get('authorization');
-
-    if (!authHeader || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (!verifyCronSecret(request.headers.get('authorization'))) {
       return NextResponse.json(
         { error: { code: 'UNAUTHORIZED', message: 'Invalid or missing cron secret' } },
         { status: 401 },

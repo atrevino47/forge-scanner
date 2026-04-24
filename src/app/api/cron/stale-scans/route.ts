@@ -14,6 +14,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/db/client';
+import { verifyCronSecret } from '@/lib/security/cron-auth';
 import type { ApiError } from '@/../contracts/api';
 
 // Scans stuck for longer than this threshold are considered stale
@@ -26,9 +27,7 @@ interface CronStaleScansResult {
 
 export async function POST(request: NextRequest): Promise<NextResponse<CronStaleScansResult | ApiError>> {
   try {
-    const authHeader = request.headers.get('authorization');
-
-    if (!authHeader || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (!verifyCronSecret(request.headers.get('authorization'))) {
       return NextResponse.json(
         { error: { code: 'UNAUTHORIZED', message: 'Invalid or missing cron secret' } },
         { status: 401 },
