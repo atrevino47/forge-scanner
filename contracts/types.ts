@@ -100,12 +100,50 @@ export interface ScreenshotData {
 // SCAN RESULTS
 // ============================================================
 
+export type ValueEquationLever =
+  | 'Dream Outcome'
+  | 'Perceived Likelihood'
+  | 'Time Delay'
+  | 'Effort & Sacrifice'
+  | 'Multiple';
+
+// Structured finding block — feeds per-stage Story Chapter UI
+// (Situation → Complication → So what → Fix). Optional: legacy prose `detail`
+// is still required so SSE v1 consumers keep working during rollout.
+export interface FindingSituation {
+  title: string; // short label for the observed state
+  body: string;  // 1-3 sentences describing what's actually on screen
+  shot_ref: string; // screenshot id the observation is grounded in
+}
+
+export interface FindingComplication {
+  lever_name: ValueEquationLever;
+  body: string; // 1-3 sentences explaining which Hormozi principle is broken
+}
+
+export interface FindingCost {
+  range_usd_min: number;
+  range_usd_max: number;
+  range_display: string; // "$38k – $72k"
+  benchmark_citation: string; // what Hormozi/CFA math the range comes from
+}
+
+export interface FindingFix {
+  body: string; // the solution, framed as a Grand Slam / Money Model upgrade
+  monday_action: string; // the single sentence the owner can execute this week
+}
+
 export interface StageFinding {
   id: string;
   title: string;
-  detail: string;
+  detail: string; // LEGACY prose blob — kept for SSE v1 back-compat
   type: AnnotationType;
   impact: 'high' | 'medium' | 'low';
+  // NEW structured fields (optional during rollout; required by v2 UI):
+  situation?: FindingSituation;
+  complication?: FindingComplication;
+  cost?: FindingCost;
+  fix?: FindingFix;
 }
 
 export interface StageSummary {
@@ -236,13 +274,6 @@ export type DiagramStageCategory =
   | 'offer'
   | 'upsell'
   | 'continuity';
-
-export type ValueEquationLever =
-  | 'Dream Outcome'
-  | 'Perceived Likelihood'
-  | 'Time Delay'
-  | 'Effort & Sacrifice'
-  | 'Multiple';
 
 export type GrandSlamStep =
   | 'MAGIC name'

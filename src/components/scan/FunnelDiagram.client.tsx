@@ -44,7 +44,7 @@ const STAGE_LABEL: Record<DiagramStageCategory, string> = {
   continuity: 'Continuity',
 };
 
-type StageNodeData = DiagramNode & { isMobile: boolean };
+type StageNodeData = DiagramNode & { isMobile: boolean } & Record<string, unknown>;
 
 function StageNode({ data }: NodeProps<Node<StageNodeData>>) {
   const handlePosTop = data.isMobile ? Position.Top : Position.Left;
