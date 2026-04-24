@@ -84,25 +84,39 @@ export function CapturePrompt({
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 p-4">
+    <div
+      className="fixed inset-x-0 bottom-0 z-40 p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="capture-prompt-title"
+      aria-describedby="capture-prompt-body"
+    >
       <div
         ref={panelRef}
         className="glass-card mx-auto max-w-lg rounded-xl p-6"
       >
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h3 className="font-display text-lg tracking-display text-forge-text">
+            <h3
+              id="capture-prompt-title"
+              className="font-display text-lg tracking-display text-forge-text"
+            >
               Your scan is running — grab your results
             </h3>
-            <p className="mt-1 text-sm text-forge-text-muted">
+            <p
+              id="capture-prompt-body"
+              className="mt-1 text-sm text-forge-text-muted"
+            >
               Enter your email to unlock the full audit, blueprint, and AI recommendations.
             </p>
           </div>
           <button
+            type="button"
             onClick={handleDismiss}
-            className="rounded-lg p-1 text-forge-text-muted transition-colors duration-200 hover:text-forge-text"
+            aria-label="Dismiss capture prompt"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-forge-text-muted transition-colors duration-200 hover:text-forge-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forge-accent"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 

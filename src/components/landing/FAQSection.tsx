@@ -12,6 +12,11 @@ const faqs = [
       "Yes. The full scan, annotations, and funnel blueprint are completely free. No credit card, no trial. We make money when you hire Forge to fix what we find.",
   },
   {
+    question: 'How is this different from a generic website audit?',
+    answer:
+      "A generic audit tells you your Lighthouse score and that your images are too big. This reads your funnel against Alex Hormozi's Value Equation and Money Model and gives you a stack-ranked fix list by dollar impact — not by technical purity.",
+  },
+  {
     question: 'Do I need to create an account?',
     answer:
       "No account needed. We'll ask for your email mid-scan so we can send you the results. That's it.",
@@ -123,21 +128,26 @@ function FAQItem({
     { dependencies: [isOpen] },
   );
 
+  const panelId = `faq-answer-${question.replace(/\W+/g, '-').slice(0, 40).toLowerCase()}`;
   return (
     <div
       data-faq="item"
       className="border-b"
       style={{ borderColor: '#ECEAE4' }}
     >
-      <button onClick={onToggle} className="flex w-full items-center justify-between py-5 text-left">
-        {/* Question — Outfit weight 600 text-lg */}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-controls={panelId}
+        className="flex min-h-[44px] w-full items-center justify-between py-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forge-accent focus-visible:ring-offset-2 focus-visible:ring-offset-forge-base"
+      >
         <span
           className="pr-4 font-display text-lg font-semibold"
           style={{ color: '#1A1917' }}
         >
           {question}
         </span>
-        {/* Plus/minus toggle */}
         <span
           ref={plusRef}
           className="flex h-5 w-5 shrink-0 items-center justify-center text-lg font-light leading-none"
@@ -147,8 +157,13 @@ function FAQItem({
           +
         </span>
       </button>
-      <div ref={contentRef} className="overflow-hidden" style={{ height: 0, opacity: 0 }}>
-        {/* Answer — Space Grotesk text-sm color #6B6860 */}
+      <div
+        id={panelId}
+        ref={contentRef}
+        role="region"
+        className="overflow-hidden"
+        style={{ height: 0, opacity: 0 }}
+      >
         <p
           className="pb-5 font-body text-sm"
           style={{ lineHeight: 1.65, color: '#6B6860' }}
