@@ -226,11 +226,37 @@ export interface FunnelMapNode {
   improvements: string[]; // specific changes needed
 }
 
+export interface TotalLeak12mo {
+  min_usd: number;
+  max_usd: number;
+  display: string; // "$280k – $380k"
+}
+
+// Money Model layer diagnosis — orthogonal to stage-based nodes[].
+// Attraction spans traffic+capture, Upsell-Downsell lives inside followup, etc.
+// Exactly one layer must have is_biggest: true.
+export interface MoneyModelLayer {
+  key: 'attraction' | 'front_end_cash' | 'upsell_downsell' | 'continuity';
+  status: 'good' | 'weak' | 'missing';
+  note: string;
+  leak_12mo_usd: number;
+  is_biggest: boolean;
+}
+
+export interface MoneyModelDiagnosis {
+  layers: MoneyModelLayer[]; // length 4, one per key
+  biggest_leak_key: 'attraction' | 'front_end_cash' | 'upsell_downsell' | 'continuity';
+  biggest_leak_callout: string; // 1-2 sentence plain-English explanation
+}
+
 export interface FunnelMapData {
   nodes: FunnelMapNode[];
   overallHealth: number; // 0-100
   biggestGap: FunnelStage;
-  revenueImpactEstimate: string; // "Adding a lead magnet could capture 30% more leads"
+  revenueImpactEstimate: string; // "Adding a lead magnet could capture 30% more leads" (LEGACY)
+  // NEW (v2 Results UI):
+  total_leak_12mo?: TotalLeak12mo;
+  money_model?: MoneyModelDiagnosis;
 }
 
 export interface BlueprintData {

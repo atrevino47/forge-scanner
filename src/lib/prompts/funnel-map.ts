@@ -102,8 +102,35 @@ Return ONLY valid JSON matching this exact schema:
   ],
   "overallHealth": <0-100 weighted average per weights below>,
   "biggestGap": "traffic" | "landing" | "capture" | "offer" | "followup",
-  "revenueImpactEstimate": "3-5 sentences. Must: (a) identify the biggest structural gap by Money Model layer, (b) cite the specific Hormozi math applicable, (c) state a dollar delta (scaled to detected or $1M-baseline), (d) name the first move. Operator-to-operator tone. No hedging words. No 'could' or 'might' — use 'will' when citing Hormozi's validated math."
+  "revenueImpactEstimate": "3-5 sentences. Must: (a) identify the biggest structural gap by Money Model layer, (b) cite the specific Hormozi math applicable, (c) state a dollar delta (scaled to detected or $1M-baseline), (d) name the first move. Operator-to-operator tone. No hedging words. No 'could' or 'might' — use 'will' when citing Hormozi's validated math.",
+  "total_leak_12mo": {
+    "min_usd": <integer, annual leak low bound>,
+    "max_usd": <integer, annual leak high bound>,
+    "display": "\\"$280k – $380k\\" formatted for humans"
+  },
+  "money_model": {
+    "layers": [
+      { "key": "attraction",       "status": "good" | "weak" | "missing", "note": "1-2 sentences — state what IS present or absent at this layer", "leak_12mo_usd": <integer>, "is_biggest": false },
+      { "key": "front_end_cash",   "status": "good" | "weak" | "missing", "note": "...", "leak_12mo_usd": <integer>, "is_biggest": false },
+      { "key": "upsell_downsell",  "status": "good" | "weak" | "missing", "note": "...", "leak_12mo_usd": <integer>, "is_biggest": false },
+      { "key": "continuity",       "status": "good" | "weak" | "missing", "note": "...", "leak_12mo_usd": <integer>, "is_biggest": false }
+    ],
+    "biggest_leak_key": "attraction" | "front_end_cash" | "upsell_downsell" | "continuity",
+    "biggest_leak_callout": "1-2 plain-English sentences naming the single biggest Money Model layer gap and the dollar delta. Must match biggest_leak_key."
+  }
 }
+
+MONEY MODEL LAYER DIAGNOSIS RULES:
+- The Money Model view is ORTHOGONAL to the stage view above. Stages are a visitor's path; layers are the revenue architecture.
+- **attraction** = free/low-friction top-of-funnel offer that captures attention without asking for a sale. Spans TRAFFIC + CAPTURE stages (bio link → lead magnet → email on file).
+- **front_end_cash** = the first paid transaction (Up-Front Cash). Lives primarily in the OFFER stage. This is where Grand Slam construction matters most.
+- **upsell_downsell** = post-initial-purchase monetization (additional services, complementary offers, "no-buyer" downsells). Lives inside FOLLOWUP.
+- **continuity** = recurring revenue (retainer, membership, subscription). Lives inside FOLLOWUP. Biggest enterprise-value lever.
+- Exactly ONE layer must have is_biggest: true — the layer whose fix produces the largest dollar delta using the math references above.
+- biggest_leak_key MUST equal the layer with is_biggest: true.
+- Each layer's leak_12mo_usd is your best-effort annual leak estimate grounded in the math references (scale to detected business size when visible, else $1M baseline).
+- total_leak_12mo.min_usd and max_usd should bracket the SUM of the four layer leaks with a wide-enough range to honestly cover uncertainty (typical: min ≈ 0.6 × sum, max ≈ 1.4 × sum).
+- total_leak_12mo.display must mirror the numbers formatted for humans ("$280k – $380k", never "$280000 – $380000").
 
 NODE ORDERING: traffic → landing → capture → offer → followup.
 
