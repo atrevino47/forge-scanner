@@ -2,7 +2,7 @@
 title: Architecture
 domain: scanner
 status: active
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-24
 ---
 
 # Architecture
@@ -276,10 +276,177 @@ Single source of truth for colors, fonts, spacing, radii, and animation presets.
 - **`TZ=America/Monterrey` for all user-facing timestamps** (inherited from the broader Forge convention).
 - **Commit format:** `[<agent>] type: description` enforced by `.githooks/commit-msg` at the vault root. Types: `decide / execute / propose / fix / learn / compile / audit / ops / feat` (+ `docs` for doc changes).
 
+## v2 Blueprint Redesign (feat/storytelling-experience, 2026-04-23 →)
+
+This section documents the Blueprint redesign on the `feat/storytelling-experience` branch. The redesign replaces the HTML mockup with a JSON-first industry-ideal funnel diagram, adds industry-agnostic prompt templating, expands finding schemas with structured Hormozi Situation-Complication-Cost-Fix blocks, and scaffolds the Vega live-voice surface. See `CHANGELOG.md` for the commit list.
+
+### v2 Blueprint pipeline
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant FE as /scan/:id client
+  participant API as /api/blueprint/generate/:scanId
+  participant AI as Anthropic Sonnet
+  participant DB as Supabase
+
+  FE->>API: POST generate
+  par Parallel generators
+    API->>AI: getFunnelMapPrompt() → FunnelMapData + money_model + total_leak_12mo
+    API->>AI: getMockupPrompt() → mockupHtml (LEGACY, retained for fallback)
+    API->>AI: getBlueprintDiagramPrompt() → BlueprintDiagram JSON
+  end
+  API->>API: try/catch parse — on BlueprintDiagram parse fail, diagram = null
+  API->>DB: insert blueprints (diagram piggybacked under funnel_map.__blueprint_diagram__)
+  API-->>FE: BlueprintData { funnelMap, mockupHtml, diagram? }
+  alt diagram present
+    FE->>FE: BlueprintView renders v2 (FunnelDiagram React Flow)
+  else diagram null
+    FE->>FE: BlueprintView legacy accordion fallback (funnelMap nodes)
+  end
+```
+
+### Prompt output contracts (single source of truth)
+
+Every prompt under `src/lib/prompts/` emits JSON typed against `contracts/types.ts`. Parsers wrap in try/catch; failure → structured fallback, never crashes. Adding a prompt means adding its contract first.
+
+| Prompt file | Contract types | Notes |
+|---|---|---|
+| `annotation.ts` | `Annotation`, `AnnotationPosition`, `AnnotationType` | Unchanged v1 → v2. |
+| `stage-summary.ts` | `StageSummary`, `StageFinding` (+ `situation`/`complication`/`cost`/`fix`) | v2 emits structured blocks; legacy `detail` required for SSE v1 back-compat. |
+| `funnel-map.ts` | `FunnelMapData` (+ `money_model: MoneyModelDiagnosis`, `total_leak_12mo: TotalLeak12mo`) | Orthogonality rule: money_model layers do not double-count stage node findings; exactly one layer is `is_biggest: true`. |
+| `blueprint-diagram.ts` | `BlueprintDiagram` | Replaces `mockup.ts` output semantics. Industry-ideal Hormozi funnel. `primary_cta.button_label` / `button_subtext` are locked TS literal types. |
+| `mockup.ts` | `{ mockupHtml: string; mockupTarget: string }` | **LEGACY** — still called in parallel during rollout; output flows to `BlueprintData.mockupHtml` for fallback only. Planned deletion. |
+| `industry-detector.ts` | `IndustryDetection` | Runs once per scan. Confidence < 0.6 → consumers use "your industry". |
+| `teaser-finding.ts` | `TeaserFinding` | Single highest-impact finding for capture-gate unlock. `unlock_cta` is locked literal. |
+| `sales-agent-system.ts` | Free-form (Vega system prompt) | Emits marker protocol `[[DATA_CARD:id]]`, `[[CALCOM_EMBED]]` — parsed server-side into SSE `data_card` / `calcom_embed` events. |
+| `sales-agent-openers.ts` | `string[]` | Conversational openers. |
+| `email-followup.ts` / `sms-followup.ts` / `whatsapp-followup.ts` | `string` | Channel-specific prose. Scrubbed of fabrications (Minion 485). |
+| `video-analysis.ts` | `VideoAnalysis` | Unchanged. |
+| `contact-scrape.ts` | Contact extraction shape | Unchanged. |
+
+#### Locked copy (contract-enforced)
+
+Any drift breaks `bunx tsc --noEmit`:
+
+```ts
+// contracts/types.ts
+export interface BlueprintPrimaryCta {
+  // ...
+  button_label: 'Book a call';
+  button_subtext: 'If you want this personalized sales funnel implemented in your business, book a call.';
+  // ...
+}
+```
+
+Pre-commit hook (`.githooks/pre-commit`) additionally scans the working tree for fabrication patterns (ex-Shopify, Playbook v2.1, Dr. Kessler, `brightskinclinic.com` defaults) and canon-tier leaks before allowing the commit through. Activate via `git config core.hooksPath .githooks` (per-clone).
+
+### SSE v2 event contract
+
+`contracts/events.ts` `ScanSSEEvent` (narrowed on `type`):
+
+| Event | Payload | When |
+|---|---|---|
+| `scan_started` | `{ url }` | Pipeline scheduled. |
+| `page_discovered` | `{ url, stage }` | URL resolved for a stage. |
+| `screenshot_captured` | `{ screenshotId, stage, source, thumbnailUrl, viewport }` | After Storage upload. |
+| `social_detected` | `{ platform, handle, url, confidence }` | URL-detector high-confidence hit. |
+| `social_ambiguous` | `{ platform, options[] }` | Multiple candidates — user confirms. |
+| `capture_prompt` | — | ~15s into scan; triggers `CapturePrompt` modal. |
+| `stage_analyzing` | `{ stage }` | Anthropic call started. |
+| `annotation_ready` | `{ screenshotId, annotations[] }` | Per-screenshot markers ready. |
+| `stage_completed` | `{ stage, summary: StageSummary }` | All annotations + summary ready. |
+| `stage_failed` | `{ stage, error }` | Isolated per-stage failure (orchestrator `Promise.allSettled`). |
+| `video_analysis` | `{ analysis: VideoAnalysis }` | Video-finding stage. |
+| `blueprint_available` | — | Blueprint row inserted; FE can fetch. |
+| `scan_completed` | `{ summary: ScanCompletedSummary }` | Terminal success. |
+| `scan_failed` | `{ error }` | Terminal failure. |
+
+**Planned additions (follow-on Minion):**
+
+- `teaser_ready` — `{ teaser: TeaserFinding }` — emitted after annotations complete, drives `CapturePrompt` unlock preview.
+- Rename `mockup_ready` → `blueprint_ready` (event name drifted from v2 semantics).
+
+### Component → JSON field mapping
+
+How v2 surfaces consume `BlueprintData`:
+
+| Component | Field on `BlueprintData` | Source prompt | Fallback when null |
+|---|---|---|---|
+| `DiagramHeader` | `diagram.industry`, `diagram.customer_role`, `diagram.weakest_stage`, `diagram.weakest_money_model_layer` | `blueprint-diagram.ts` | Legacy funnel-map heading from `funnelMap.biggestGap` |
+| `MoneyModelCard` | `funnelMap.money_model.layers[]`, `funnelMap.total_leak_12mo` | `funnel-map.ts` | Card hidden (null branch) |
+| `GrandSlamChecklist` | `diagram.grand_slam_checklist[]` | `blueprint-diagram.ts` | Section hidden |
+| `FunnelDiagram.client.tsx` | `diagram.diagram.nodes[]`, `diagram.diagram.edges[]` | `blueprint-diagram.ts` | Legacy accordion over `funnelMap.nodes[]` |
+| `OutcomeGuaranteeCard` | `diagram.outcome_guarantee` | `blueprint-diagram.ts` | Section hidden |
+| `ObjectionFaqList` | `diagram.objection_faq[]` | `blueprint-diagram.ts` | Section hidden |
+| `PrimaryCta` | `diagram.primary_cta` (`button_label`, `button_subtext`, `book_url`) | `blueprint-diagram.ts` | Falls back to `NEXT_PUBLIC_CALCOM_EMBED_URL` + locked copy defaults |
+| `CapturePrompt` (v2, pending) | `TeaserFinding` via `teaser_ready` SSE event | `teaser-finding.ts` | Generic capture copy |
+| `StageFindingsView` Story Chapter blocks | `StageFinding.situation / complication / cost / fix` | `stage-summary.ts` | Legacy `StageFinding.detail` prose |
+
+### React Flow rendering rules (`FunnelDiagram.client.tsx`)
+
+- **Library:** `@xyflow/react@12.10.2`.
+- **Direction:** LTR desktop, TTB on `max-width: 768px` (MQ-sniffed at mount).
+- **Node decorations:**
+  - `is_critical_upgrade: true` → accent ring + "Start here" pill.
+  - `is_missing_in_prospect: true` → dashed border.
+  - `stage_category` drives node color bucket.
+- **Accessibility:** outer container `role="img"` + aria-label summarizing the flow; nodes are focusable with keyboard.
+- **Reduced motion:** MQ-sniffed directly — disables wheel-zoom; global `globals.css` rule additionally kills CSS animations + transitions when `prefers-reduced-motion: reduce`.
+
+### Vega voice configuration (`src/lib/voice/vega-voice-config.ts`)
+
+- **Provider:** ElevenLabs Conversational AI (Agents). Selected for voice quality over Vapi / Retell / OpenAI Realtime — voice quality is the biggest predictor of post-greeting engagement per the reprompting analysis.
+- **Brain lives in `sales-agent-system.ts`** (same system prompt used by text Vega). Loaded into the Agent's system-prompt slot at ElevenLabs.
+- **Env contract:**
+
+  | Var | Required | Default | Purpose |
+  |---|---|---|---|
+  | `ELEVENLABS_AGENT_ID` | yes | — | Missing → `getVegaVoiceConfig()` returns `{ provider: 'none', reason }`; UI drops to text Vega. |
+  | `ELEVENLABS_API_KEY` | yes | — | Signed URL issuance for client-side widget. |
+  | `ELEVENLABS_VOICE_ID` | no | `EXAVITQu4vr4xnSDxMaL` (Sarah) | Swap without redeploy. |
+  | `VEGA_LLM_MODEL` | no | `claude-4.6-sonnet` | `gpt-4o` / `claude-4.7-opus` / `gemini-2.0-flash` supported. |
+  | `VEGA_MAX_SESSION_MINUTES` | no | 12 | Hard per-session ceiling (soft cost guardrail). |
+
+- **Tools declared (`VEGA_TOOLS`):**
+  - `get_scan_summary(scanId)`
+  - `get_biggest_leak(scanId)`
+  - `get_cal_url()`
+
+  Tool names must match the ElevenLabs dashboard exactly. Webhook: `POST /api/voice/vega-tool-webhook` (handler pending).
+- **Text fallback:** `VegaVoiceConfigMissing` is a first-class return. UI must render text Vega without any env present.
+- **Secrets rule:** nothing inlined. All reads go through `process.env.*`.
+
+### Industry-agnostic templating
+
+Pre-redesign prompts hardcoded med-spa examples ("Dr. Kessler," "Bright Skin Clinic"). v2 replaces these with template slots filled from `IndustryDetection`:
+
+| Slot | Source | Fallback |
+|---|---|---|
+| `{{industry_slug}}` | `IndustryDetection.industry_slug` | `'generic'` |
+| `{{industry_display}}` | `.industry_display` | `'your industry'` |
+| `{{customer_role_singular}}` | `.customer_role_singular` | `'customer'` |
+| `{{customer_role_plural}}` | `.customer_role_plural` | `'customers'` |
+| `{{typical_avg_ticket_usd.min/max}}` | `.typical_avg_ticket_usd` | $500–$5000 range |
+
+**Rule:** any `IndustryDetection.confidence < 0.6` → treat detection as absent, fall back to `null` for consumers. Downstream prompts then render "your industry" phrasing. Threshold tunable via `INDUSTRY_DETECT_MIN_CONFIDENCE` env (consumer-side).
+
+**Pre-commit hook enforcement:** `.githooks/pre-commit` greps staged diff for fabrication patterns (ex-Shopify Plus, Built in Monterrey, Playbook v2.1, 10-hour Course, Teardown Newsletter, `brightskinclinic.com`) and aborts the commit. One-time setup: `git config core.hooksPath .githooks`.
+
+### Persistence shortcuts (roll-forward path)
+
+Two pragmatic shortcuts in v2, both with a documented migration:
+
+1. **Blueprint diagram JSONB piggyback.** `BlueprintDiagram` is persisted under `blueprints.funnel_map.__blueprint_diagram__` rather than its own column — avoids a migration during the frozen rollout window. Migration: `ALTER TABLE blueprints ADD COLUMN diagram JSONB; UPDATE blueprints SET diagram = funnel_map->'__blueprint_diagram__' WHERE funnel_map ? '__blueprint_diagram__';` + update mapper. Safe because the piggyback is read-only at the consumer boundary (mappers unwrap on read; writers use a single setter path).
+2. **Industry detection is ephemeral.** Currently re-run per blueprint generation (or skipped → `null`). Migration plan: add `scans.industry_detection JSONB`, populate once after page capture, cache downstream. Until then, `generateBlueprintDiagram` receives `null` and prompts use generic phrasing.
+
+Both are reversible: revert the v2 branch, piggyback key is ignored by legacy readers.
+
 ## Related
 
 - [API.md](API.md) — every route with payload shapes
 - [DATA-MODELS.md](DATA-MODELS.md) — schema + RLS + ERD
 - [DEPLOYMENT.md](DEPLOYMENT.md) — how this ships
 - [AGENTS.md](AGENTS.md) — how the codebase is split across agents
+- [../CHANGELOG.md](../CHANGELOG.md) — release notes; redesign entry + follow-on list
 - Spec of record: `../../../canon/forge-scanner-spec.md`
