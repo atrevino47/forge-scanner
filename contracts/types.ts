@@ -47,6 +47,17 @@ export type PaymentProductType = 'setup_fee' | 'monthly_retainer' | 'custom_pack
 export type CaptureMethod = 'direct' | 'scraped' | 'manual';
 
 // ============================================================
+// TEASER FINDING (capture-gate unlock preview — 1 finding shown before full results)
+// ============================================================
+
+export interface TeaserFinding {
+  headline: string; // 10-120 chars — highest-impact single finding phrased as teaser
+  dollar_range_display: string; // "$38k – $72k / yr"
+  total_findings_count: number; // total findings across the scan (drives "see the other 16" copy)
+  unlock_cta: 'See the other findings + Blueprint'; // locked copy
+}
+
+// ============================================================
 // INDUSTRY DETECTION (runs once per scan, feeds template slots to all prompts)
 // ============================================================
 
