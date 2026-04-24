@@ -23,24 +23,20 @@ export function ResultsTopBar({ onBookCall, scannedUrl, showUrl }: ResultsTopBar
         <span className="sm:hidden">Book a Call</span>
       </button>
 
-      {/* Center: scanned URL (when results visible) or FORGE logo */}
+      {/* Center: scanned URL (when results visible) or FORGEWITH.AI wordmark — matches TopBanner */}
       <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 max-w-[180px] md:max-w-md overflow-hidden">
         {showUrl && displayUrl ? (
           <span className="font-mono text-[11px] md:text-xs text-forge-text-secondary truncate">
             {displayUrl}
           </span>
         ) : (
-          <div className="flex items-center gap-1.5">
-            <span
-              className="material-symbols-outlined text-forge-accent text-[18px]"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              precision_manufacturing
-            </span>
-            <span className="font-display font-black uppercase tracking-tighter text-base text-forge-accent">
-              FORGE
-            </span>
-          </div>
+          <span
+            className="font-display font-black tracking-tight"
+            style={{ fontSize: '18px', letterSpacing: '-0.03em' }}
+          >
+            <span style={{ color: 'var(--forge-text)' }}>FORGE</span>
+            <span style={{ color: 'var(--forge-accent)' }}>WITH.AI</span>
+          </span>
         )}
       </div>
 
