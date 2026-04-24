@@ -293,6 +293,9 @@ export async function runScreenshotPipeline(params: {
 
         try {
           const sourceType = platformToSourceType(platform);
+          if (!sourceType) {
+            continue;
+          }
           const result = await capturePageWithMetadata(browser, socialData.url, 'desktop', 'full');
 
           pendingScreenshots.push({
@@ -681,14 +684,14 @@ function generateScreenshotId(): string {
   return crypto.randomUUID();
 }
 
-function platformToSourceType(platform: keyof DetectedSocials): SourceType {
-  const mapping: Record<keyof DetectedSocials, SourceType> = {
+function platformToSourceType(platform: keyof DetectedSocials): SourceType | null {
+  const mapping: Partial<Record<keyof DetectedSocials, SourceType>> = {
     instagram: 'instagram',
     facebook: 'facebook',
     tiktok: 'tiktok',
     linkedin: 'linkedin',
   };
-  return mapping[platform];
+  return mapping[platform] ?? null;
 }
 
 function extractBusinessNameFromUrl(url: string): string | null {
