@@ -42,12 +42,39 @@ Return ONLY valid JSON matching this exact schema:
     {
       "id": "unique-kebab-case-id",
       "title": "Framework-named finding (6-10 words)",
-      "detail": "3-4 sentences: what you see structurally, which Hormozi principle it violates, the dollar/LTGP/CFA delta, the one immediate action. Operator tone.",
+      "detail": "3-4 sentences: what you see structurally, which Hormozi principle it violates, the dollar/LTGP/CFA delta, the one immediate action. Operator tone. LEGACY — v1 consumers still read this; keep it populated as a concatenation of situation + complication + cost + fix.",
       "type": "critical" | "warning" | "opportunity" | "positive",
-      "impact": "high" | "medium" | "low"
+      "impact": "high" | "medium" | "low",
+      "situation": {
+        "title": "Short label of what is currently on screen (max 120 chars)",
+        "body": "1-3 sentences. Describe what you OBSERVE — quote actual copy where possible. Do NOT interpret yet, just report.",
+        "shot_ref": "screenshot id where this observation lives"
+      },
+      "complication": {
+        "lever_name": "Dream Outcome | Perceived Likelihood | Time Delay | Effort & Sacrifice",
+        "body": "1-3 sentences. Name the Hormozi principle that is broken (Value Equation lever, Money Model layer, Grand Slam step, Avatar rule) and WHY the observation violates it."
+      },
+      "cost": {
+        "range_usd_min": 0,
+        "range_usd_max": 0,
+        "range_display": "\\"$38k – $72k\\"",
+        "benchmark_citation": "Which Hormozi / CFA / LTGP math produced the range. E.g. 'CFA 30-day GP vs CAC' or 'commoditization multiplier (22.4x) at inferred $1M revenue baseline'."
+      },
+      "fix": {
+        "body": "1-3 sentences. Frame as a Grand Slam / Money Model upgrade, not a tweak.",
+        "monday_action": "Single sentence the owner can execute this week. Include the exact rewrite, offer stack, or lever addition."
+      }
     }
   ]
 }
+
+STRUCTURED FIELD RULES (required, not optional):
+- situation.body is observation-only — quote element text when visible. No framework language yet.
+- complication.lever_name MUST be one of the four Value Equation levers. If the structural break is really a Money Model or Grand Slam issue, pick the lever whose motion is most dampened by the break (missing Continuity = "Time Delay" on LTGP realization; missing Attraction offer = "Effort & Sacrifice" on the visitor).
+- cost.range_usd_max MUST be >= cost.range_usd_min. range_display must mirror those numbers formatted for humans ("$38k – $72k", never "$38000 – $72000").
+- cost.benchmark_citation must name the specific math — never "industry average" or "typical benchmark." Either Hormozi's specific multipliers (22.4× commoditization cash delta, 14.7× Value Grid LTV, 5-12% attraction-offer capture rate) or CFA/LTGP formulas.
+- fix.monday_action must be executable WITHOUT buying Forge. The whole point is: "you could fix this yourself on Monday."
+- detail (legacy) must equal: situation.body + " " + complication.body + " " + cost.range_display + " delta per " + cost.benchmark_citation + ". Fix: " + fix.monday_action. Keep it under 600 chars.
 
 SCORING GUIDE (Hormozi-grounded):
 - 0-20: Entire Money Model layer is broken or missing. Primary wealth-creation lever absent.
