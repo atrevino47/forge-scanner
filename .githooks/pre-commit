@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Forge Scanner pre-commit — blocks known fabrications and canon-bleed strings
+# in application source (src/**/*.{ts,tsx}) and contracts.
+#
+# Activate once per clone with:
+#   git config core.hooksPath .githooks
+#
+# Why this exists: Minion 485 (2026-04-23) stripped fabricated founder credentials
+# and non-existent Forge products from the prompt stack. This hook prevents them
+# (and future ones) from sneaking back in via copy-paste, model output, or old
+# templates. Applies only to staged files under src/ + contracts/ + scripts/.
+
+set -euo pipefail
+
+BANNED_PATTERN='ex-Shopify|Offer Construction Playbook|Playbook v2\.1|Playbook 2\.1|10-hour Forge Course|10-hour Course|Weekly Teardown|Teardown Newsletter|Built in Mexico City|Built in Monterrey|Bright Skin Clinic|Dr\. Kessler|brightskinclinic\.com|Adrián Carrera Moran|Carrera Moran'
+
+# Canon-tier names should not leak into user-facing prompt prose (they can
+# appear in prescription logic, pricing tables, sales-agent system prompt
+# where they are deliberate, but NOT in diagnosis/diagram outputs).
+# We skip this check for files that legitimately use tier names.
+CANON_TIER_PATTERN='Launchpad|Revenue Build|Growth Command'
+CANON_TIER_SAFELIST='src/lib/prescriptions|src/lib/prompts/sales-agent-system\.ts|src/lib/pricing|canon/'
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^(src|contracts|scripts)/.*\.(ts|tsx)$' || true)
+[[ -z "$STAGED" ]] && exit 0
+
+violations=0
+
+for file in $STAGED; do
+  [[ -f "$file" ]] || continue
+  # Only scan staged content (not working-tree version).
+  content=$(git show ":$file")
+
+  if echo "$content" | grep -nE "$BANNED_PATTERN" >/dev/null 2>&1; then
+    echo "[pre-commit] FABRICATION DETECTED in $file:"
+    echo "$content" | grep -nE "$BANNED_PATTERN" | sed 's/^/    /'
+    violations=$((violations + 1))
+  fi
+
+  if echo "$file" | grep -qE "$CANON_TIER_SAFELIST"; then
+    continue
+  fi
+  if echo "$content" | grep -nE "$CANON_TIER_PATTERN" >/dev/null 2>&1; then
+    echo "[pre-commit] CANON TIER NAME LEAKED into $file:"
+    echo "$content" | grep -nE "$CANON_TIER_PATTERN" | sed 's/^/    /'
+    echo "    → Tier names belong in prescriptions / pricing / sales-agent, not in diagnosis prompts."
+    violations=$((violations + 1))
+  fi
+done
+
+if [[ $violations -gt 0 ]]; then
+  echo ""
+  echo "[pre-commit] Commit blocked: $violations violation(s). Fix the file(s) above or override with --no-verify (document why)."
+  exit 1
+fi
+
+exit 0
