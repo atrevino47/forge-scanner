@@ -60,6 +60,15 @@ Blueprint redesign: HTML mockup → industry-ideal funnel diagram. Prompt layer 
 - **`pipeline.ts` tsc** — `platformToSourceType` narrows to mapped keys; clears pre-existing `DetectedSocials` drift. Commit: `e51f7b4`.
 - **XSS primitive deleted** — `designs/claude-design-2026-04-23/project/design-canvas.jsx` and host HTML accepted any-origin postMessage payloads and wrote DOM from them. 757 lines removed, no functional loss (design reference material only). Commit: `3b2cd94`.
 
+### Security (audit 2026-04-23 P0/High remediation — 2026-04-24)
+
+- **Atomic rate-limit RPC** (audit 1.3, High) — `check_rate_limit(p_key, p_type, p_limit, p_window_ms)` Postgres function performs the read-modify-write as a single atomic statement via `INSERT ... ON CONFLICT DO UPDATE`. Closes the TOCTOU race where two concurrent scan-starts at `count=limit` both observed the stale value and both incremented, bursting through the cap. Migration `supabase/migrations/20260424010000_atomic_rate_limit.sql` — Adrián to apply. `src/lib/rate-limit/index.ts` rewritten to call the RPC.
+- **Timing-safe cron secret comparison** (audit 1.5, High) — new `src/lib/security/cron-auth.ts :: verifyCronSecret()` uses `crypto.timingSafeEqual` over equal-length padded buffers plus a length-equality check. Swapped into `/api/cron/rate-limit-purge`, `/api/cron/stale-scans`, `/api/cron/followup-sender`.
+- **SSRF denylist extracted + tested** (audit 1.2 follow-up) — `isPrivateOrMetadataHost` moved from `scan/start/route.ts` to `src/lib/security/ssrf.ts`. Public API unchanged; now covered by regression tests.
+- **vitest harness added** — first test suite in the project. `bun run test` runs `ssrf.test.ts` (23 cases) and `cron-auth.test.ts` (8 cases) = 39 assertions across 2 files. Config: `vitest.config.ts` (node env, `@/` alias).
+- **Audit items verified already-remediated (no code change needed):** 1.1 (`/api/test-screenshot` + `/debug` gated with `NODE_ENV === 'production' → 404`), 1.2 main fix (SSRF denylist in scan/start), 1.4 (`/api/cron/rate-limit-purge` + `vercel.json` cron), 1.7 (`/api/admin/team` returns 501).
+- **Deferred:** 1.6 (CSP `unsafe-eval/unsafe-inline`) — big-rock F, requires Next.js nonce plumbing through middleware; parked until test suite broadens to cover PostHog/Stripe/Cal embeds. 1.8–1.13 are Medium/Low and outside this pass.
+
 ### Locked copy (contract-enforced)
 
 - Blueprint primary CTA button label: `'Book a call'` (literal TS type).

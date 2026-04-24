@@ -218,14 +218,21 @@ Users enter a URL, scan starts, then ~15 s in, `CapturePrompt` slides in asking 
 
 Postgres RLS is enabled on every table. Scans, screenshots, funnel_stages, blueprints are readable by `anon` so users can view their own `/scan/:id` page without logging in (the URL itself is the bearer token). Service role bypasses RLS for pipeline writes. Leads, conversations, messages, bookings are locked to the authenticated `auth.uid()` when present. See `supabase/migrations/20260318203853_initial_schema.sql` for the full policy set.
 
-### 8. DB-backed rate limiting
+### 8. DB-backed rate limiting (atomic RPC)
 
-`src/lib/rate-limit/` uses the `rate_limits` table (key, type, count, window_start) to enforce:
+`src/lib/rate-limit/` calls the `check_rate_limit(p_key, p_type, p_limit, p_window_ms)` Postgres RPC (migration `20260424010000_atomic_rate_limit.sql`). The RPC performs the read-modify-write as a single atomic `INSERT ... ON CONFLICT DO UPDATE` against the `rate_limits` table (key, type, count, window_start) and returns `(allowed, new_count, window_start)`. This replaces the earlier app-level SELECT-then-UPDATE pattern, which had a TOCTOU race under concurrent requests.
+
+Enforces:
 - 5 requests / 60 s per IP (burst)
 - 20 scans / 24 h per IP
 - Chat message limits per conversation
 
 Not Redis, not edge — Postgres is the source of truth, which keeps the limit consistent across Vercel regions.
+
+Hardening adjuncts:
+- `src/lib/security/ssrf.ts :: isPrivateOrMetadataHost` — hostname denylist applied in `/api/scan/start` before handoff to the Hetzner Chrome. Blocks loopback, RFC1918, `169.254/16` (cloud metadata), IPv6 `::1` and `fc00::/7`, `.local/.internal/.test` TLDs.
+- `src/lib/security/cron-auth.ts :: verifyCronSecret` — `crypto.timingSafeEqual` against the `Bearer ${CRON_SECRET}` header. Used by `rate-limit-purge`, `stale-scans`, and `followup-sender` cron routes.
+- `/api/cron/rate-limit-purge` (vercel cron `0 4 * * *`) deletes `rate_limits` rows older than 25h so the table cannot grow unbounded.
 
 ### 9. Write-back to forge-vault via queue/event writer
 
