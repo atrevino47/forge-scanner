@@ -2,12 +2,14 @@
 title: Forge Funnel Scanner
 domain: scanner
 status: active
-last_reviewed: 2026-04-23
+last_reviewed: 2026-04-24
 ---
 
 # Forge Funnel Scanner
 
-AI-powered funnel audit tool that is **forgewith.ai**'s primary lead-generation machine. A prospect enters a URL, the system captures real screenshots of their website / socials / GBP / ads, Claude Sonnet annotates them with specific issues, generates an optimized blueprint + HTML mockup, then an AI Sales Agent (Hormozi CLOSER-framework) drives them to book a strategy call with Adrián.
+AI-powered funnel audit tool that is **forgewith.ai**'s primary lead-generation machine. A prospect enters a URL, the system captures real screenshots of their website / socials / GBP / ads, Claude Sonnet annotates them with specific issues, generates an industry-ideal **funnel diagram** (Grand Slam + 4-layer Money Model), then an AI Sales Agent (Vega, Hormozi CLOSER-framework) — optionally in live voice via ElevenLabs — drives them to book a strategy call with Adrián.
+
+> **Active branch:** `feat/storytelling-experience` — Blueprint redesign (HTML mockup → JSON funnel diagram), industry-agnostic prompt templating, Vega voice scaffolding. See `CHANGELOG.md` for the full entry; `docs/ARCHITECTURE.md` §v2 Blueprint Redesign for the flow.
 
 > **The one goal:** convert free-scan users into booked strategy calls. Every feature serves that conversion.
 
@@ -79,11 +81,80 @@ Three public, seven admin.
 | `/admin/setup` | 25-check env health board |
 | `/admin/login` | Admin auth gate (Supabase OAuth, allowlist via `ADMIN_EMAILS`) |
 
+## v2 Blueprint Redesign (feat/storytelling-experience)
+
+The Blueprint surface is mid-rebuild. Two paths coexist at runtime; the client picks whichever is populated:
+
+```
+Blueprint API  ─┬─► legacy HTML mockup (mockup.ts)  ────► iframe render (FALLBACK)
+                │
+                └─► JSON funnel diagram (blueprint-diagram.ts) ─► React Flow render (v2, default when present)
+```
+
+### Blueprint diagram flow
+
+```
+scan complete
+   │
+   ├─ POST /api/blueprint/generate/:scanId
+   │     │
+   │     ├─ funnel-map.ts          → FunnelMapData (+ money_model 4-layer + total_leak_12mo)
+   │     ├─ mockup.ts               → legacy mockupHtml (kept for fallback)
+   │     └─ blueprint-diagram.ts    → BlueprintDiagram (nodes, edges, grand_slam_checklist,
+   │                                   outcome_guarantee, objection_faq, primary_cta)
+   │            │
+   │            └─ persisted in blueprints.funnel_map.__blueprint_diagram__
+   │               (JSONB piggyback; dedicated column is a pending migration)
+   │
+   ▼
+BlueprintView (src/components/scan/BlueprintView.tsx)
+   DiagramHeader
+     └─ MoneyModelCard (4 layers × {status, note, leak_12mo_usd, is_biggest})
+     └─ GrandSlamChecklist (MAGIC / 30-word / Value stack / Anchor / Risk reversal)
+     └─ FunnelDiagram.client.tsx (@xyflow/react — LTR desktop, TTB <768px)
+     └─ OutcomeGuaranteeCard
+     └─ ObjectionFaqList
+     └─ PrimaryCta (button_label + button_subtext are z.literal-equivalent locked types)
+```
+
+Every prompt output is contract-validated. See **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** §Prompt output contracts.
+
+### Voice agent (Vega)
+
+Config-only module at `src/lib/voice/vega-voice-config.ts`. Vega's brain (CLOSER framework, objection handling, scan-data injection) remains in `src/lib/prompts/sales-agent-system.ts` and is loaded into the ElevenLabs Agent's system-prompt slot.
+
+| Env var | Purpose |
+|---|---|
+| `ELEVENLABS_AGENT_ID` | Required — if missing, UI falls back to text Vega. |
+| `ELEVENLABS_API_KEY` | Required — signed URL issuance. |
+| `ELEVENLABS_VOICE_ID` | Optional — default `EXAVITQu4vr4xnSDxMaL` (Sarah). |
+| `VEGA_LLM_MODEL` | Optional — default `claude-4.6-sonnet`. Swappable without voice change. |
+| `VEGA_MAX_SESSION_MINUTES` | Optional — default 12. Soft cost guardrail. |
+
+Tool surface declared in `VEGA_TOOLS` (agrees with the ElevenLabs dashboard names):
+
+- `get_scan_summary(scanId)` — top-level scan health + leak number.
+- `get_biggest_leak(scanId)` — single headline money_model layer + $ range.
+- `get_cal_url()` — returns Adrián's Cal.com URL for in-call handoff.
+
+Webhook: `POST /api/voice/vega-tool-webhook` (handler pending; see `CHANGELOG.md` follow-ons).
+
+### Industry-agnostic templating
+
+Every prompt that emits copy referencing an industry accepts template slots filled at runtime from `IndustryDetection`:
+
+- `{{industry_display}}` — "HVAC Contracting" / "Med-Spa" / "your industry" (confidence < 0.6).
+- `{{customer_role_singular}}` / `{{customer_role_plural}}` — "homeowner" / "homeowners", "patient" / "patients".
+- `{{typical_avg_ticket_usd}}` — `{min, max}` for $-range grounding.
+
+Detector runs once per scan. Output cached (pipeline wire pending — current fallback: prompts receive `industry = null` and use "your industry" phrasing). Pre-commit hook blocks hardcoded industry strings ("med-spa", "Dr. Kessler", "ex-Shopify") from entering the repo.
+
 ## Documentation map
 
 All docs live under `docs/` with YAML frontmatter + `last_reviewed` dates. If a doc contradicts the code, the code wins — open a PR to reconcile.
 
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — system design, component diagram, data flow, rationale
+- **[CHANGELOG.md](CHANGELOG.md)** — release notes; `feat/storytelling-experience` redesign entry
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — system design, component diagram, data flow, prompt output contracts, Vega config
 - **[docs/SETUP.md](docs/SETUP.md)** — dev environment from scratch, env vars, troubleshooting
 - **[docs/API.md](docs/API.md)** — every HTTP endpoint with request/response/auth
 - **[docs/DATA-MODELS.md](docs/DATA-MODELS.md)** — Supabase schema, enums, RLS, ERD
