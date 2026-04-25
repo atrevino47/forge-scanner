@@ -183,6 +183,287 @@ body::before {
   background-size: 20px 20px;
 }
 
+/* ══════════════════════════════════════════════════════════
+ * SCANNER REDESIGN — bundle styles (claude-design-2026-04-23)
+ * Short-name vars + classes consumed by /src/components/design-system/.
+ * Coexists with forge-* tokens above; do not collapse them.
+ * ══════════════════════════════════════════════════════════ */
+
+:root {
+  --base: #FAFAF7;
+  --surface: #F5F4F0;
+  --card: #ECEAE4;
+  --elevated: #E2E0DA;
+  --accent: #E8530E;
+  --accent-bright: #FF6B2B;
+  --accent-glow: rgba(232, 83, 14, 0.08);
+  --text: #1A1917;
+  --text-2: #6B6860;
+  --text-muted: #B8B5AD;
+  --border: #ECEAE4;
+  --border-strong: #D9D6CE;
+
+  --critical: #D93636;
+  --warning: #D4890A;
+  --positive: #2D8C4E;
+  --opportunity: #2B7BD4;
+
+  --ink: #141413;
+  --ink-surface: #1E1E1C;
+  --ink-card: #282826;
+  --ink-elevated: #353533;
+  --ink-text: #F0EFE9;
+  --ink-text-2: #9A9890;
+
+  --r: 10px;
+  --r-lg: 12px;
+  --r-sm: 6px;
+}
+
+/* ── Typography primitives ── */
+.display { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+.display-900 { font-family: var(--font-display); font-weight: 900; letter-spacing: -0.025em; line-height: 1.02; }
+.body { font-family: var(--font-body); }
+.mono { font-family: var(--font-mono); }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.eyebrow-accent { color: var(--accent); }
+.eyebrow-muted { color: var(--text-muted); }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 22px;
+  border-radius: var(--r);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.12s ease, background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--accent); color: #FAFAF7; }
+.btn-primary:hover { background: var(--accent-bright); }
+.btn-secondary { background: transparent; color: var(--text); border-color: var(--border-strong); }
+.btn-secondary:hover { border-color: var(--text); }
+.btn-ghost { background: transparent; color: var(--text-2); }
+.btn-ghost:hover { color: var(--text); }
+.btn-dark { background: var(--ink); color: var(--ink-text); }
+.btn-dark:hover { background: var(--ink-card); }
+.btn-sm { height: 36px; padding: 0 14px; font-size: 12px; }
+.btn-lg { height: 56px; padding: 0 28px; font-size: 15px; }
+
+/* ── Cards ── */
+.ds-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 24px;
+}
+.ds-card-flat { background: var(--base); border: 1px solid var(--border-strong); border-radius: var(--r-lg); }
+.card-ink { background: var(--ink-card); border: 1px solid rgba(255,255,255,0.06); color: var(--ink-text); border-radius: var(--r-lg); }
+
+/* ── Chips ── */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-2);
+}
+.chip-accent { background: rgba(232, 83, 14, 0.08); color: var(--accent); border-color: rgba(232, 83, 14, 0.25); }
+.chip-critical { background: rgba(217, 54, 54, 0.08); color: var(--critical); border-color: rgba(217, 54, 54, 0.25); }
+.chip-warning { background: rgba(212, 137, 10, 0.08); color: var(--warning); border-color: rgba(212, 137, 10, 0.25); }
+
+/* ── Hair (no-line rule: dividers only at atomic level) ── */
+.hair { height: 1px; background: var(--border); }
+.hair-strong { height: 1px; background: var(--border-strong); }
+
+/* ── Dot grid ── */
+.dot-grid-dark {
+  background-image: radial-gradient(circle at 1px 1px, rgba(240, 239, 233, 0.06) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* ── Annotation pin ── */
+.ann-pin {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #FAFAF7;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #FAFAF7;
+  box-shadow: 0 0 0 1px rgba(232,83,14,0.35), 0 8px 20px -6px rgba(232,83,14,0.6);
+  transform: translate(-50%, -50%);
+}
+.ann-pin.pin-critical { background: var(--critical); box-shadow: 0 0 0 1px rgba(217,54,54,0.35), 0 8px 20px -6px rgba(217,54,54,0.6); }
+.ann-pin.pin-warning { background: var(--warning); box-shadow: 0 0 0 1px rgba(212,137,10,0.35), 0 8px 20px -6px rgba(212,137,10,0.6); }
+.ann-pin.pin-opportunity { background: var(--opportunity); box-shadow: 0 0 0 1px rgba(43,123,212,0.35), 0 8px 20px -6px rgba(43,123,212,0.6); }
+
+/* ── Soft shadow (one ambient-occlusion shadow max) ── */
+.shadow-amb {
+  box-shadow: 0 1px 2px rgba(20, 20, 19, 0.04), 0 12px 32px -12px rgba(20, 20, 19, 0.12);
+}
+
+/* ── Placeholder image (striped tile) ── */
+.ph-img {
+  background-color: var(--card);
+  background-image:
+    repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(26,25,23,0.04) 12px, rgba(26,25,23,0.04) 13px);
+  position: relative;
+  overflow: hidden;
+}
+.ph-img > .ph-label {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+/* ── FORGE logo ── */
+.forge-logo {
+  font-family: var(--font-display);
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  font-size: 18px;
+  color: var(--text);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+}
+.forge-logo .forge-logo-accent { color: var(--accent); }
+.forge-logo-dark { color: var(--ink-text); }
+
+/* ── Top nav ── */
+.top-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 32px;
+  background: var(--base);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 10;
+}
+.top-nav-compact { padding: 16px 24px; }
+.top-nav-dark { background: var(--ink); border-bottom-color: rgba(255,255,255,0.05); }
+.top-nav-links { display: flex; align-items: center; gap: 22px; }
+.top-nav-link {
+  font-size: 12px;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  font-family: var(--font-mono);
+}
+.top-nav-link:hover { color: var(--text); }
+.top-nav-dark .top-nav-link { color: var(--ink-text-2); }
+.top-nav-dark .top-nav-link:hover { color: var(--ink-text); }
+
+@media (max-width: 768px) {
+  .top-nav { display: none; }
+}
+
+/* ── Mobile nav ── */
+.mobile-nav {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--base);
+  border-bottom: 1px solid var(--border);
+}
+.mobile-nav-dark { background: var(--ink); border-bottom-color: rgba(255,255,255,0.05); }
+.mobile-nav-burger { display: flex; flex-direction: column; gap: 4px; }
+.mobile-nav-burger > span {
+  display: block;
+  width: 20px; height: 1.5px;
+  background: var(--text);
+}
+.mobile-nav-dark .mobile-nav-burger > span { background: var(--ink-text); }
+
+@media (max-width: 768px) {
+  .mobile-nav { display: flex; }
+}
+
+/* ── Footer ── */
+.forge-footer { padding: 48px 32px 32px; background: var(--surface); margin-top: 80px; }
+.forge-footer-inner {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 40px; flex-wrap: wrap;
+  max-width: 1240px; margin: 0 auto;
+}
+.forge-footer-brand { max-width: 320px; }
+.forge-footer-blurb { font-size: 13px; color: var(--text-2); margin-top: 14px; line-height: 1.6; }
+.forge-footer-columns { display: flex; gap: 48px; flex-wrap: wrap; }
+.forge-footer-col-title { margin-bottom: 10px; }
+.forge-footer-col-links { display: flex; flex-direction: column; gap: 6px; }
+.forge-footer-link { font-size: 13px; color: var(--text-2); text-decoration: none; }
+.forge-footer-link:hover { color: var(--text); }
+.forge-footer-hair { max-width: 1240px; margin: 32px auto 0; }
+.forge-footer-base {
+  max-width: 1240px; margin: 0 auto; padding-top: 16px;
+  display: flex; justify-content: space-between;
+}
+.forge-footer-meta { font-size: 11px; color: var(--text-muted); }
+
+/* ── Page container (used by redesign landing) ── */
+.scanner-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--base);
+  color: var(--text);
+}
+
+/* ── Landing-specific helpers ── */
+.landing-hero-watermark {
+  position: absolute;
+  right: -120px; top: -80px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 520px;
+  line-height: 1;
+  color: rgba(26,25,23,0.035);
+  letter-spacing: -0.04em;
+  pointer-events: none;
+}
+.landing-hero-radial {
+  position: absolute;
+  right: -200px; top: -200px;
+  width: 800px; height: 800px;
+  background: radial-gradient(circle, rgba(232,83,14,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* hide desktop landing on small screens, mobile landing on large */
+.landing-desktop { display: block; }
+.landing-mobile { display: none; }
+@media (max-width: 768px) {
+  .landing-desktop { display: none; }
+  .landing-mobile { display: block; }
+}
+
 /* ── Skeleton shimmer — replaces animate-pulse on loading skeletons ── */
 @keyframes skeleton-sweep {
   0% { background-position: -200% 0; }
