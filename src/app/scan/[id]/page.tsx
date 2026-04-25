@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { ScanLayout } from '@/components/scan/ScanLayout';
+import { ScanRedesignPreview } from '@/components/scan-redesign/ScanRedesignPreview';
 
 export async function generateMetadata({
   params,
@@ -34,10 +35,17 @@ export async function generateMetadata({
 
 export default async function ScanPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ redesign?: string }>;
 }) {
   const { id } = await params;
+  const { redesign } = await searchParams;
+
+  if (redesign === 'capture' || redesign === 'results') {
+    return <ScanRedesignPreview view={redesign} />;
+  }
 
   return <ScanLayout scanId={id} />;
 }
