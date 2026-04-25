@@ -20,6 +20,10 @@ import { CapturePrompt } from './CapturePrompt';
 import { SocialConfirmation } from './SocialConfirmation';
 import { BlueprintCTA } from './BlueprintCTA';
 import { BlueprintView } from './BlueprintView';
+import {
+  BlueprintDesktop,
+  BlueprintMobile,
+} from '@/components/blueprint-redesign';
 import { ChatContainer } from '@/components/chat/ChatContainer';
 import { ChatToggle } from '@/components/chat/ChatToggle';
 import { ResultsTopBar } from './ResultsTopBar';
@@ -719,7 +723,25 @@ export function ScanLayout({ scanId }: { scanId: string }) {
 
           {/* Blueprint view — after blueprint generated (overview tab, full width) */}
           {activeTab === 'overview' && state.blueprintData && (
-            <BlueprintView blueprint={state.blueprintData} />
+            <>
+              {/* Original data-bound blueprint (Money Model, Funnel Diagram, Grand Slam checklist, FAQ) */}
+              <BlueprintView blueprint={state.blueprintData} />
+
+              {/* Redesigned presentational blueprint mockup — responsive */}
+              <div className="blueprint-redesign-desktop hidden md:block">
+                <BlueprintDesktop
+                  weakestStage={state.blueprintData.diagram?.weakest_stage}
+                  industry={state.blueprintData.diagram?.industry}
+                  onBookCall={() => handleOpenCalcom('results_cta')}
+                />
+              </div>
+              <div className="blueprint-redesign-mobile block md:hidden">
+                <BlueprintMobile
+                  weakestStage={state.blueprintData.diagram?.weakest_stage}
+                  onBookCall={() => handleOpenCalcom('results_cta')}
+                />
+              </div>
+            </>
           )}
         </div>
 
