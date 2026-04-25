@@ -464,6 +464,30 @@ body::before {
   .landing-mobile { display: block; }
 }
 
+/* same rule for scan-in-progress redesign */
+.scan-desktop { display: block; }
+.scan-mobile { display: none; }
+@media (max-width: 768px) {
+  .scan-desktop { display: none; }
+  .scan-mobile { display: block; }
+}
+
+/* annotation pulse ring — used on scan + capture/results pages */
+.ann-pulse { position: absolute; transform: translate(-50%, -50%); width: 26px; height: 26px; pointer-events: none; }
+.ann-pulse::before {
+  content: "";
+  position: absolute; inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  animation: pulse-ring 1.8s ease-out infinite;
+  opacity: 0;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.6); opacity: 0.6; }
+  70% { opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
 /* ── Skeleton shimmer — replaces animate-pulse on loading skeletons ── */
 @keyframes skeleton-sweep {
   0% { background-position: -200% 0; }

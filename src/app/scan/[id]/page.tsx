@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { ScanLayout } from '@/components/scan/ScanLayout';
+import { ScanDesktop } from '@/components/scan-redesign/ScanDesktop';
+import { ScanMobile } from '@/components/scan-redesign/ScanMobile';
 
 export async function generateMetadata({
   params,
@@ -39,5 +40,10 @@ export default async function ScanPage({
 }) {
   const { id } = await params;
 
-  return <ScanLayout scanId={id} />;
+  return (
+    <>
+      <ScanDesktop scanId={id} />
+      <ScanMobile scanId={id} />
+    </>
+  );
 }
