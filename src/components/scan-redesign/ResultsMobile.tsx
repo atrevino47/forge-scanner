@@ -1,5 +1,5 @@
 import { MobileNav, Eyebrow, StatusDot } from '@/components/design-system/primitives';
-import { SAMPLE_SCORE_DATA, SAMPLE_MONEY_LAYERS } from './results-data';
+import { SAMPLE_SCORE_DATA, SAMPLE_MONEY_LAYERS, type StageScore } from './results-data';
 
 interface ResultsMobileProps {
   voice?: boolean;
@@ -7,6 +7,10 @@ interface ResultsMobileProps {
   agentName?: string;
   findingCount?: number;
   stageCount?: number;
+  stageScores?: StageScore[];
+  scanDuration?: string;
+  onBookCall?: () => void;
+  onViewBlueprint?: () => void;
 }
 
 export function ResultsMobile({
@@ -15,13 +19,21 @@ export function ResultsMobile({
   agentName = '[VOICE_AGENT_NAME]',
   findingCount = 17,
   stageCount = 5,
+  stageScores,
+  scanDuration = '94s',
+  onBookCall,
+  onViewBlueprint,
 }: ResultsMobileProps) {
+  const scores = stageScores ?? SAMPLE_SCORE_DATA;
+  // Mark vars as used so TS allow-any holds
+  void onBookCall;
+  void onViewBlueprint;
   const initial = agentName.replace(/[^A-Za-z]/g, '').charAt(0).toUpperCase() || 'V';
   return (
     <div className="scanner-page" style={{ width: '100%' }}>
       <MobileNav />
       <section style={{ padding: '24px 20px' }}>
-        <Eyebrow accent>Audit complete · 94s · EXAMPLE</Eyebrow>
+        <Eyebrow accent>Audit complete · {scanDuration}</Eyebrow>
         <h1
           className="display-900"
           style={{ fontSize: 30, margin: '10px 0 10px', lineHeight: 1.1 }}
@@ -94,7 +106,7 @@ export function ResultsMobile({
               gap: 10,
             }}
           >
-            {SAMPLE_SCORE_DATA.map((s) => (
+            {scores.map((s) => (
               <div
                 key={s.key}
                 className="ds-card"

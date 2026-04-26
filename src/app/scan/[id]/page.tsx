@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
-import { ScanDesktop } from '@/components/scan-redesign/ScanDesktop';
-import { ScanMobile } from '@/components/scan-redesign/ScanMobile';
+import { ScanLayout } from '@/components/scan/ScanLayout';
 import { ScanRedesignPreview } from '@/components/scan-redesign/ScanRedesignPreview';
 
 export async function generateMetadata({
@@ -44,14 +43,12 @@ export default async function ScanPage({
   const { id } = await params;
   const { redesign } = await searchParams;
 
+  // Preview-only escape hatch for design review (no live state)
   if (redesign === 'capture' || redesign === 'results') {
     return <ScanRedesignPreview view={redesign} />;
   }
 
-  return (
-    <>
-      <ScanDesktop scanId={id} />
-      <ScanMobile scanId={id} />
-    </>
-  );
+  // Live scan: ScanLayout owns SSE, state machine, and renders the new
+  // ScanDesktop/Mobile + CaptureGate + ResultsDesktop/Mobile based on state.
+  return <ScanLayout scanId={id} />;
 }

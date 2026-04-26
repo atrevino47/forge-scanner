@@ -3,20 +3,43 @@ import { TopNav, Eyebrow, PhImg } from '@/components/design-system/primitives';
 
 type MilestoneStatus = 'done' | 'active' | 'queued';
 
-interface Milestone {
+export interface Milestone {
   id: string;
   t: string;
   s: MilestoneStatus;
   detail: string;
 }
 
+export interface ScreenshotAnnotation {
+  x: number; // percent 0-100
+  y: number;
+  severity: 'critical' | 'warning' | 'positive';
+}
+
+export interface ScreenshotEntry {
+  id?: string;
+  url?: string;
+  label: string;
+  state?: 'CURRENT' | 'QUEUED' | 'DONE';
+  annotations?: ScreenshotAnnotation[];
+}
+
 interface ScanDesktopProps {
   scanId: string;
   domain?: string;
   voice?: boolean;
+  // Live state wiring (all optional — fallback to sample data for /preview routes)
+  milestones?: Milestone[];
+  activityLog?: Array<[string, string, string]>;
+  currentScreenshot?: ScreenshotEntry;
+  thumbnails?: ScreenshotEntry[];
+  elapsed?: string;
+  eta?: string;
+  progressPct?: number;
+  onCancel?: () => void;
 }
 
-const MILESTONES: Milestone[] = [
+const SAMPLE_MILESTONES: Milestone[] = [
   { id: 'crawl', t: 'Crawling site', s: 'done', detail: 'Pages + screenshots at 3 breakpoints' },
   { id: 'traffic', t: 'Traffic sources', s: 'done', detail: 'Channel + analytics detection' },
   { id: 'landing', t: 'Landing experience', s: 'active', detail: 'Vision pass · scoring elements' },
@@ -25,7 +48,7 @@ const MILESTONES: Milestone[] = [
   { id: 'followup', t: 'Follow-up system', s: 'queued', detail: 'Email cadence, SMS, retargeting' },
 ];
 
-const ACTIVITY_LOG: Array<[string, string, string]> = [
+const SAMPLE_ACTIVITY_LOG: Array<[string, string, string]> = [
   ['00:02', '✓', 'Resolved DNS · origin reachable'],
   ['00:04', '✓', 'Robots.txt OK · sitemap indexed'],
   ['00:08', '✓', 'Captured page snapshots'],
@@ -38,6 +61,22 @@ const ACTIVITY_LOG: Array<[string, string, string]> = [
   ['00:44', '·', 'Pinning annotations to pixels'],
   ['00:47', '◌', 'Queued: capture form analysis'],
 ];
+
+const SAMPLE_THUMBNAILS: ScreenshotEntry[] = [
+  { label: 'landing.jpg', state: 'CURRENT' },
+  { label: 'capture-form.jpg', state: 'QUEUED' },
+  { label: 'social-bio.jpg', state: 'QUEUED' },
+];
+
+const SAMPLE_CURRENT: ScreenshotEntry = {
+  label: 'Landing page · desktop · 1440w',
+  annotations: [
+    { x: 28, y: 22, severity: 'critical' },
+    { x: 62, y: 35, severity: 'warning' },
+    { x: 20, y: 58, severity: 'critical' },
+    { x: 75, y: 72, severity: 'warning' },
+  ],
+};
 
 function milestoneBadgeStyle(s: MilestoneStatus): CSSProperties {
   return {
@@ -57,13 +96,33 @@ function milestoneBadgeStyle(s: MilestoneStatus): CSSProperties {
   };
 }
 
-export function ScanDesktop({ scanId, domain, voice = true }: ScanDesktopProps) {
+export function ScanDesktop({
+  scanId,
+  domain,
+  voice = true,
+  milestones,
+  activityLog,
+  currentScreenshot,
+  thumbnails,
+  elapsed,
+  eta,
+  progressPct,
+  onCancel,
+}: ScanDesktopProps) {
   const shortId = scanId.slice(0, 8);
   const target = domain ?? 'your site';
+  const ms = milestones ?? SAMPLE_MILESTONES;
+  const log = activityLog ?? SAMPLE_ACTIVITY_LOG;
+  const thumbs = thumbnails ?? SAMPLE_THUMBNAILS;
+  const current = currentScreenshot ?? SAMPLE_CURRENT;
+  const elapsedStr = elapsed ?? '00:47';
+  const etaStr = eta ?? '01:30';
+  const pct = Math.max(0, Math.min(100, progressPct ?? 52));
+  const annPins = current.annotations ?? [];
 
   return (
     <div className="scanner-page scan-desktop">
-      <TopNav compact ctaLabel="Cancel scan" />
+      <TopNav compact ctaLabel="Cancel scan" onCta={onCancel} />
 
       <section style={{ padding: '40px 48px 24px' }}>
         <div
@@ -96,8 +155,8 @@ export function ScanDesktop({ scanId, domain, voice = true }: ScanDesktopProps) 
               ELAPSED / ETA
             </div>
             <div className="display-900" style={{ fontSize: 28, letterSpacing: '-0.02em' }}>
-              00:47{' '}
-              <span style={{ color: 'var(--text-muted)', fontSize: 20 }}>/ 01:30</span>
+              {elapsedStr}{' '}
+              <span style={{ color: 'var(--text-muted)', fontSize: 20 }}>/ {etaStr}</span>
             </div>
           </div>
         </div>
@@ -115,7 +174,7 @@ export function ScanDesktop({ scanId, domain, voice = true }: ScanDesktopProps) 
         >
           <div
             style={{
-              width: '52%',
+              width: `${pct}%`,
               height: '100%',
               background: 'var(--accent)',
               position: 'relative',
@@ -157,7 +216,7 @@ export function ScanDesktop({ scanId, domain, voice = true }: ScanDesktopProps) 
               borderColor: 'var(--border-strong)',
             }}
           >
-            <Eyebrow>Milestones · {MILESTONES.length}</Eyebrow>
+            <Eyebrow>Milestones · {ms.length}</Eyebrow>
             <div style={{ marginTop: 16, position: 'relative' }}>
               <div
                 style={{
@@ -169,7 +228,7 @@ export function ScanDesktop({ scanId, domain, voice = true }: ScanDesktopProps) 
                   background: 'var(--border-strong)',
                 }}
               />
-              {MILESTONES.map((m, i) => (
+              {ms.map((m, i) => (
                 <div
                   key={m.id}
                   style={{
@@ -273,33 +332,34 @@ export function ScanDesktop({ scanId, domain, voice = true }: ScanDesktopProps) 
                 </span>
               </div>
               <div style={{ position: 'relative', padding: 24 }}>
-                <PhImg label="Landing page · desktop · 1440w" aspect="unset" height={520} />
-                <span className="ann-pulse" style={{ left: '28%', top: '22%' }} />
-                <span
-                  className="ann-pin pin-critical"
-                  style={{ left: '28%', top: '22%', position: 'absolute' }}
-                >
-                  1
-                </span>
-                <span
-                  className="ann-pin pin-warning"
-                  style={{ left: '62%', top: '35%', position: 'absolute' }}
-                >
-                  2
-                </span>
-                <span
-                  className="ann-pin pin-critical"
-                  style={{ left: '20%', top: '58%', position: 'absolute' }}
-                >
-                  3
-                </span>
-                <span className="ann-pulse" style={{ left: '75%', top: '72%' }} />
-                <span
-                  className="ann-pin pin-warning"
-                  style={{ left: '75%', top: '72%', position: 'absolute' }}
-                >
-                  4
-                </span>
+                {current.url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={current.url}
+                    alt={current.label}
+                    style={{
+                      width: '100%',
+                      height: 520,
+                      objectFit: 'cover',
+                      objectPosition: 'top',
+                      borderRadius: 6,
+                      display: 'block',
+                    }}
+                  />
+                ) : (
+                  <PhImg label={current.label} aspect="unset" height={520} />
+                )}
+                {annPins.map((p, i) => (
+                  <span key={`pin-${i}`}>
+                    <span className="ann-pulse" style={{ left: `${p.x}%`, top: `${p.y}%` }} />
+                    <span
+                      className={`ann-pin pin-${p.severity}`}
+                      style={{ left: `${p.x}%`, top: `${p.y}%`, position: 'absolute' }}
+                    >
+                      {i + 1}
+                    </span>
+                  </span>
+                ))}
               </div>
             </div>
 
@@ -311,13 +371,9 @@ export function ScanDesktop({ scanId, domain, voice = true }: ScanDesktopProps) 
                 marginTop: 14,
               }}
             >
-              {[
-                { src: 'landing.jpg', state: 'CURRENT' },
-                { src: 'capture-form.jpg', state: 'QUEUED' },
-                { src: 'social-bio.jpg', state: 'QUEUED' },
-              ].map(({ src, state }) => (
+              {thumbs.slice(0, 3).map((t, i) => (
                 <div
-                  key={src}
+                  key={t.id ?? `${t.label}-${i}`}
                   className="card"
                   style={{
                     padding: 0,
@@ -328,12 +384,21 @@ export function ScanDesktop({ scanId, domain, voice = true }: ScanDesktopProps) 
                     position: 'relative',
                   }}
                 >
-                  <PhImg label={src} aspect="unset" height={110} style={{ borderRadius: 0 }} />
+                  {t.url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={t.url}
+                      alt={t.label}
+                      style={{ width: '100%', height: 110, objectFit: 'cover', objectPosition: 'top', display: 'block' }}
+                    />
+                  ) : (
+                    <PhImg label={t.label} aspect="unset" height={110} style={{ borderRadius: 0 }} />
+                  )}
                   <div
                     className="mono chip"
                     style={{ position: 'absolute', top: 8, left: 8, fontSize: 9 }}
                   >
-                    {state}
+                    {t.state ?? 'QUEUED'}
                   </div>
                 </div>
               ))}
@@ -378,14 +443,14 @@ export function ScanDesktop({ scanId, domain, voice = true }: ScanDesktopProps) 
                 ● LIVE
               </span>
             </div>
-            {ACTIVITY_LOG.map(([t, s, msg], i) => (
+            {log.map(([t, s, msg], i) => (
               <div
                 key={i}
                 style={{
                   display: 'grid',
                   gridTemplateColumns: '44px 18px 1fr',
                   gap: 4,
-                  color: i > 8 ? 'var(--ink-text-2)' : 'var(--ink-text)',
+                  color: i > log.length - 3 ? 'var(--ink-text-2)' : 'var(--ink-text)',
                 }}
               >
                 <span style={{ color: 'var(--ink-text-2)' }}>{t}</span>

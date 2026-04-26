@@ -1,13 +1,19 @@
 import { MobileNav, Eyebrow, PhImg } from '@/components/design-system/primitives';
+import type { Milestone, ScreenshotEntry, ScreenshotAnnotation } from './ScanDesktop';
 
 type MilestoneStatus = 'done' | 'active' | 'queued';
 
 interface ScanMobileProps {
   scanId: string;
   domain?: string;
+  milestones?: Milestone[];
+  currentScreenshot?: ScreenshotEntry;
+  elapsed?: string;
+  eta?: string;
+  progressPct?: number;
 }
 
-const MOBILE_MILESTONES: Array<[string, MilestoneStatus]> = [
+const SAMPLE_MOBILE_MILESTONES: Array<[string, MilestoneStatus]> = [
   ['Crawling site', 'done'],
   ['Traffic sources', 'done'],
   ['Landing experience', 'active'],
@@ -16,8 +22,30 @@ const MOBILE_MILESTONES: Array<[string, MilestoneStatus]> = [
   ['Follow-up', 'queued'],
 ];
 
-export function ScanMobile({ scanId: _scanId, domain }: ScanMobileProps) {
+const SAMPLE_MOBILE_ANNS: ScreenshotAnnotation[] = [
+  { x: 28, y: 25, severity: 'critical' },
+  { x: 62, y: 55, severity: 'warning' },
+  { x: 30, y: 78, severity: 'critical' },
+];
+
+export function ScanMobile({
+  scanId: _scanId,
+  domain,
+  milestones,
+  currentScreenshot,
+  elapsed,
+  eta,
+  progressPct,
+}: ScanMobileProps) {
   const target = domain ?? 'your site';
+  const elapsedStr = elapsed ?? '00:47';
+  const etaStr = eta ?? '01:30';
+  const pct = Math.max(0, Math.min(100, progressPct ?? 52));
+  const milestonesArr: Array<[string, MilestoneStatus]> = milestones
+    ? milestones.map((m) => [m.t, m.s])
+    : SAMPLE_MOBILE_MILESTONES;
+  const current = currentScreenshot;
+  const annPins = current?.annotations ?? SAMPLE_MOBILE_ANNS;
 
   return (
     <div className="scanner-page scan-mobile">
@@ -41,13 +69,13 @@ export function ScanMobile({ scanId: _scanId, domain }: ScanMobileProps) {
             className="mono"
             style={{ fontSize: 11, color: 'var(--text-muted)' }}
           >
-            ELAPSED 00:47
+            ELAPSED {elapsedStr}
           </span>
           <span
             className="mono"
             style={{ fontSize: 11, color: 'var(--text-muted)' }}
           >
-            ETA 01:30
+            ETA {etaStr}
           </span>
         </div>
         <div
@@ -59,7 +87,7 @@ export function ScanMobile({ scanId: _scanId, domain }: ScanMobileProps) {
             overflow: 'hidden',
           }}
         >
-          <div style={{ width: '52%', height: '100%', background: 'var(--accent)' }} />
+          <div style={{ width: `${pct}%`, height: '100%', background: 'var(--accent)' }} />
         </div>
 
         <div
@@ -106,33 +134,34 @@ export function ScanMobile({ scanId: _scanId, domain }: ScanMobileProps) {
             </span>
           </div>
           <div style={{ position: 'relative', padding: 12 }}>
-            <PhImg label="landing screenshot" aspect="unset" height={240} />
-            <span className="ann-pulse" style={{ left: '28%', top: '25%' }} />
-            <span
-              className="ann-pin pin-critical"
-              style={{ left: '28%', top: '25%', position: 'absolute' }}
-            >
-              1
-            </span>
-            <span
-              className="ann-pin pin-warning"
-              style={{ left: '62%', top: '55%', position: 'absolute' }}
-            >
-              2
-            </span>
-            <span
-              className="ann-pin pin-critical"
-              style={{ left: '30%', top: '78%', position: 'absolute' }}
-            >
-              3
-            </span>
+            {current?.url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={current.url}
+                alt={current.label}
+                style={{ width: '100%', height: 240, objectFit: 'cover', objectPosition: 'top', display: 'block', borderRadius: 4 }}
+              />
+            ) : (
+              <PhImg label={current?.label ?? 'landing screenshot'} aspect="unset" height={240} />
+            )}
+            {annPins.map((p, i) => (
+              <span key={`m-pin-${i}`}>
+                <span className="ann-pulse" style={{ left: `${p.x}%`, top: `${p.y}%` }} />
+                <span
+                  className={`ann-pin pin-${p.severity}`}
+                  style={{ left: `${p.x}%`, top: `${p.y}%`, position: 'absolute' }}
+                >
+                  {i + 1}
+                </span>
+              </span>
+            ))}
           </div>
         </div>
 
         <div style={{ marginTop: 28 }}>
           <Eyebrow>Milestones</Eyebrow>
           <div style={{ marginTop: 10 }}>
-            {MOBILE_MILESTONES.map(([t, s], i) => (
+            {milestonesArr.map(([t, s], i) => (
               <div
                 key={t}
                 style={{
@@ -141,7 +170,7 @@ export function ScanMobile({ scanId: _scanId, domain }: ScanMobileProps) {
                   alignItems: 'center',
                   padding: '12px 0',
                   borderBottom:
-                    i < MOBILE_MILESTONES.length - 1 ? '1px solid var(--border)' : 'none',
+                    i < milestonesArr.length - 1 ? '1px solid var(--border)' : 'none',
                 }}
               >
                 <div

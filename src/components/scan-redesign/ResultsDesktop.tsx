@@ -3,7 +3,7 @@ import { StageScoreCard } from './StageScoreCard';
 import { MoneyModelCard } from './MoneyModelCard';
 import { VoiceAgentCard } from './VoiceAgentCard';
 import { StoryChapter } from './StoryChapter';
-import { SAMPLE_SCORE_DATA } from './results-data';
+import { SAMPLE_SCORE_DATA, type StageScore } from './results-data';
 
 interface ResultsDesktopProps {
   voice?: boolean;
@@ -12,6 +12,11 @@ interface ResultsDesktopProps {
   totalLeak?: string;
   findingCount?: number;
   stageCount?: number;
+  stageScores?: StageScore[];
+  scanDuration?: string;
+  onBookCall?: () => void;
+  onViewBlueprint?: () => void;
+  onShare?: () => void;
 }
 
 export function ResultsDesktop({
@@ -21,7 +26,13 @@ export function ResultsDesktop({
   totalLeak = '$322k',
   findingCount = 17,
   stageCount = 5,
+  stageScores,
+  scanDuration = '94s',
+  onBookCall,
+  onViewBlueprint,
+  onShare,
 }: ResultsDesktopProps) {
+  const scores = stageScores ?? SAMPLE_SCORE_DATA;
   return (
     <div className="scanner-page" style={{ width: '100%' }}>
       <TopNav compact ctaLabel="Download PDF" />
@@ -40,7 +51,7 @@ export function ResultsDesktop({
           >
             <div>
               <Eyebrow accent>
-                Audit complete · scan #{scanShortId} · 94s · EXAMPLE
+                Audit complete · scan #{scanShortId} · {scanDuration}
               </Eyebrow>
               <h1
                 className="display-900"
@@ -66,8 +77,8 @@ export function ResultsDesktop({
               </p>
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
-              <button className="btn btn-secondary">Share link</button>
-              <button className="btn btn-primary">Book strategy call →</button>
+              <button type="button" className="btn btn-secondary" onClick={onShare}>Share link</button>
+              <button type="button" className="btn btn-primary" onClick={onBookCall}>Book strategy call →</button>
             </div>
           </div>
         </div>
@@ -115,7 +126,7 @@ export function ResultsDesktop({
               gap: 16,
             }}
           >
-            {SAMPLE_SCORE_DATA.map((s) => (
+            {scores.map((s) => (
               <StageScoreCard
                 key={s.key}
                 stage={s.stage}
@@ -339,7 +350,7 @@ export function ResultsDesktop({
                 seconds to view.
               </p>
             </div>
-            <button className="btn btn-primary btn-lg">View the Blueprint →</button>
+            <button type="button" className="btn btn-primary btn-lg" onClick={onViewBlueprint}>View the Blueprint →</button>
           </div>
         </div>
       </section>

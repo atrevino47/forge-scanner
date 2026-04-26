@@ -24,6 +24,12 @@ import {
   BlueprintDesktop,
   BlueprintMobile,
 } from '@/components/blueprint-redesign';
+import { ScanDesktop, type Milestone, type ScreenshotEntry as RedesignScreenshot } from '@/components/scan-redesign/ScanDesktop';
+import { ScanMobile } from '@/components/scan-redesign/ScanMobile';
+import { CaptureGate } from '@/components/scan-redesign/CaptureGate';
+import { ResultsDesktop } from '@/components/scan-redesign/ResultsDesktop';
+import { ResultsMobile } from '@/components/scan-redesign/ResultsMobile';
+import type { StageScore } from '@/components/scan-redesign/results-data';
 import { ChatContainer } from '@/components/chat/ChatContainer';
 import { ChatToggle } from '@/components/chat/ChatToggle';
 import { ResultsTopBar } from './ResultsTopBar';
@@ -327,6 +333,144 @@ function scanReducer(state: ScanState, action: ScanAction): ScanState {
   }
 }
 
+// ── State → redesign props mappers ──────────────────────
+const MILESTONE_DETAILS: Record<FunnelStage | 'crawl', { id: string; t: string; detail: string }> = {
+  crawl: { id: 'crawl', t: 'Crawling site', detail: 'Pages + screenshots at 3 breakpoints' },
+  traffic: { id: 'traffic', t: 'Traffic sources', detail: 'Channel + analytics detection' },
+  landing: { id: 'landing', t: 'Landing experience', detail: 'Vision pass · scoring elements' },
+  capture: { id: 'capture', t: 'Lead capture', detail: 'Form fields, friction, speed-to-lead' },
+  offer: { id: 'offer', t: 'Offer & conversion', detail: 'Value Equation cross-check' },
+  followup: { id: 'followup', t: 'Follow-up system', detail: 'Email cadence, SMS, retargeting' },
+};
+
+const STAGE_LABEL_DISPLAY: Record<FunnelStage, string> = {
+  traffic: 'Traffic sources',
+  landing: 'Landing experience',
+  capture: 'Lead capture',
+  offer: 'Offer & conversion',
+  followup: 'Follow-up system',
+};
+
+function stagesToMilestones(
+  stages: Partial<Record<FunnelStage, StageState>>,
+  hasAnyScreenshot: boolean,
+): Milestone[] {
+  const result: Milestone[] = [];
+  // Crawl is always implied when any screenshot or stage has been touched
+  result.push({
+    ...MILESTONE_DETAILS.crawl,
+    s: hasAnyScreenshot || Object.keys(stages).length > 0 ? 'done' : 'queued',
+  });
+  for (const stage of STAGE_ORDER) {
+    const ss = stages[stage];
+    let s: 'done' | 'active' | 'queued' = 'queued';
+    if (ss?.status === 'completed') s = 'done';
+    else if (ss?.status === 'analyzing') s = 'active';
+    else if (ss?.status === 'failed') s = 'done'; // surface as done; failed icon comes from elsewhere
+    result.push({ ...MILESTONE_DETAILS[stage], s });
+  }
+  return result;
+}
+
+function progressMessagesToActivityLog(
+  messages: string[],
+): Array<[string, string, string]> {
+  // Synthesize timestamps in 4s increments. Mark latest as active, prior as done.
+  const last = messages.length - 1;
+  return messages.slice(-12).map((msg, i, arr) => {
+    const idx = messages.length - arr.length + i;
+    const totalSecs = idx * 4 + 2;
+    const mm = String(Math.floor(totalSecs / 60)).padStart(2, '0');
+    const ss = String(totalSecs % 60).padStart(2, '0');
+    const icon = idx === last ? '●' : '✓';
+    return [`${mm}:${ss}`, icon, msg];
+  });
+}
+
+function screenshotsToRedesignThumbnails(
+  screenshots: ScreenshotEntry[],
+): RedesignScreenshot[] {
+  return screenshots.slice(0, 3).map((s, i) => ({
+    id: s.id,
+    url: s.thumbnailUrl,
+    label: `${s.stage} · ${s.source}`,
+    state: i === 0 ? 'CURRENT' : 'QUEUED',
+  }));
+}
+
+function latestScreenshotToCurrent(
+  screenshots: ScreenshotEntry[],
+): RedesignScreenshot | undefined {
+  if (screenshots.length === 0) return undefined;
+  const latest = screenshots[screenshots.length - 1];
+  const annotations = (latest.annotations ?? []).slice(0, 4).map((a) => {
+    const sev =
+      a.type === 'critical'
+        ? 'critical'
+        : a.type === 'warning'
+        ? 'warning'
+        : ('positive' as const);
+    return {
+      x: a.position?.x ?? 30,
+      y: a.position?.y ?? 30,
+      severity: sev as 'critical' | 'warning' | 'positive',
+    };
+  });
+  return {
+    id: latest.id,
+    url: latest.thumbnailUrl,
+    label: `${latest.stage} · ${latest.source}`,
+    annotations,
+  };
+}
+
+function stagesToScores(
+  stages: Partial<Record<FunnelStage, StageState>>,
+): StageScore[] {
+  const scores: StageScore[] = [];
+  let weakestKey: string | null = null;
+  let weakestScore = 101;
+  for (const stage of STAGE_ORDER) {
+    const ss = stages[stage];
+    const score = ss?.summary?.score ?? 0;
+    if (ss?.summary && score < weakestScore) {
+      weakestScore = score;
+      weakestKey = stage;
+    }
+  }
+  for (const stage of STAGE_ORDER) {
+    const ss = stages[stage];
+    const score = ss?.summary?.score ?? 0;
+    let severity = 'Pending';
+    if (ss?.summary) {
+      severity = score >= 70 ? 'Strong' : score >= 40 ? 'Weak' : 'Critical';
+    }
+    scores.push({
+      key: stage,
+      stage: STAGE_LABEL_DISPLAY[stage],
+      score,
+      severity,
+      weakest: stage === weakestKey,
+    });
+  }
+  return scores;
+}
+
+function extractDomain(url: string): string {
+  if (!url) return 'your site';
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return url.replace(/^https?:\/\//, '').replace(/\/.*$/, '') || 'your site';
+  }
+}
+
+function formatElapsed(secs: number): string {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
+
 // ── Component ───────────────────────────────────────────
 export function ScanLayout({ scanId }: { scanId: string }) {
   const [state, dispatch] = useReducer(scanReducer, initialState);
@@ -459,6 +603,52 @@ export function ScanLayout({ scanId }: { scanId: string }) {
     });
   };
 
+  // ── Elapsed-time ticker for redesign ScanDesktop/Mobile ──
+  const [elapsedSecs, setElapsedSecs] = useState(0);
+  const scanStartRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (state.status === 'connecting' || state.status === 'completed' || state.status === 'failed') return;
+    if (scanStartRef.current === null) scanStartRef.current = Date.now();
+    const id = window.setInterval(() => {
+      const start = scanStartRef.current ?? Date.now();
+      setElapsedSecs(Math.floor((Date.now() - start) / 1000));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [state.status]);
+
+  // ── Email submission for redesign CaptureGate ──
+  const [captureSubmitting, setCaptureSubmitting] = useState(false);
+  const [captureError, setCaptureError] = useState<string | null>(null);
+  const handleCaptureSubmit = async (email: string, phone: string) => {
+    if (!email.trim() || captureSubmitting) return;
+    setCaptureSubmitting(true);
+    setCaptureError(null);
+    try {
+      const res = await fetch('/api/scan/capture-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          scanId,
+          leadId: state.leadId ?? '',
+          email: email.trim(),
+          phone: phone.trim() || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to save');
+      const data = (await res.json()) as { lead: { id: string } };
+      dispatch({
+        type: 'EMAIL_CAPTURED',
+        leadId: data.lead.id,
+        email: email.trim(),
+        phone: phone.trim() || undefined,
+      });
+    } catch {
+      setCaptureError('Something went wrong. Please try again.');
+    } finally {
+      setCaptureSubmitting(false);
+    }
+  };
+
   const isScanning =
     state.status === 'scanning' ||
     state.status === 'capturing' ||
@@ -467,6 +657,28 @@ export function ScanLayout({ scanId }: { scanId: string }) {
   const isComplete = state.status === 'completed';
   const isFailed = state.status === 'failed';
   const needsEmailGate = isComplete && !state.emailCaptured;
+
+  // ── Redesign view-model derivations ──
+  const redesignDomain = extractDomain(state.websiteUrl);
+  const redesignMilestones = stagesToMilestones(state.stages, state.screenshots.length > 0);
+  const redesignActivityLog = progressMessagesToActivityLog(state.progressMessages);
+  const redesignThumbnails = screenshotsToRedesignThumbnails(state.screenshots);
+  const redesignCurrent = latestScreenshotToCurrent(state.screenshots);
+  const completedStageCount = STAGE_ORDER.filter(
+    (s) => state.stages[s]?.status === 'completed',
+  ).length;
+  const redesignProgressPct = isScanning ? Math.round((completedStageCount / STAGE_ORDER.length) * 100) : 100;
+  const redesignElapsed = formatElapsed(elapsedSecs);
+  const redesignStageScores = stagesToScores(state.stages);
+  const redesignTotalLeak = state.completedSummary
+    ? `$${(state.completedSummary.criticalIssues * 18).toFixed(0)}k`
+    : '$0';
+  const redesignFindingCount = STAGE_ORDER.reduce(
+    (sum, s) => sum + (state.stages[s]?.summary?.findings?.length ?? 0),
+    0,
+  );
+  const redesignVoiceAgentName = '[VOICE_AGENT_NAME]';
+  void redesignVoiceAgentName; // reserved for prop wiring later
 
   /* ANIMATION SEQUENCE — Email gate blur/unblur:
    * Gate on (needsEmailGate=true):
@@ -520,286 +732,197 @@ export function ScanLayout({ scanId }: { scanId: string }) {
     { dependencies: [needsEmailGate, state.emailCaptured] },
   );
 
+  // ── REDESIGN RENDER (v2) — wired to live SSE/state ──
+  // Renders new ScanDesktop/Mobile, CaptureGate, ResultsDesktop/Mobile
+  // composing from the same reducer state the legacy UI used.
   return (
-    <div className="min-h-screen bg-forge-base">
-      {/* Fixed top bar */}
-      <ResultsTopBar
-        onBookCall={() => handleOpenCalcom('banner_cta')}
-        scannedUrl={state.websiteUrl}
-        showUrl={isComplete}
-      />
+    <div className="min-h-screen" style={{ background: 'var(--base)' }}>
+      {/* Failed state */}
+      {isFailed && (
+        <div style={{ maxWidth: 720, margin: '0 auto', padding: 80 }}>
+          <h2 className="display-900" style={{ fontSize: 32 }}>Scan failed</h2>
+          <p className="body" style={{ color: 'var(--text-2)', marginTop: 12 }}>
+            {state.error || 'Something went wrong. Please try again.'}
+          </p>
+        </div>
+      )}
 
-      <main className="pt-20 md:pt-24 pb-28 md:pb-12 px-4 sm:px-6 lg:px-8 w-full max-w-lg md:max-w-[1120px] mx-auto">
-        {/* Progress indicator — visible while scanning */}
-        {isScanning && <ProgressIndicator messages={state.progressMessages} />}
+      {/* Scanning state — live milestones, screenshots, activity log */}
+      {isScanning && (
+        <>
+          <ScanDesktop
+            scanId={scanId}
+            domain={redesignDomain}
+            milestones={redesignMilestones}
+            activityLog={redesignActivityLog}
+            currentScreenshot={redesignCurrent}
+            thumbnails={redesignThumbnails}
+            elapsed={redesignElapsed}
+            progressPct={redesignProgressPct}
+          />
+          <ScanMobile
+            scanId={scanId}
+            domain={redesignDomain}
+            milestones={redesignMilestones}
+            currentScreenshot={redesignCurrent}
+            elapsed={redesignElapsed}
+            progressPct={redesignProgressPct}
+          />
+        </>
+      )}
 
-        {/* Error state */}
-        {isFailed && (
-          <div className="bg-forge-surface rounded-xl p-8 text-center">
-            <h2 className="font-display mb-2 text-2xl tracking-display text-forge-text">
-              Scan Failed
-            </h2>
-            <p className="text-forge-text-muted">
-              {state.error || 'Something went wrong. Please try again.'}
-            </p>
-          </div>
-        )}
-
-        {/* Desktop inline tab navigation — hidden on mobile (bottom nav used instead) */}
-        {isComplete && (
-          <nav className="hidden md:flex items-center gap-1 mb-8 bg-forge-surface/60 backdrop-blur-sm p-1 rounded-lg w-fit">
-            {(['overview', 'stages', 'roadmap'] as const).map((tab) => {
-              const labels = { overview: 'Overview', stages: 'Stages', roadmap: 'Roadmap' };
-              const icons = { overview: 'dashboard', stages: 'architecture', roadmap: 'analytics' };
-              const isActive = activeTab === tab;
-              return (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-md font-mono text-[11px] font-bold uppercase tracking-widest transition-all ${
-                    isActive
-                      ? 'bg-forge-base text-forge-accent shadow-sm'
-                      : 'text-forge-text-secondary hover:text-forge-text'
-                  }`}
-                >
-                  <span
-                    className="material-symbols-outlined text-base"
-                    style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}
-                  >
-                    {icons[tab]}
-                  </span>
-                  {labels[tab]}
-                </button>
-              );
-            })}
-          </nav>
-        )}
-
-        {/* Results content (GSAP-driven blur when email gate is active) */}
-        <div
-          ref={resultsRef}
-          className={needsEmailGate ? 'pointer-events-none select-none' : ''}
-          style={needsEmailGate ? { filter: 'blur(8px)', scale: 0.98 } : {}}
-        >
-          {/* ── TAB CONTENT ── */}
-          {activeTab === 'overview' && (
-            <div className="space-y-12">
-              {/* Desktop: two-column layout — audit left, sidebar right */}
-              <div className="md:grid md:grid-cols-[1fr_380px] md:gap-10 md:items-start">
-                {/* Left column — main audit content */}
-                <div className="space-y-12">
-                  <AuditOverview
-                    summary={state.completedSummary}
-                    stages={state.stages}
-                    screenshots={state.screenshots}
-                    onInitiateFix={() => handleOpenCalcom('results_cta')}
-                  />
-                </div>
-
-                {/* Right column — sidebar: stage breakdown + health potential (desktop only, stacked below on mobile) */}
-                <aside className="space-y-8 md:sticky md:top-28">
-                  {/* Stage Summary Grid */}
-                  {isComplete && STAGE_ORDER.some((s) => state.stages[s]) && (
-                    <section className="bg-forge-surface p-5 rounded-xl">
-                      <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-forge-text-secondary mb-4">
-                        Stage Breakdown
-                      </h3>
-                      <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 -mx-2 px-2 md:mx-0 md:px-0 scrollbar-hide">
-                        {STAGE_ORDER.map((stage) => {
-                          const stageState = state.stages[stage];
-                          if (!stageState) return null;
-                          const score = stageState.summary?.score ?? 0;
-                          const exists = stageState.summary?.exists ?? false;
-                          const scoreColor = !exists
-                            ? 'text-forge-text-muted'
-                            : score >= 70
-                              ? 'text-forge-positive'
-                              : score >= 40
-                                ? 'text-forge-warning'
-                                : 'text-forge-critical';
-                          return (
-                            <button
-                              key={stage}
-                              onClick={() => {
-                                setActiveTab('stages');
-                                setActiveStage(stage);
-                              }}
-                              className="shrink-0 md:shrink md:w-full flex flex-col md:flex-row md:justify-between items-center md:items-center gap-1 md:gap-0 px-4 py-3 bg-forge-base border border-forge-card rounded-lg hover:bg-forge-card transition-all active:scale-[0.98]"
-                            >
-                              <span className="font-mono text-[9px] uppercase tracking-widest text-forge-text-secondary font-bold whitespace-nowrap">
-                                {STAGE_LABELS[stage]}
-                              </span>
-                              {stageState.summary ? (
-                                <span className={`font-display text-xl md:text-lg font-black tabular-nums ${scoreColor}`}>
-                                  {exists ? score : '—'}
-                                </span>
-                              ) : (
-                                <span className="font-mono text-[9px] text-forge-text-muted uppercase tracking-wider">
-                                  Scanning
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  )}
-
-                  {/* Blueprint CTA — sidebar placement on desktop */}
-                  {isComplete && state.emailCaptured && !state.blueprintData && (
-                    <BlueprintCTA
-                      scanId={scanId}
-                      blueprintAvailable={state.blueprintAvailable}
-                      onGenerated={(blueprint) =>
-                        dispatch({ type: 'BLUEPRINT_GENERATED', blueprint })
-                      }
-                    />
-                  )}
-                </aside>
-              </div>
-
-              {state.completedSummary && (
-                <HealthPotential
-                  summary={state.completedSummary}
-                  onInitiateOptimization={() => handleOpenCalcom('results_cta')}
-                />
-              )}
-
-              {/* GEO/AEO — AI discoverability analysis (findings extracted from traffic stage) */}
-              {isComplete && (
-                <GeoAeoSection
-                  stages={state.stages}
-                  onBookCall={() => handleOpenCalcom('geo_aeo_cta')}
-                />
-              )}
-
-              {/* Prescription offers — Hormozi-style prescriptive fixes based on findings */}
-              {isComplete && (
-                <PrescriptionSection
-                  stages={state.stages}
-                  onBookCall={() => handleOpenCalcom('prescription_cta')}
-                />
-              )}
-            </div>
-          )}
-
-          {activeTab === 'stages' && (
-            <div>
-              {/* Stage selector pills */}
-              <div className="flex gap-2 overflow-x-auto pb-4 mb-6 -mx-2 px-2 scrollbar-hide">
-                {STAGE_ORDER.map((stage) => {
-                  const hasData = state.stages[stage] || state.screenshots.some((s) => s.stage === stage);
-                  if (!hasData) return null;
-                  return (
-                    <button
-                      key={stage}
-                      onClick={() => setActiveStage(stage)}
-                      className={`shrink-0 px-4 py-2 rounded-sm font-mono text-[10px] font-bold uppercase tracking-widest transition-all active:scale-[0.98] ${
-                        activeStage === stage
-                          ? 'bg-forge-accent text-white shadow-md'
-                          : 'bg-forge-surface text-forge-text-secondary hover:bg-forge-card'
-                      }`}
-                    >
-                      {STAGE_LABELS[stage]}
-                    </button>
-                  );
-                })}
-              </div>
-              <StageFindingsView
-                stage={activeStage}
-                stageState={state.stages[activeStage]}
-                screenshots={state.screenshots.filter((s) => s.stage === activeStage)}
-                onInitiateFix={() => handleOpenCalcom('results_cta')}
-              />
-            </div>
-          )}
-
-          {activeTab === 'roadmap' && (
-            <ImplementationRoadmap
-              stages={state.stages}
-              onForgeSolution={() => handleOpenCalcom('results_cta')}
+      {/* Email gate — full-screen capture modal blocks results until email submitted */}
+      {needsEmailGate && (
+        <>
+          {/* Desktop variant */}
+          <div className="scan-desktop">
+            <CaptureGate
+              findingCount={redesignFindingCount || 17}
+              stageCount={STAGE_ORDER.length}
+              onSubmit={(email, phone) => {
+                void handleCaptureSubmit(email, phone);
+              }}
             />
+          </div>
+          {/* Mobile variant */}
+          <div className="scan-mobile">
+            <CaptureGate
+              mobile
+              findingCount={redesignFindingCount || 17}
+              stageCount={STAGE_ORDER.length}
+              onSubmit={(email, phone) => {
+                void handleCaptureSubmit(email, phone);
+              }}
+            />
+          </div>
+          {captureError && (
+            <div
+              role="alert"
+              style={{
+                position: 'fixed',
+                top: 24,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'var(--critical)',
+                color: '#FAFAF7',
+                padding: '10px 18px',
+                borderRadius: 8,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 12,
+                zIndex: 60,
+              }}
+            >
+              {captureError}
+            </div>
           )}
+          {captureSubmitting && (
+            <div
+              style={{
+                position: 'fixed',
+                bottom: 24,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: 'var(--ink)',
+                color: 'var(--ink-text)',
+                padding: '8px 16px',
+                borderRadius: 8,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+                zIndex: 60,
+              }}
+            >
+              Sending...
+            </div>
+          )}
+        </>
+      )}
 
-          {/* Blueprint view — after blueprint generated (overview tab, full width) */}
-          {activeTab === 'overview' && state.blueprintData && (
-            <>
-              {/* Original data-bound blueprint (Money Model, Funnel Diagram, Grand Slam checklist, FAQ) */}
+      {/* Results state — email captured, full results visible */}
+      {isComplete && state.emailCaptured && (
+        <>
+          <ResultsDesktop
+            scanShortId={scanId.slice(0, 8)}
+            domain={redesignDomain}
+            totalLeak={redesignTotalLeak}
+            findingCount={redesignFindingCount}
+            stageCount={STAGE_ORDER.length}
+            stageScores={redesignStageScores}
+            onBookCall={() => handleOpenCalcom('redesign_results_book_call')}
+            onShare={() => {
+              if (typeof navigator !== 'undefined' && navigator.share) {
+                void navigator.share({
+                  title: 'My funnel audit',
+                  url: window.location.href,
+                });
+              } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                void navigator.clipboard.writeText(window.location.href);
+              }
+            }}
+            onViewBlueprint={() => {
+              const el = document.getElementById('blueprint');
+              el?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          />
+          <ResultsMobile
+            totalLeak={redesignTotalLeak}
+            findingCount={redesignFindingCount}
+            stageCount={STAGE_ORDER.length}
+            stageScores={redesignStageScores}
+            onBookCall={() => handleOpenCalcom('redesign_results_book_call')}
+            onViewBlueprint={() => {
+              const el = document.getElementById('blueprint');
+              el?.scrollIntoView({ behavior: 'smooth' });
+            }}
+          />
+
+          {/* Blueprint section — wired to real data when available */}
+          {state.blueprintData && (
+            <div id="blueprint">
               <BlueprintView blueprint={state.blueprintData} />
-
-              {/* Redesigned presentational blueprint mockup — responsive */}
               <div className="blueprint-redesign-desktop hidden md:block">
                 <BlueprintDesktop
                   weakestStage={state.blueprintData.diagram?.weakest_stage}
                   industry={state.blueprintData.diagram?.industry}
-                  onBookCall={() => handleOpenCalcom('results_cta')}
+                  onBookCall={() => handleOpenCalcom('redesign_blueprint_book_call')}
                 />
               </div>
               <div className="blueprint-redesign-mobile block md:hidden">
                 <BlueprintMobile
                   weakestStage={state.blueprintData.diagram?.weakest_stage}
-                  onBookCall={() => handleOpenCalcom('results_cta')}
+                  onBookCall={() => handleOpenCalcom('redesign_blueprint_book_call')}
                 />
               </div>
-            </>
-          )}
-        </div>
-
-        {/* Email gate overlay — GSAP animated entrance/exit */}
-        {needsEmailGate && (
-          <div
-            ref={gateOverlayRef}
-            className="fixed inset-x-0 bottom-0 z-40 bg-gradient-to-t from-forge-base via-forge-base/95 to-transparent px-6 pb-28 pt-20"
-            style={{ opacity: 0 }}
-          >
-            <div className="mx-auto max-w-md text-center">
-              <h3 className="font-display mb-2 text-xl tracking-display">
-                Unlock Your Full Results
-              </h3>
-              <p className="mb-4 text-sm text-forge-text-muted">
-                Enter your email to see the complete audit findings.
-              </p>
-              <button
-                onClick={() => dispatch({ type: 'SHOW_CAPTURE' })}
-                className="rounded-lg bg-forge-accent px-6 py-3 font-body font-semibold text-white transition-colors duration-200 hover:bg-forge-accent-hover"
-              >
-                Unlock Results
-              </button>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Capture prompt — slides in from bottom */}
-        {state.showCapturePrompt && state.leadId && (
-          <CapturePrompt
-            scanId={scanId}
-            leadId={state.leadId}
-            onSubmit={(leadId, email, phone) =>
-              dispatch({ type: 'EMAIL_CAPTURED', leadId, email, phone })
-            }
-            onDismiss={() => dispatch({ type: 'DISMISS_CAPTURE' })}
-          />
-        )}
-
-        {/* Social confirmation popup */}
-        {state.socialAmbiguous && (
-          <SocialConfirmation
-            platform={state.socialAmbiguous.platform}
-            options={state.socialAmbiguous.options}
-            scanId={scanId}
-            leadId={state.leadId}
-            onConfirm={() => dispatch({ type: 'DISMISS_SOCIAL' })}
-            onDismiss={() => dispatch({ type: 'DISMISS_SOCIAL' })}
-          />
-        )}
-      </main>
-
-      {/* Bottom navigation — only show when scan is complete */}
-      {isComplete && (
-        <ResultsBottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+          {/* Blueprint generator CTA — visible when not yet generated */}
+          {!state.blueprintData && (
+            <section style={{ padding: '40px 48px', maxWidth: 1100, margin: '0 auto' }}>
+              <BlueprintCTA
+                scanId={scanId}
+                blueprintAvailable={state.blueprintAvailable}
+                onGenerated={(blueprint) =>
+                  dispatch({ type: 'BLUEPRINT_GENERATED', blueprint })
+                }
+              />
+            </section>
+          )}
+        </>
       )}
 
-      {/* Chat toggle + container — only after email captured + leadId available */}
+      {/* Social confirmation popup (preserves existing behavior) */}
+      {state.socialAmbiguous && (
+        <SocialConfirmation
+          platform={state.socialAmbiguous.platform}
+          options={state.socialAmbiguous.options}
+          scanId={scanId}
+          leadId={state.leadId}
+          onConfirm={() => dispatch({ type: 'DISMISS_SOCIAL' })}
+          onDismiss={() => dispatch({ type: 'DISMISS_SOCIAL' })}
+        />
+      )}
+
+      {/* Chat — only after email captured (preserves SSE-driven ChatContainer) */}
       {state.emailCaptured && state.leadId && (
         <>
           <ChatToggle
