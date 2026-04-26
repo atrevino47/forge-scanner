@@ -491,13 +491,22 @@ export function ScanLayout({ scanId }: { scanId: string }) {
   const gateOverlayRef = useRef<HTMLDivElement>(null);
 
   // ── Fetch initial scan data ──
+  const [fetchStatus, setFetchStatus] = useState<'idle' | 'fetching' | 'ok' | 'not_found' | 'error'>('idle');
   useEffect(() => {
+    setFetchStatus('fetching');
     fetch(`/api/scan/results/${scanId}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data: ScanResultsResponse | null) => {
-        if (data) dispatch({ type: 'INITIAL_DATA', data });
+      .then(async (res) => {
+        if (res.ok) {
+          const data = (await res.json()) as ScanResultsResponse;
+          dispatch({ type: 'INITIAL_DATA', data });
+          setFetchStatus('ok');
+        } else if (res.status === 404) {
+          setFetchStatus('not_found');
+        } else {
+          setFetchStatus('error');
+        }
       })
-      .catch(() => {});
+      .catch(() => setFetchStatus('error'));
   }, [scanId]);
 
   // ── SSE connection for real-time updates ──
@@ -737,6 +746,54 @@ export function ScanLayout({ scanId }: { scanId: string }) {
   // composing from the same reducer state the legacy UI used.
   return (
     <div className="min-h-screen" style={{ background: 'var(--base)' }}>
+      {/* Dev debug overlay — only in non-prod */}
+      {process.env.NODE_ENV !== 'production' && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 8,
+            right: 8,
+            zIndex: 100,
+            background: 'rgba(20,20,19,0.92)',
+            color: '#FAFAF7',
+            padding: '8px 12px',
+            borderRadius: 6,
+            fontFamily: 'var(--font-mono)',
+            fontSize: 11,
+            lineHeight: 1.6,
+            maxWidth: 360,
+            pointerEvents: 'none',
+          }}
+        >
+          <div>scanId: {scanId.slice(0, 24)}</div>
+          <div>fetch: {fetchStatus}</div>
+          <div>status: {state.status}</div>
+          <div>
+            emailCaptured: {String(state.emailCaptured)} · leadId: {state.leadId?.slice(0, 8) ?? 'null'}
+          </div>
+          <div>
+            stages: {Object.keys(state.stages).length} · screenshots: {state.screenshots.length} · msgs: {state.progressMessages.length}
+          </div>
+          <div>
+            isScanning:{String(isScanning)} · needsGate:{String(needsEmailGate)} · isComplete:{String(isComplete)}
+          </div>
+        </div>
+      )}
+
+      {/* 404 — scan ID not found */}
+      {fetchStatus === 'not_found' && state.status === 'connecting' && (
+        <div style={{ maxWidth: 720, margin: '80px auto', padding: 40, textAlign: 'center' }}>
+          <h2 className="display-900" style={{ fontSize: 32 }}>Scan not found</h2>
+          <p className="body" style={{ color: 'var(--text-2)', marginTop: 12 }}>
+            The scan ID <code>{scanId.slice(0, 8)}</code> doesn&apos;t exist or was deleted. Try
+            starting a new scan from the homepage.
+          </p>
+          <a href="/" className="btn btn-primary" style={{ marginTop: 24, display: 'inline-block' }}>
+            Start a new scan →
+          </a>
+        </div>
+      )}
+
       {/* Failed state */}
       {isFailed && (
         <div style={{ maxWidth: 720, margin: '0 auto', padding: 80 }}>
@@ -748,7 +805,7 @@ export function ScanLayout({ scanId }: { scanId: string }) {
       )}
 
       {/* Scanning state — live milestones, screenshots, activity log */}
-      {isScanning && (
+      {isScanning && fetchStatus !== 'not_found' && (
         <>
           <ScanDesktop
             scanId={scanId}
