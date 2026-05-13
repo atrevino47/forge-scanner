@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 .claude.json
+.codex/
+.gstack/
+.minion-briefs/
 
 # vault queue files (written by followup trigger at runtime)
 /sales/
