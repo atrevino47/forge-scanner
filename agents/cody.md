@@ -1,1 +1,1 @@
-../../../forge-agents/cody/CLAUDE.md
+../../../forge-vault/forge-agents/cody/CLAUDE.md

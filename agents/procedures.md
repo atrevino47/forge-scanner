@@ -1,1 +1,1 @@
-../../../forge-agents/cody/procedures.md
+../../../forge-vault/forge-agents/cody/procedures.md
